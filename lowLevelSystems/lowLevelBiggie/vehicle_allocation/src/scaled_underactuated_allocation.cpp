@@ -17,8 +17,8 @@ namespace alloc {
 		control_effort_sub = alloc_nh->subscribe("control_effort", 10, &alloc::scaledUnderactuatedAllocation::tau_callback_, this);
 		
 		//actuation_pub = alloc_nh->advertise<custom_messages_biggie::control_effort>("/ship/actuation", 10); //published TAU = {X,Y,Eta}
-		sim_port_pub = alloc_nh->advertise<std_msgs::Float32>("right_thrust_cmd", 10);
-		sim_stbd_pub = alloc_nh->advertise<std_msgs::Float32>("left_thrust_cmd", 10);
+		sim_port_pub = alloc_nh->advertise<std_msgs::Float32>("/wamv/thrusters/right_thrust_cmd", 10);
+		sim_stbd_pub = alloc_nh->advertise<std_msgs::Float32>("/wamv/thrusters/left_thrust_cmd", 10);
 
 		get_ros_params_();
 		T_over_.resize(3,4);

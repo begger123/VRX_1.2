@@ -3,9 +3,9 @@
 //the purpose of this class is to assemble the ROS xsense node and the compass node
 vehicle_state::vehicle_state(ros::NodeHandle &nh) : state_nh_(&nh), loop_rate(100)
 {
-	gps_sub = state_nh_->subscribe("/fix", 10, &vehicle_state::gps_callback, this);
-	imu_sub = state_nh_->subscribe("/imu/data", 10, &vehicle_state::imu_callback, this);
-	vel_sub = state_nh_->subscribe("/velocity", 10, &vehicle_state::vel_callback, this);
+	gps_sub = state_nh_->subscribe("/wamv/sensors/gps/gps/fix", 10, &vehicle_state::gps_callback, this);
+	imu_sub = state_nh_->subscribe("/wamv/sensors/imu/imu/data", 10, &vehicle_state::imu_callback, this);
+	vel_sub = state_nh_->subscribe("/wamv/sensors/gps/gps/fix_velocity", 10, &vehicle_state::vel_callback, this);
 	compass_sub = state_nh_->subscribe("/compass", 10, &vehicle_state::compass_callback, this);
 	base_link_ned_pub = state_nh_->advertise<nav_msgs::Odometry>("/p3d_wamv_ned", 10);
 	base_link_enu_pub = state_nh_->advertise<nav_msgs::Odometry>("/p3d_wamv_enu", 10);

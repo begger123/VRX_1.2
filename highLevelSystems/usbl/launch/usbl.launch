@@ -1,0 +1,5 @@
+<!-- -*- mode: XML -*- -->
+<launch>
+	<node pkg="usbl" name="usbl" type="usbl_driver" output="screen"/>
+	<rosparam file="$(find usbl)/yaml/usbl.yaml" param = "usbl" command="load"/>
+</launch>

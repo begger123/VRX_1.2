@@ -1,0 +1,30 @@
+#This will hold params for the pid controller
+#Sim Gains
+smsk:
+  m: 200
+  Iz: 250
+  Xu_dot_: 27
+  Yv_dot_: 37
+  Nr_dot_: 93.2345
+  Xu: 56.2
+  Yv: 300
+  Nr_: 400
+  lamda: 0.16
+  r_kx_: 12.5
+  r_ky_: 12.5
+  r_kpsi_: 12.5
+  e_kx_: 0.50
+  e_ky_: 0.50
+  e_kpsi_: 0.52359878 #3*3.14159265359/180.0
+
+ctrl:
+  alloc:
+    lx: 2.23
+    ly: 1.0
+    T_max: 420
+    T_min: -300
+    alpha_max: rad(0)
+    alpha_min: rad(-0)
+  ctrlr:
+    tau_max: [420.0, 300.0, 360.0]
+    tau_min: [-300.0, -300.0, -360.0]

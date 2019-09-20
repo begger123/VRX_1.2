@@ -1,0 +1,6 @@
+holdoff: "100"
+trigger: "500"
+threshold: "100"
+frequency1: "32000"
+frequency2: "35000"
+gain: "10"

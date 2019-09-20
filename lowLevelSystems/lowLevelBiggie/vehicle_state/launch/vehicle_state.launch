@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<!-- Load State Params -->
+	<rosparam command="load" file="$(find vehicle_state)/config/state.yaml" />
+
+	<!-- Run ROS IMU Driver - xsens_driver -->
+	<include file="$(find xsens_driver)/launch/xsens_driver.launch" />
+
+	<!-- Run Compass Driver -->
+	<node pkg="vehicle_compass" name="vehicle_compass" type="vehicle_compass" output="screen"/>
+	
+	<!-- Run State Accumulator -->
+	<node pkg="vehicle_state" name="vehicle_state" type="vehicle_state" output="screen"/>
+</launch>

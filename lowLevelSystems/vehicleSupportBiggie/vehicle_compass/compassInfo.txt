@@ -1,0 +1,3 @@
+This package is a class based approach to reading in data from a serial compass, namely the OS5000.
+
+This information will be published to the ROS network as 0 North, clockwise positive

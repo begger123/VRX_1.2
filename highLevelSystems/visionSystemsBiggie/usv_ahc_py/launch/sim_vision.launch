@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+	<!-- Run Gazebo Simulator -->
+	<include file="$(find robotx_gazebo)/launch/sandisland.launch"> 
+		<arg name="urdf" value="$(find wamv_gazebo)/urdf/wamv_gazebo_sensors.urdf"/>	
+	</include>
+
+	<!-- Run Gazebo State Simulator -->
+	<include file="$(find wamv_gazebo)/launch/localization_example.launch"/>
+
+	<!-- Run Rviz -->
+	<include file="$(find wamv_gazebo)/launch/rviz_example.launch"/>
+	
+	<node pkg="usv_ahc_py" type="ahc.py" name="ahc_node" output="screen"/>
+	<!--<node pkg="cluster_classifier" type="classifier.py" name="classifier_node"/>-->
+	<!--<node pkg="usv_ahc_py" type="persistance_table.py" name="persistance_table_node"/>-->
+
+</launch>

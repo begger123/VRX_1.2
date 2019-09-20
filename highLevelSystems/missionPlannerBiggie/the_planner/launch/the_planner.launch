@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!-- [navigation_channel, speed_gate_mission, follow_the_leader, acoustics_channel, buoy_field] -->
+
+<launch>
+	<rosparam command="load" file="$(find the_planner)/yaml/boundingBox.yaml"/>
+	<!-- <node pkg="the_planner" type="gen_traj_server" name="gen_traj_server" output="screen"></node> -->
+
+    <node pkg="the_planner" type="fake_persist_table" name="fake_persist_table" output="screen"/>
+
+	<node pkg="the_planner" type="planner" name="planner" output="screen">
+            <!-- <rosparam param="mission_string">[acoustics_channel, buoy_field, totems, navigation_channel]</rosparam> -->
+            <rosparam param="mission_string">[totems]</rosparam>
+            <!-- <rosparam param="mission_string">[acoustics_channel]</rosparam> -->
+   		<rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load"></rosparam>
+    	</node> 
+</launch>

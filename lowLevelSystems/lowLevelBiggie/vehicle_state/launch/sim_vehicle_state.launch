@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<launch>
+	<!-- Load State Params -->
+	<rosparam command="load" file="$(find vehicle_state)/config/state.yaml" />
+
+	<!-- Run State Accumulator -->
+	<node pkg="vehicle_state" name="vehicle_state_sim" type="vehicle_state_sim" output="screen"/>
+</launch>

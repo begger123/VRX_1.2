@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="usv16_blm" name="blm" type="blm_node" />
+</launch>

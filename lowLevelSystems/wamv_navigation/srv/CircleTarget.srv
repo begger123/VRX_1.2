@@ -1,0 +1,8 @@
+float32 radius
+bool clockwise 
+geometry_msgs/Point32 vehicle_pos
+geometry_msgs/Point32 target_pos
+int8 num_wp
+int8 return_wp
+---
+geometry_msgs/PoseArray circle_path

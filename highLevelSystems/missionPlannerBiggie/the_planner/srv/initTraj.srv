@@ -1,0 +1,7 @@
+geometry_msgs/Point pointA
+geometry_msgs/Point pointB
+geometry_msgs/Point pointC
+geometry_msgs/Point pointD
+std_msgs/Float32 RoD
+---
+geometry_msgs/Pose2D[] initial_trajectory

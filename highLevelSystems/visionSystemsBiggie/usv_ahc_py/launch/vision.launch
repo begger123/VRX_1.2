@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="usv_ahc_py" type="ahc.py" name="ahc_node" output="screen"/>
+  <!--<node pkg="cluster_classifier" type="classifier.py" name="classifier_node"/>-->
+  <!--<node pkg="usv_ahc_py" type="persistance_table.py" name="persistance_table_node"/>-->
+</launch>

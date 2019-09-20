@@ -1,0 +1,37 @@
+---------------------------------- WAM-V NAVIGATION ------------------------------------
+----------------------------------------------------------------------------------------
+
+NOTE: This is only to be executed in the VMRC simulation.  Needs to be modified for the
+actual implementation.
+
+*  Node:  odom_to_base.cpp : This node gets data from the "/ship/state"
+   topic in order to construct and publish both, a topic ("/odom") and a
+   transform ("odom"), with odometry related information, both of them defined
+   according the ENU convention.  
+
+*  Node:  path_to_goal.cpp : This node receives a single goal position
+   and produces a global trajectory using the global planner from the move_base
+   node.  The message in the subscribed topic need to me send once and latched,
+   as it is exemplified on file sendSingleGoal.cpp.
+
+*  Node:  multiple_goals.cpp : This node receives an array of goals
+   representing the ExploreMission, and computes the trajectories between
+   consecutive waypoints in a sequential manner.  The message in the subscribed
+   topic can be sent in the regular way (not once, not latched), as it is
+   exemplified on file sendArrayGoals.cpp.  The node gets the first message to
+   fill-up a goals_array and shutdown the subscriber callback function.  The
+   node also accepts any 'intrude_goal', at any time, which detours the
+   original goals_array (ExploreMission) and takes on the ExploreMission back
+   after the intrude_goal has been achieved.
+
+*  Node:  path_to_ned.cpp : This node listens for the global_planner
+   message in the "/move_base/NavfnROS/plan" topic, as well as for the
+   "odom_ned" transform.  Using these two, it transforms the global trajectory
+   from odom_enu to odom_ned reference frame.
+
+*  TODO:  This node listens to geometry_msgs/Twist message in the "/cmd_vel"
+   topic and uses the default kinematic motion model and time of projection in
+   order to recover the sequence of poses describing the local trajectory,
+   necessary as input to our low-level controller.
+   
+

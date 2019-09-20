@@ -1,0 +1,5 @@
+geometry_msgs/Pose goal
+geometry_msgs/Point32 vehicle_pos
+float64 dist_stop
+---
+float64 goal_heading_enu

@@ -1,0 +1,23 @@
+digraph G {
+"wamv/odom" -> "ned_origin"[label="Broadcaster: /tf_tree_sim\nAverage rate: 1826.795 Hz\nMost recent transform: 31.050 ( 0.001 sec old)\nBuffer length: 4.971 sec\n"];
+"wamv/odom" -> "enu_origin"[label="Broadcaster: /tf_tree_sim\nAverage rate: 1826.795 Hz\nMost recent transform: 31.050 ( 0.001 sec old)\nBuffer length: 4.971 sec\n"];
+"wamv/base_link" -> "wamv/left_engine_link"[label="Broadcaster: /wamv/rob_st_pub\nAverage rate: 50.161 Hz\nMost recent transform: 31.041 ( 0.010 sec old)\nBuffer length: 4.964 sec\n"];
+"wamv/left_engine_link" -> "wamv/left_propeller_link"[label="Broadcaster: /wamv/rob_st_pub\nAverage rate: 50.161 Hz\nMost recent transform: 31.041 ( 0.010 sec old)\nBuffer length: 4.964 sec\n"];
+"wamv/base_link" -> "wamv/right_engine_link"[label="Broadcaster: /wamv/rob_st_pub\nAverage rate: 50.161 Hz\nMost recent transform: 31.041 ( 0.010 sec old)\nBuffer length: 4.964 sec\n"];
+"wamv/right_engine_link" -> "wamv/right_propeller_link"[label="Broadcaster: /wamv/rob_st_pub\nAverage rate: 50.161 Hz\nMost recent transform: 31.041 ( 0.010 sec old)\nBuffer length: 4.964 sec\n"];
+"ned_origin" -> "base_link_ned"[label="Broadcaster: /vehicle_state_sim\nAverage rate: 100.202 Hz\nMost recent transform: 31.050 ( 0.001 sec old)\nBuffer length: 4.960 sec\n"];
+"base_link_ned" -> "lidar_nwu"[label="Broadcaster: /vehicle_state_sim\nAverage rate: 100.202 Hz\nMost recent transform: 31.040 ( 0.011 sec old)\nBuffer length: 4.950 sec\n"];
+"base_link_ned" -> "camera_optical"[label="Broadcaster: /vehicle_state_sim\nAverage rate: 100.202 Hz\nMost recent transform: 31.040 ( 0.011 sec old)\nBuffer length: 4.950 sec\n"];
+"wamv/base_link" -> "wamv/dummy_link"[label="Broadcaster: /wamv/rob_st_pub\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 31.051 sec old)\nBuffer length: 0.000 sec\n"];
+"wamv/base_link" -> "wamv/left_battery_link"[label="Broadcaster: /wamv/rob_st_pub\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 31.051 sec old)\nBuffer length: 0.000 sec\n"];
+"wamv/base_link" -> "wamv/right_battery_link"[label="Broadcaster: /wamv/rob_st_pub\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 31.051 sec old)\nBuffer length: 0.000 sec\n"];
+"wamv/odom" -> "utm"[label="Broadcaster: /wamv/robot_localization/navsat_transform_node\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 31.051 sec old)\nBuffer length: 0.000 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 31.051"[ shape=plaintext ] ;
+ }->"wamv/odom";
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 31.051"[ shape=plaintext ] ;
+ }->"wamv/base_link";
+}

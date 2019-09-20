@@ -1,0 +1,44 @@
+#This will hold params for the pid controller
+#Sim Gains
+pid:
+  Kp_h: 400
+  Ki_h: 0
+  Kd_h: 175
+  anti_windup_limit_h: 5
+  cutoff_frequency_h: 40
+  heading_scalar: 1
+  Kp_v: 400
+  Ki_v: 0
+  Kd_v: 150
+  anti_windup_limit_v: 5
+  cutoff_frequency_v: 40
+  velocity_scalar: 1
+  is_sim: true
+  R: 2.0
+
+ctrl:
+  alloc:
+    lx: 2.23
+    ly: 1.0
+    T_max: 420
+    T_min: -300
+    alpha_max: rad(60)
+    alpha_min: rad(-60)
+  ctrlr:
+    tau_max: [420.0, 300.0, 360.0]
+    tau_min: [-300.0, -300.0, -360.0]
+
+#pid:
+#  Kp_h: 500
+#  Ki_h: 0
+#  Kd_h: 200
+#  anti_windup_limit_h: 5
+#  cutoff_frequency_h: 40
+#  heading_scalar: 1
+#  Kp_v: 400
+#  Ki_v: 0
+#  Kd_v: 150
+#  anti_windup_limit_v: 5
+#  cutoff_frequency_v: 40
+#  velocity_scalar: 1
+#  is_sim: true

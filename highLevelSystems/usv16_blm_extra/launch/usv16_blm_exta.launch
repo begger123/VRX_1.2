@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="usv16_blm_extra" name="blm_extra" type="blm_extra_node" />
+	<include file="$(find usbl)/launch/usbl.launch" />
+</launch>

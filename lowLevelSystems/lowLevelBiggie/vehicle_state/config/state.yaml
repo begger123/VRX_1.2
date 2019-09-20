@@ -1,0 +1,12 @@
+#This will hold params for the pid controller
+state:
+  ref: 
+    latRef: 26.0552589903
+    lonRef: -80.1138966666
+  tf:
+    lidarXOffset: 0.75
+    lidarYOffset: 0.0
+    lidarZOffset: -1.5
+    cameraXOffset: 0.75
+    cameraYOffset: -0.108
+    cameraZOffset: -1.411

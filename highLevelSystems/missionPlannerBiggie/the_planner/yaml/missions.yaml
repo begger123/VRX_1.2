@@ -1,0 +1,55 @@
+tester:
+    name: "tester"
+    timeout: 0
+    north: 0
+    east: 0
+    heading: 0
+
+navigation_channel:
+    name: "navigation_channel"
+    timeout: 0
+    north: 10
+    east: 10
+    heading: 0
+
+acoustics_channel:
+    name: "acoustics_channel"
+    timeout: 0
+    north: 50
+    east: -20
+    heading: 0
+
+buoy_field:
+    name: "buoy_field"
+    timeout: 0
+    north: 119
+    east: 73
+    heading: 0
+
+totems:
+    name: "totems"
+    timeout: 0
+    north: 0
+    east: 0
+    heading: 0
+
+slalom_mission:
+    name: "slalom_mission"
+    timeout: 0
+    north: 0
+    east: 0
+    heading: 0
+
+speed_gate_mission:
+    name: "speed_gate_mission"
+    timeout: 0
+    north: -110.0
+    east: -10.0
+    heading: 0.09
+
+follow_the_leader:
+    name: "follow_the_leader"
+    timeout: 0
+    north: -88.6
+    east: -8.16
+    heading: 1.5

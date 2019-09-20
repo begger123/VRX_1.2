@@ -1,0 +1,293 @@
+#include <ros/ros.h>
+#include <boost/asio/serial_port.hpp>
+#include <boost/asio.hpp>
+#include <termios.h>
+#include <string>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+#include <iostream>
+#include <errno.h>
+#include <stdio.h>
+#include "usbl/blocking_reader.h"
+#include "usbl/Integer.h"
+#include <pthread.h>
+#include "usbl/usbl.h"
+#include <std_srvs/Empty.h>
+#include <sstream>
+
+#define SERIAL_BUFFER_SIZE 10000
+
+using namespace boost;
+using namespace std;
+
+void *usblFunc(void* arg);
+void *getLineFunc(void* arg);
+
+bool reply = false;
+
+bool binary_data_incomming = true;
+
+struct usblStruct{
+	int argc;
+	char **argv;
+	asio::serial_port *port;
+};
+
+class USBLService
+{
+public:
+	USBLService(asio::serial_port * port){this->port = port;}
+	bool setGainCallback(usbl::Integer::Request& request, usbl::Integer::Response& response)
+	{
+		stringstream ss;
+		ss << "set gain " << request.data << "\n";
+		port->write_some(asio::buffer(ss.str()));
+		return true;
+	}
+	bool lowerBoomCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+	{
+		port->write_some(asio::buffer("set boom down\n"));
+		return true;
+	}
+	bool raiseBoomCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+	{
+		port->write_some(asio::buffer("set boom up\n"));
+		return true;
+	}
+	bool stopBoomCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+	{
+		port->write_some(asio::buffer("set boom stop\n"));
+		return true;
+	}
+	bool arrayDumpCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+	{
+		port->write_some(asio::buffer("get array_dump\n"));
+		binary_data_incomming = true;
+		return true;
+	}
+
+private:
+	asio::serial_port *port;
+
+};
+/*
+bool raiseBoomFlag = 0;
+bool lowerBoomFlag = 0;
+bool stopBoomFlag = 0;
+
+bool lowerBoomCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+{REPORT
+	lowerBoomFlag = 1;
+	return true;
+}
+
+bool raiseBoomCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+{
+	raiseBoomFlag = 1;
+	return true;
+}
+bool stopBoomCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+{
+	stopBoomFlag = 1;
+	return true;
+}*/
+
+
+
+int main(int argc, char **argv)
+{
+	ros::init(argc, argv, "usbl_node");
+	ros::NodeHandle nh;
+	asio::io_service io;
+	asio::serial_port port(io);
+
+	pthread_t thread;
+	pthread_t readThread;
+
+	port.open("/dev/ttyTHS0");
+	port.set_option(asio::serial_port_base::baud_rate(115200));
+	usblStruct us;
+	us.argc = argc;
+	us.argv = argv;
+	us.port = &port;
+	string s;
+	nh.getParam("usbl/frequency1", s);
+	port.write_some(asio::buffer("set frequency1 " + s + "\n"));
+	cout << s << endl;
+	usleep(100000);
+	nh.getParam("usbl/frequency2", s);
+	port.write_some(asio::buffer("set frequency2 " + s + "\n"));
+	cout << s << endl;
+	usleep(100000);
+	nh.getParam("usbl/gain", s);
+	port.write_some(asio::buffer("set gain " + s + "\n"));
+	cout << s << endl;
+	usleep(100000);
+	nh.getParam("usbl/trigger", s);
+	port.write_some(asio::buffer("set trigger " + s + "\n"));
+	cout << s << endl;
+	usleep(100000);
+	nh.getParam("usbl/threshold", s);
+	port.write_some(asio::buffer("set threshold " + s + "\n"));
+	cout << s << endl;
+	usleep(100000);
+	nh.getParam("usbl/holdoff", s);
+	port.write_some(asio::buffer("set holdoff " + s + "\n"));
+	cout << s << endl;
+	usleep(100000);
+
+
+
+	USBLService usblService(&port);
+/*
+	ros::ServiceServer lowerBoomService = nh.advertiseService("usbl_lower_boom", lowerBoomCallback);
+	ros::ServiceServer raiseBoomService = nh.advertiseService("usbl_raise_boom", raiseBoomCallback);
+	ros::ServiceServer stopBoomService = nh.advertiseService("usbl_stop_boom", stopBoomCallback);*/
+
+	ros::ServiceServer lowerBoomService = nh.advertiseService("usbl_lower_boom", &USBLService::lowerBoomCallback, &usblService);
+	ros::ServiceServer raiseBoomService = nh.advertiseService("usbl_raise_boom", &USBLService::raiseBoomCallback, &usblService);
+	ros::ServiceServer stopBoomService = nh.advertiseService("usbl_stop_boom", &USBLService::stopBoomCallback, &usblService);
+
+	ros::ServiceServer setGainService = nh.advertiseService("usbl_set_gain", &USBLService::setGainCallback, &usblService);
+	ros::ServiceServer arrayDumpService = nh.advertiseService("usbl_array_dump", &USBLService::arrayDumpCallback, &usblService);
+
+
+	if(pthread_create(&thread, NULL, usblFunc, (void*) &us)){
+		cout << "Thread not started" << endl;
+		return 1;
+	}
+
+	if(pthread_create(&readThread, NULL, getLineFunc, (void*) &us)){
+		cout << "Thread not started" << endl;
+		return 1;
+	}
+	/*ros::Rate r(100);
+	while(ros::ok()){
+			ros::spinOnce();
+		if(raiseBoomFlag){
+			raiseBoomFlag = false;
+			port.write_some(asio::buffer("set boom up\n"));
+		}
+		if(lowerBoomFlag){
+			lowerBoomFlag = false;
+			port.write_some(asio::buffer("set boom down\n"));
+		}
+		if(stopBoomFlag){
+			stopBoomFlag = false;
+			port.write_some(asio::buffer("set boom stop\n"));
+		}
+	}*/
+	ros::spin();
+
+
+	port.close();
+	return 0;
+}
+
+
+void *usblFunc(void* arg){
+
+	asio::serial_port *port = ((usblStruct*) arg)->port;
+
+
+	ros::init(((usblStruct*) arg)->argc, ((usblStruct*) arg)->argv, "usbl_node");
+	ros::NodeHandle nh;
+
+	ros::Publisher usblPub = nh.advertise<usbl::usbl>("usbl_data",1);
+
+	usbl::usbl u;
+	while(ros::ok()){
+
+		char ret[SERIAL_BUFFER_SIZE] = {0};
+		port->read_some(asio::buffer(ret, SERIAL_BUFFER_SIZE));
+		reply = true;
+
+		binary_data_incomming = true;
+		if(binary_data_incomming)
+		{
+			int count = 1;
+			cout << "Start of raw data transmission:" << endl;
+			for(int i = 0; i < SERIAL_BUFFER_SIZE; i++)
+			{
+				cout << "COUNT: " << count << ", ";
+				//cout << ret[i];
+				//perform masking to ensure zero's when necessary
+				cout << "\nhello world\n";
+				cout << "PART1 " << (((int)ret[i]) | (((int)ret[i+1])<<8)) << ", ";
+				for(int j = 3000; j>0; j--){}
+				cout << "PART2 " << ((ret[i+1]) | ((ret[i])<<8)) << ", ";
+				for(int j = 3000; j>0; j--){}
+				// commented out, identical output to part 2
+				//cout << "PART3 " << (((int)ret[i+1]) | (((int)ret[i])<<8)) << ", ";
+				//for(int j = 3000; j>0; j--){}
+				binary_data_incomming = false;
+				count++;
+			}
+			cout << "\nEnd of raw data transmission." << endl;
+		}
+		if(strlen(ret) > 0 && strchr(ret, ',') && strchr(ret, ':')){
+			//cout << "valid" << endl;
+			cout << "" << endl;
+
+			stringstream ss( ret );
+			vector<string> result;
+			u.header.seq++;
+			ros::Time time = ros::Time::now();
+			u.header.stamp.sec = time.sec;
+			u.header.stamp.nsec = time.nsec;
+			while( ss.good() )
+			{
+				string substr;
+				getline( ss, substr, ',' );
+				result.push_back( substr );
+				string value, key;
+
+				int i;
+				if((i = substr.find_first_of(':')) != string::npos){
+					key = substr.substr(0,i);
+					value = substr.substr(i+1);
+					cout << substr << endl;
+
+					if(key == "freq1"){
+						u.frequency1 = atoi(value.c_str());
+					} else if(key == "freq2"){
+						u.frequency2 = atoi(value.c_str());
+					} else if(key == "bearing1"){
+						u.bearing1 = atof(value.c_str());
+					} else if(key == "bearing2"){
+						u.bearing2 = atof(value.c_str());
+					} else if(key == "amp1"){
+						u.amplitude1 = atof(value.c_str());
+					} else if(key == "amp2"){
+						u.amplitude2 = atof(value.c_str());
+					}
+				}
+
+
+			}
+
+			usblPub.publish(u);
+			//cout << ret <<endl;
+
+		}
+		usleep(100000);
+	}
+
+}
+
+void *getLineFunc(void* arg)
+{
+	asio::serial_port *port = ((usblStruct*) arg)->port;
+
+	//if(!port) return NULL;
+
+	while(1){
+
+		string input;
+		getline(cin, input);
+		input += "\n";
+		port->write_some(asio::buffer(input));
+	}
+
+}

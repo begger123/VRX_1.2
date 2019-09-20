@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<!-- Publish the static TF Tree -->
+	<node pkg="tf_tree" name="tf_tree" type="tf_tree" output="screen"/>
+
+	<!-- Load ROS params for the entire control system -->
+	<!-- Among other things, this should specifiy which controller to use -->
+	<rosparam command="load" file="$(find vehicle_control)/config/control.yaml" />
+
+	<!-- Based on the selected controller, load params for the requested control type -->
+	<!-- Load ROS params PID control -->
+	<rosparam command="load" file="$(find vehicle_control)/config/pid.yaml" />
+
+	<!-- Run control system -->
+	<node pkg="vehicle_control" name="control" type="vehicle_control" output="screen"/>
+
+	<!-- Run allocation -->
+	<node pkg="vehicle_allocation" name="allocation" type="vehicle_allocation" output="screen"/>
+
+	<!-- Start High To Low Parser -->
+	<node pkg="high_to_low" type="high_to_low" name="high_to_low" output="screen"></node>
+
+	<!-- Start Real Position Drivers and State Accumulator -->
+	<include file="$(find vehicle_state)/launch/vehicle_state.launch" />
+
+        <!-- Run PC Collapser -->
+        <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan_node">
+      <remap from="cloud_in" to="/scan/pcl"/>
+      <remap from="scan" to="/laser"/>
+        <rosparam>
+          target_frame: lidar_nwu
+          transform_tolerance: 0.01
+          min_height: 0.01
+          max_height: 3.0
+          angle_min: -3.1415
+          angle_max: 3.1415
+          <!-- angle_min: -1.5708 -->
+          <!-- angle_max: 1.5708 -->
+          <!-- angle_min: -1.2708 -->
+          <!-- angle_max: 1.2708 -->
+          angle_increment: 0.01
+          scan_time: 0.1
+          range_min: 0.9
+          range_max: 130
+          use_inf: true
+          concurrency_level: 0
+        </rosparam>
+        </node>
+
+        <!-- Run Armando's Suite -->
+        <include file="$(find wamv_navigation)/launch/vehicle_sim.launch" />
+
+	<!-- Run's the thrust package -->	
+	<node pkg="vehicle_thrust" name="thrust" type="vehicle_thrust" output="screen"/>
+
+	<!-- Run's the bottom level manager -->
+	<include file="$(find usv16_blm)/launch/usv16_blm.launch" />
+	
+</launch>

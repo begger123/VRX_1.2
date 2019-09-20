@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<launch>
+	<!-- Run Path Converter -->
+	<node pkg="wamv_navigation" name="path_to_ned" type="path_to_ned" output="screen"/>
+
+	<!-- Run Trajectory Server -->
+	<node pkg="wamv_navigation" name="multiple_goals" type="multiple_goals" output="screen"/>
+
+    <!-- Path-to-goal server -->
+    <node pkg="wamv_navigation" name="path_to_goal" type="path_to_goal" output="screen"/>
+
+    <!-- Circular path behavior server -->
+    <node pkg="wamv_navigation" name="circular_path" type="circular_path" output="screen"/>
+	
+	<!-- ROS -->
+    <include file="$(find wamv_navigation)/launch/move_base_mapless_demo.launch" />
+</launch>

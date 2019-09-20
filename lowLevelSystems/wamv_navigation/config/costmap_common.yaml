@@ -1,0 +1,46 @@
+footprint: [[-2.5, -2.5], [-2.5, 2.5], [2.5, 2.5], [2.5, -2.5]]
+footprint_padding: 0.2
+
+robot_base_frame: wamv/base_link
+update_frequency: 4.0
+publish_frequency: 4.0
+transform_tolerance: 0.5
+
+resolution: 0.30         # 0.20 looked nice
+
+obstacle_range: 50.0
+raytrace_range: 50.0
+
+# # layer definitions
+# static:
+#     map_topic: /odom
+#     subscribe_to_updates: true
+#
+# obstacles_pc:
+#     observation_sources: pointcloud
+#     pointcloud: {sensor_frame: lidar_wamv_link, data_type: PointCloud2, clearing: true, marking: true, topic: /lidar_wamv/points}
+#
+# inflation:
+#     inflation_radius: 1.0
+
+#layer definitions
+static:
+    map_topic: /odom
+    subscribe_to_updates: true
+
+obstacles_laser:
+    observation_sources: laser
+    # laser: {sensor_frame: lidar_wamv_link, data_type: LaserScan, clearing: true, marking: true, topic: scan_converter, inf_is_valid: true, observation_persistence: 2}
+
+    laser: {sensor_frame: wamv/lidar_wamv_link, data_type: LaserScan, clearing: true, marking: true, topic: scan_converter, inf_is_valid: true}
+obstacles_pc:
+    observation_sources: pointcloud
+    # it is believed if you are not running with GPU acceleration, you do not need to clear the water
+    # pointcloud: {sensor_frame: lidar_wamv_link, data_type: PointCloud2, clearing: true, marking: true, topic: /lidar_wamv/points_no_water observation_persistence: 2}
+    # it is believed if you are running with GPU acceleration you must run without water
+    # pointcloud: {sensor_frame: lidar_wamv_link, data_type: PointCloud2, clearing: true, marking: true, topic: /lidar_wamv/points_no_water, observation_persistence: 0}
+    # pointcloud: {sensor_frame: lidar_wamv_link, data_type: PointCloud2, clearing: false, marking: true, topic: /lidar_wamv/points_no_water}
+    pointcloud: {sensor_frame: wamv/lidar_wamv_link, data_type: PointCloud2, clearing: true, marking: true, topic: /wamv/sensors/lidars/lidar_wamv/points}
+
+inflation:
+    inflation_radius: 2.0

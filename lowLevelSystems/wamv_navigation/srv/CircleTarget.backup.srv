@@ -1,0 +1,7 @@
+float32 radius
+bool clockwise 
+geometry_msgs/Point32 vehicle_pos
+geometry_msgs/Point32 target_pos
+---
+#custom_messages_biggie/waypoint_array circle_path
+geometry_msgs/PoseArray circle_path

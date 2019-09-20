@@ -1,0 +1,17 @@
+#These points serve as the bouding rectangle for the intial trajectory generation
+#They should be in NED s.t. X is a noth coordinate and Y is an east coordinate
+high_level:
+  pointA:
+    x: 10.0
+    y: 10.0
+  pointB:
+    x: 10.0
+    y: 100.0
+  pointC:
+    x: 200.0
+    y: 100.0
+  pointD:
+    x: 200.0
+    y: 10.0
+  RoD: 20.0
+  wpSpace: 10.0

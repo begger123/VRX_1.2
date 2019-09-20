@@ -1,0 +1,16 @@
+global_frame: wamv/odom
+rolling_window: true
+
+# obstacles_laser:
+#     observation_sources: laser
+#     laser: {sensor_frame: lidar_wamv_link, data_type: LaserScan, clearing: true, marking: false, topic: scan, inf_is_valid: true}
+
+# obstacles_pc_l:
+#     observation_sources: pointcloud
+#     pointcloud: {sensor_frame: lidar_wamv_link, data_type: PointCloud2, clearing: true, marking: true, topic: /lidar_wamv/points_no_water}
+
+plugins:
+  - {name: obstacles_laser,           type: "costmap_2d::ObstacleLayer"}
+  # - {name: obstacles_pc,              type: "costmap_2d::VoxelLayer"}
+  - {name: obstacles_pc,              type: "costmap_2d::ObstacleLayer"}
+  - {name: inflation,                 type: "costmap_2d::InflationLayer"}

@@ -1,0 +1,67 @@
+listen_to_gui:
+    name: "listen_to_gui"
+    timeout: 0
+    lat: 0
+    lon: 0
+    heading: 0
+
+tester:
+    name: "tester"
+    timeout: 0
+    lat: 0
+    lon: 0
+    heading: 0
+
+slalom_mission:
+    name: "slalom_mission"
+    timeout: 0
+    lat: 0
+    lon: 0
+    heading: 0
+
+speed_gate_mission:
+    name: "speed_gate_mission"
+    timeout: 0
+    lat: -110.0
+    lon: -10.0
+    heading: 0.09
+
+navigation_channel:
+    name: "navigation_channel"
+    timeout: 0
+    lat: -118.97
+    lon: -13.66
+    heading: 0.9
+
+acoustics_docking:
+    name: "acoustics_docking"
+    timeout: 0
+<<<<<<< HEAD
+    lat: -95.0
+    lon: -5.4
+    heading: 1.0
+=======
+    lat: -97.8
+    lon: -3
+    heading: 0.09
+>>>>>>> 24e6643f9c3351d0e8513dfcbf2d096351452b0d
+
+follow_the_leader:
+    name: "follow_the_leader"
+    timeout: 0
+    lat: -94.5
+    lon: -9.3
+    heading: 1.5
+
+buoy_field:
+    name: "buoy_field"
+    timeout: 0
+<<<<<<< HEAD
+    lat: -88.2
+    lon: 2.01
+    heading: 0.7
+=======
+    lat: -85.5
+    lon: 5.5
+    heading: 0.09
+>>>>>>> 24e6643f9c3351d0e8513dfcbf2d096351452b0d

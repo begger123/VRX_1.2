@@ -23,7 +23,7 @@ sm_controller::sl_mode_st_keep::sl_mode_st_keep(ros::NodeHandle &nh) : sm_sk_nh_
 	ROS_DEBUG("Entering initializer, next stop get_params");
 	target_sub_ = sm_sk_nh_->subscribe("control_target", 10, &sm_controller::sl_mode_st_keep::target_callback, this);
 	state_sub_ = sm_sk_nh_->subscribe("/p3d_wamv_ned", 10, &sm_controller::sl_mode_st_keep::state_callback, this);
-	control_effort_pub_ = sm_sk_nh_->advertise<custom_messages_biggie::control_effort>("/control_effort", 10); //published TAU = {X,Y,Eta}
+	control_effort_pub_ = sm_sk_nh_->advertise<custom_messages_biggie::control_effort>("/control_effort_sk", 10); //published TAU = {X,Y,Eta}
 
 	this->get_params();
 

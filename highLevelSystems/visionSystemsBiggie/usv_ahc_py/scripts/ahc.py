@@ -199,7 +199,7 @@ def cloudCallback(point_cloud_2):
     #this publisher was used to publish to rviz to visually validate that the data is doing what we want 
     #pubTest.publish(testingPC)
  
-    thresh=1.25
+    thresh=5.0
     if(not np.size(np_point_cloud)==0):
         Y=pdist(np_point_cloud, metric='euclidean')
         Z=linkage(Y, method='average')
@@ -222,7 +222,7 @@ def cloudCallback(point_cloud_2):
 
 def cloudSub():
     rospy.init_node('cloud_sub', anonymous=False)
-    rospy.Subscriber('/lidar_wamv/points', PointCloud2, cloudCallback)
+    rospy.Subscriber('/wamv/sensors/lidars/lidar_wamv/points', PointCloud2, cloudCallback)
     #rospy.Subscriber('/full_point_cloud', PointCloud2, cloudCallback)
     rospy.Subscriber('/p3d_wamv_ned', Odometry, state_callback)
     rospy.on_shutdown(shutdownHook)

@@ -23,8 +23,8 @@ ctrl:
     ly: 1.0
     T_max: 420
     T_min: -300
-    alpha_max: rad(0)
-    alpha_min: rad(-0)
+    alpha_max: rad(45)
+    alpha_min: rad(-45)
   ctrlr:
     tau_max: [420.0, 300.0, 360.0]
     tau_min: [-300.0, -300.0, -360.0]

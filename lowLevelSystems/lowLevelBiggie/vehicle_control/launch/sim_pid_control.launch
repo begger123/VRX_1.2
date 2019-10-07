@@ -23,10 +23,12 @@
     <rosparam command="load" file="$(find vehicle_control)/config/pid.yaml" />
 
     <!-- Run control system -->
-    <node pkg="vehicle_control" name="control" type="vehicle_control" output="screen"/>
+    <!-- <node pkg="vehicle_control" name="control" type="vehicle_control" output="screen"/> -->
+    <node pkg="vehicle_control" name="control" type="vehicle_control_dyn" output="screen"/>
 
     <!-- Run allocation -->
-    <node pkg="vehicle_allocation" name="allocation" type="vehicle_allocation" output="screen"/>
+    <!-- <node pkg="vehicle_allocation" name="allocation" type="vehicle_allocation" output="screen"/> -->
+    <node pkg="qp_allocation" name="qp_allocation" type="qp_allocation.py" output="screen"/>
 
     <!-- Start High To Low Parser -->
     <node pkg="high_to_low" type="high_to_low" name="high_to_low" output="screen"></node>

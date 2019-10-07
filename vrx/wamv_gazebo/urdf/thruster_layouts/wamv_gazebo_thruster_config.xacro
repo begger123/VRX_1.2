@@ -11,7 +11,7 @@
       <enableAngle>true</enableAngle>
 
       <!-- Optional Parameters -->
-      <mappingType>0</mappingType>
+      <mappingType>1</mappingType>
       <maxCmd>1.0</maxCmd>
       <maxForceFwd>250.0</maxForceFwd>
       <maxForceRev>-100.0</maxForceRev>

@@ -26,7 +26,7 @@ void vehicle_state_sim::set_transforms()
 	base_link_ned_tf.setOrigin(tf::Vector3(the_odometry.pose.pose.position.x, the_odometry.pose.pose.position.y, the_odometry.pose.pose.position.z));
 	q_base_link_ned.setRPY(0, 0, yawAngle);
 
-    ROS_INFO("yawAngle = %f", yawAngle);
+    // ROS_INFO("yawAngle = %f", yawAngle);
 
 	q_base_link_ned.normalize();
 	base_link_ned_tf.setRotation(q_base_link_ned);
@@ -109,11 +109,11 @@ void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
 	//im not sure why, but the above rotation "enu_to_ned_tf.setRPY(M_PI,0,-M_PI/2);" is not properly rotating about the roll, therefore we apply a negative sign below
 	yawAngle=-tf::getYaw(tf::Quaternion(the_odometry.pose.pose.orientation.x,the_odometry.pose.pose.orientation.y,the_odometry.pose.pose.orientation.z,the_odometry.pose.pose.orientation.w));
 
-    ROS_INFO("yawAngle_vstate = %f", yawAngle);
-    ROS_INFO("orientation_x = %f", the_odometry.pose.pose.orientation.x);
-    ROS_INFO("orientation_y = %f", the_odometry.pose.pose.orientation.y);
-    ROS_INFO("orientation_z = %f", the_odometry.pose.pose.orientation.z);
-    ROS_INFO("orientation_w = %f", the_odometry.pose.pose.orientation.w);
+    // ROS_INFO("yawAngle_vstate = %f", yawAngle);
+    // ROS_INFO("orientation_x = %f", the_odometry.pose.pose.orientation.x);
+    // ROS_INFO("orientation_y = %f", the_odometry.pose.pose.orientation.y);
+    // ROS_INFO("orientation_z = %f", the_odometry.pose.pose.orientation.z);
+    // ROS_INFO("orientation_w = %f", the_odometry.pose.pose.orientation.w);
 }
 
 int vehicle_state_sim::loop()

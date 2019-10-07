@@ -14,6 +14,8 @@ endif()
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  dynamic_reconfigure
+  rospy
   geometry_msgs
   message_generation
   message_runtime
@@ -83,10 +85,9 @@ find_package(Eigen REQUIRED)
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
+generate_dynamic_reconfigure_options(
+  cfg/pidGains.cfg
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -111,7 +112,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-include
+  include
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
 )
@@ -128,6 +129,11 @@ include
 add_executable(vehicle_control src/ros_control_node.cpp src/pid_controller.cpp)
 add_dependencies(vehicle_control vehicle_control_generate_message_cpp ${${custom_messages_biggie}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(vehicle_control ${catkin_LIBRARIES})
+
+# With dynamic_reconfigure for the PID gains
+add_executable(vehicle_control_dyn src/ros_control_node_dyn.cpp src/pid_controller_dyn.cpp)
+add_dependencies(vehicle_control_dyn vehicle_control_generate_message_cpp ${${custom_messages_biggie}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
+target_link_libraries(vehicle_control_dyn ${catkin_LIBRARIES})
 
 ######################
 ## SM_SK Executable ##

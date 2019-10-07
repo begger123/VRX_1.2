@@ -45,6 +45,7 @@ namespace alloc {
 		Eigen::Matrix2f T_inv_;
 
 		std_msgs::Bool isSim;
+        ros::Time lastTime;
 
 		void get_ros_params_(void);
 		void publish_actuator_inputs_(const Eigen::Vector4f& u);

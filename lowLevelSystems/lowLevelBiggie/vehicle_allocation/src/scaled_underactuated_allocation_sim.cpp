@@ -24,6 +24,9 @@ namespace alloc {
 
 		// set up inverse of transformation matirix
 		T_inv_ = ((Matrix2f() << 1.0, 1.0, -ly_,ly_).finished()).inverse();
+
+        // get time
+        lastTime = ros::Time::now();
 	}
 
 	scaledUnderactuatedAllocationSim::~scaledUnderactuatedAllocationSim()
@@ -228,6 +231,16 @@ namespace alloc {
 		std_msgs::Float32 rightCmd;
 		rightCmd.data=u(2)/210;
 		sim_stbd_pub.publish(rightCmd);
+
+        // get current time
+        ros::Time curTime = ros::Time::now();
+        ros::Duration diffTime = curTime - lastTime;
+
+        ROS_INFO("[left_thrust, right_thrus] = [%g, %g]", leftCmd.data, rightCmd.data);
+        ROS_INFO("diffTime = %g", diffTime);
+        cout << "diffeTime = " << diffTime << endl;
+
+        lastTime = curTime;
 	}
 
 	void scaledUnderactuatedAllocationSim::tau_callback_(const custom_messages_biggie::control_effort::ConstPtr& msg)

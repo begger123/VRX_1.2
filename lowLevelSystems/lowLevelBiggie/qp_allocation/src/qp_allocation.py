@@ -15,6 +15,8 @@ import numpy as np
 import rospy
 from custom_messages_biggie.msg import control_effort
 from std_msgs.msg import Float32
+from qpsolvers import solve_qp
+from rosgraph_msgs.msg import Clock
 
 class QP:
 
@@ -24,29 +26,29 @@ class QP:
         self.control_effort_sub = rospy.Subscriber("/control_effort", control_effort, self.tau_callback)
 
         # Publishers
-        self.left_thrust_pub  = rospy.Publisher("/wamv/thruster/left_thrust_cmd", Float32, queue_size=10)
-        self.left_angle_pub   = rospy.Publisher("/wamv/thruster/left_thrust_angle", Float32, queue_size=10)
-        self.right_thrust_pub = rospy.Publisher("/wamv/thruster/right_thrust_cmd", Float32, queue_size=10)
-        self.right_angle_pub  = rospy.Publisher("/wamv/thruster/right_thrust_angle", Float32, queue_size=10)
+        self.left_thrust_pub  = rospy.Publisher("/wamv/thrusters/left_thrust_cmd", Float32, queue_size=10)
+        self.left_angle_pub   = rospy.Publisher("/wamv/thrusters/left_thrust_angle", Float32, queue_size=10)
+        self.right_thrust_pub = rospy.Publisher("/wamv/thrusters/right_thrust_cmd", Float32, queue_size=10)
+        self.right_angle_pub  = rospy.Publisher("/wamv/thrusters/right_thrust_angle", Float32, queue_size=10)
 
         # Variables
-        self.command = 0
+        self.lastTime = rospy.get_time()
+        self.command = 0.0
         self.left_thrust = left_thrust
         self.left_angle = left_angle
         self.left_command = 0
         self.right_command = 0
         self.max_thrust = 250
         self.min_thrust = -100
-        self.max_angle  =  np.pi/2
-        self.min_angle  = -np.pi/2
         self.right_thrust = right_thrust
         self.right_angle = right_angle
         self.n = 3                              # tau dimensionality (/control_effort)
         self.m = 2                              # u dimensionality (u is a vector with left and right thust values)
         self.x = np.zeros((self.n+2*self.m, 1)) # This is the vector to be optimized [deltaU_left, deltaU_right, Sx, Sy, Sz, d_left_angle, d_right_angle]
-        self.w = 0.0095                         # quadratic term coeff. of the quadratic fit of the power function
+        fact =  10
+        self.w = 0.018*fact                     # 0.018 - quadratic term coeff. of the quadratic fit of the power function
         self.q = 10                             # weights for Q>0 which penalize the error s between commanded and achieved forces
-        self.omega = 10                         # weights for OMEGA>0 for tunning angle rate (delta_alpha)
+        self.omega = 180                        # 180 - weights for OMEGA>0 for tunning angle rate (delta_alpha)
         self.lx = 1.3                           # bf x-magnitude of the thrusters
         self.ly = 0.915                         # bf y-magnitude of the thrusters
         self.rho = 100                          # weighting parameter of the singularity avoidance term
@@ -57,9 +59,11 @@ class QP:
         # Boundary constraints
         self.u_min = np.array([self.min_thrust, self.min_thrust])
         self.u_max = np.array([self.max_thrust, self.max_thrust])
+        self.max_angle  = np.pi/2.0;
+        self.min_angle  = -np.pi/2.0;
         self.alpha_min = np.array([self.min_angle, self.min_angle])
         self.alpha_max = np.array([self.max_angle, self.max_angle])
-        self.d_alpha = 0.0079;
+        self.d_alpha = 0.3;      # 0.3927 at 4 Hz according to elapsed time
         self.delta_alpha_min = np.array([-self.d_alpha, -self.d_alpha])
         self.delta_alpha_max = np.array([self.d_alpha, self.d_alpha])
         self.s_min = np.array([-np.inf, -np.inf, -np.inf])
@@ -75,10 +79,10 @@ class QP:
                               [0, 0, 0, 0, 0, 0, self.omega] ])
 
 
-    def tau_callback(data):
+    def tau_callback(self, msg):
 
         # Set some variables
-        tau = np.array([data.tau[0].data, data.tau[1].data, data.tau[2].data])
+        tau = np.array([msg.tau[0].data, msg.tau[1].data, msg.tau[2].data])
         lx = self.lx
         ly = self.ly
         left_thrust = self.left_thrust
@@ -89,7 +93,7 @@ class QP:
         alpha_o = np.array([left_angle, right_angle])
 
         # Linear terms matrix
-        q = np.array([2*self.w*left_thrust, 2*self.w*right_thrust, 0, 0, 0, gradC1, gradC2])
+        f = np.array([2*self.w*left_thrust, 2*self.w*right_thrust, 0, 0, 0, self.gradC1, self.gradC2])
 
         # Linear constraint
         B_o = np.array([ [np.cos(left_angle), np.cos(right_angle)],
@@ -101,7 +105,7 @@ class QP:
                              [ left_thrust*(-lx*np.cos(left_angle) - ly*np.sin(left_angle)),
                                right_thrust*(-lx*np.cos(right_angle) + ly*np.sin(right_angle))] ])
 
-        A = np.concatenate((B_o, np.identity(n), dBuda_o), axis=1)
+        A = np.concatenate((B_o, np.identity(self.n), dBuda_o), axis=1)
         b = tau - np.dot(B_o, u_o)
 
         # Singularity avoidance (SA) term (not yet implemented)
@@ -111,7 +115,7 @@ class QP:
         y1 = np.zeros((self.m, 1))
         y2 = np.zeros((self.m, 1))
 
-        for i in range(m):
+        for i in range(self.m):
             if (alpha_o[i] > 0):
                 if ((self.alpha_max[i] - alpha_o[i]) < self.delta_alpha_max[i]):
                     y1[i] = 1
@@ -125,8 +129,8 @@ class QP:
                 y2[i] = 0
 
         LB_delta_alpha_min = np.zeros((self.m, 1))
-        LB_delta_alpha_max = np.zeros((self.m, 1))
-        for i in range(m):
+        UB_delta_alpha_max = np.zeros((self.m, 1))
+        for i in range(self.m):
             LB_delta_alpha_min[i] = self.delta_alpha_min[i] - y2[i]*(self.delta_alpha_min[i] - (self.alpha_min[i] - alpha_o[i]))
             UB_delta_alpha_max[i] = self.delta_alpha_max[i] - y1[i]*(self.delta_alpha_max[i] - (self.alpha_max[i] - alpha_o[i]))
 
@@ -151,25 +155,31 @@ class QP:
         G = np.concatenate((np.identity(7), -np.identity(7)), axis=0)
         h = np.concatenate((UB, -LB), axis=0)
 
-        x = solve_qp(P, q, G, h, A, b, solver="quadprog")
+        x = solve_qp(self.P, f, G, h, A, b, solver="quadprog")
         print("QP solution: x = {}".format(x))
 
         # Store as previous values
-        self.left_thrust  = x[0]
-        self.right_thrust = x[1]
-        self.left_angle   = x[m+n]
-        self.right_angle  = x[m+n+1]
+        self.left_thrust  = x[0] + self.left_thrust
+        self.right_thrust = x[1] + self.right_thrust
+        self.left_angle   = x[5] + self.left_angle
+        self.right_angle  = x[6] + self.right_angle
 
-        # Create messages and send them
-        left_thrust_msg  = Float32()
-        left_angle_msg   = Float32()
-        right_thrust_msg = Float32()
-        right_angle_msg  = Float32()
+        curtime = rospy.get_time()
+        difftime = curtime - self.lastTime
+
+        #  curtime = rospy.Time.now()
+        #  difftime = curtime.nsecs - self.lastTime.nsecs
+
+        rospy.loginfo("tau = [%g, %g, %g]", tau[0], tau[1], tau[2])
+        rospy.loginfo("[left_thrust, left_angle] = [%g, %g]", self.left_thrust, self.left_angle);
+        rospy.loginfo("[right_thrust, right_angle] = [%g, %g]", self.right_thrust, self.right_angle);
+        rospy.loginfo("difftime = %g", difftime)
+        #  now = rospy.Time.now()
+        #  rospy.loginfo("time_now = %i %i", now.secs, now.nsecs)
 
         if (self.left_thrust > 0):
             self.left_command = self.left_thrust/self.max_thrust
         elif (self.left_thrust < 0):
-            left_den = self.min_thrust
             self.left_command = self.left_thrust/self.min_thrust
         else:
             self.left_command = 0
@@ -177,10 +187,15 @@ class QP:
         if (self.right_thrust > 0):
             self.right_command = self.right_thrust/self.max_thrust
         elif (self.right_thrust < 0):
-            right_den = self.min_thrust
             self.right_command = self.right_thrust/self.min_thrust
         else:
             self.right_command = 0
+
+        # Create messages and send them
+        left_thrust_msg  = Float32()
+        left_angle_msg   = Float32()
+        right_thrust_msg = Float32()
+        right_angle_msg  = Float32()
 
         left_thrust_msg.data  = self.left_command
         right_thrust_msg.data = self.right_command
@@ -192,16 +207,10 @@ class QP:
         self.left_angle_pub.publish(left_angle_msg)
         self.right_angle_pub.publish(right_angle_msg)
 
+        self.lastTime = curtime
+
 
 if __name__ == '__main__':
     rospy.init_node('qp_allocation', anonymous=True)
     qp_alloc = QP(0, 0, 0, 0, 0, 0)
     rospy.spin()
-
-
-
-
-
-
-
-

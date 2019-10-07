@@ -1,5 +1,5 @@
 //This will be a cascaded heading and velocity controller
-#include <vehicle_control/pid_controller.h>
+#include <vehicle_control/pid_controller_dyn.h>
 
 pid_controller::pid::pid(ros::NodeHandle &nh) : pid_nh(&nh), loop_rate(4) //sets default loop rate
 {
@@ -120,7 +120,7 @@ void pid_controller::pid::set_error_los()
 	heading_error.at(0)=headingError;
 	heading_error.at(0)=this->wrap_heading(heading_error.at(0));
 
-	//ROS_INFO("heading error after wrapping is BEFORE %f", heading_error.at(0));
+	// ROS_INFO("heading error after wrapping is BEFORE %f", heading_error.at(0));
 
 	//set velocity error
 	velocity_error.at(2) = velocity_error.at(1);
@@ -134,7 +134,7 @@ void pid_controller::pid::set_error_los()
 	velocity_error.at(0) = velocity_command-vel;// Current error goes to slot 0
 	//ROS_DEBUG("velocity error is %f", velocity_error.at(0));
 	//ROS_DEBUG("control_command is %f", velocity_command);
-	//ROS_DEBUG("vel is %f", vel);
+    ROS_INFO("vel is %f", vel);
 }
 void pid_controller::pid::set_error_ebs()
 {
@@ -231,7 +231,7 @@ void pid_controller::pid::set_error_ebs()
     // ROS_INFO("y_los %f", y_los);
     // ROS_INFO("delta_x %f", delta_x);
     // ROS_INFO("delta_y %f", delta_y);
-
+    //
 	// ROS_INFO("thetaD is %f", thetaD);
 	// ROS_INFO("yaw_angle is %f", yaw_angle);
 	// ROS_DEBUG("heading error after wrapping is BEFORE %f", heading_error.at(0));
@@ -448,9 +448,9 @@ void pid_controller::pid::accumulate_control_effort()
 	derivative_velocity = Kd_v * filtered_velocity_error_deriv.at(0);
     // ROS_INFO("filtered_velocity_error_deriv_0 = %f", filtered_velocity_error_deriv.at(0));
 	control_effort_velocity = proportional_velocity + integral_velocity + derivative_velocity;
-      // ROS_DEBUG("Proportional velocity effort %f", proportional_velocity);
-      // ROS_DEBUG("Integral velocity effort %f", integral_velocity);
-      // ROS_DEBUG("Derivative velocity effort %f", derivative_velocity);
+  	ROS_DEBUG("Proportional velocity effort %f", proportional_velocity);
+  	ROS_DEBUG("Integral velocity effort %f", integral_velocity);
+  	ROS_DEBUG("Derivative velocity effort %f", derivative_velocity);
 }
 void pid_controller::pid::pub()
 {
@@ -478,16 +478,16 @@ void pid_controller::pid::get_params()
 {
 	//ROS_DEBUG("Entering get_params, next stop check_pid_gains");
 	//This style of obtaining params is used because it resolves the param relative to the namespace of the node
-  	ros::param::get("pid/Kp_h", Kp_h);
-  	ros::param::get("pid/Ki_h", Ki_h);
-  	ros::param::get("pid/Kd_h", Kd_h);
+      // ros::param::get("pid/Kp_h", Kp_h);
+      // ros::param::get("pid/Ki_h", Ki_h);
+      // ros::param::get("pid/Kd_h", Kd_h);
   	ros::param::get("pid/anti_windup_limit_h", anti_windup_limit_h);
   	ros::param::get("pid/diff_filter_coefficient_h", cutoff_frequency_h);
   	ros::param::get("pid/heading_scalar", heading_scalar);
 
-  	ros::param::get("pid/Kp_v", Kp_v);
-  	ros::param::get("pid/Ki_v", Ki_v);
-  	ros::param::get("pid/Kd_v", Kd_v);
+      // ros::param::get("pid/Kp_v", Kp_v);
+      // ros::param::get("pid/Ki_v", Ki_v);
+      // ros::param::get("pid/Kd_v", Kd_v);
   	ros::param::get("pid/anti_windup_limit_v", anti_windup_limit_v);
   	ros::param::get("pid/diff_filter_coefficient_v", cutoff_frequency_v);
   	ros::param::get("pid/velocity_scalar", velocity_scalar);
@@ -500,6 +500,20 @@ void pid_controller::pid::get_params()
   	ROS_DEBUG("Kp_v %f, Ki_v %f, Kd_v %f", Kp_v, Ki_v, Kd_v);
 
   	this->check_pid_gains();
+}
+
+void pid_controller::pid::get_theGains(vehicle_control::pidGainsConfig &config, uint32_t level)
+{
+    Kp_h = config.Kp_h;
+    Ki_h = config.Ki_h;
+    Kd_h = config.Kd_h;
+    
+    Kp_v = config.Kp_v;
+    Ki_v = config.Ki_v;
+    Kd_v = config.Kd_v;
+
+    ROS_INFO("Heading controller gains: [Kp_h, Ki_h, Kd_h] = [%g, %g, %g]", Kp_h, Ki_h, Kd_h);
+    ROS_INFO("Velocity controller gains: [Kp_v, Ki_v, Kd_v] = [%g, %g, %g]", Kp_v, Ki_v, Kd_v);
 }
 
 void pid_controller::pid::check_pid_gains()
@@ -526,6 +540,11 @@ void pid_controller::pid::run()
 		{
 			newCommand=false;
 			newState=false;
+
+            // dynamic_reconfigure stuff
+            f = boost::bind(&pid_controller::pid::get_theGains, this, _1, _2);
+            server.setCallback(f);
+
 			this->set_error_ebs(); //sets the error every time a new state message is received
 			this->set_timestep();
 			this->integrate_error();

@@ -14,6 +14,8 @@ pid_controller::pid::pid(ros::NodeHandle &nh) : pid_nh(&nh), loop_rate(4) //sets
 	state_sub = pid_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::pid::state_callback, this);//use this for simulation
 	control_effort_pub = pid_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10); //published TAU = {X,Y,Eta}
 
+	base_link_pose2d_pub = state_nh_->advertise<geometry_msgs::Pose2D>("/vehicle_pose", 10);
+
 	this->get_params();
 	previous_waypoint.x=0;
 	previous_waypoint.y=0;
@@ -28,7 +30,6 @@ pid_controller::pid::~pid()
 void pid_controller::pid::pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg)
 {
     yaw_angle = msg->theta;
-    ROS_INFO("yaw_angle = %f", yaw_angle);
 }
 
 void pid_controller::pid::target_callback(const geometry_msgs::Pose2D::ConstPtr& msg)
@@ -63,23 +64,6 @@ void pid_controller::pid::target_callback(const geometry_msgs::Pose2D::ConstPtr&
 		previous_waypoint.z=velocity_command;
 	}
 
-
-	//These messages are based on the original implementation of this controller where the input message to this function was of type
-	//custom_messages_biggie::control_target
-	//Left to be used as a reference in case that functionality is implemented in addition to the current functionality later
-	//if(target_data.type.data!="PID")
-	//{
-	//	ROS_WARN("The type of command sent to the pid controller is incorrect");
-	//}
-	//else if(target_data.control_command.size()!=2)
-	//{
-	//	ROS_WARN("The pid command message is of the incorrect format.");
-	//	ROS_WARN("Please ensure that it is of format [heading velocity].");
-	//}
-	//ROS_DEBUG("The size of control command is %lu",target_data.control_command.size());
-	//ROS_DEBUG("The value of heading command is %f",target_data.control_command.at(0).data);
-	//ROS_DEBUG("The value of velocity command is %f",target_data.control_command.at(1).data);
-
 	newCommand=true;
 }
 
@@ -90,16 +74,18 @@ void pid_controller::pid::state_callback(const nav_msgs::Odometry::ConstPtr& msg
 	state_data.pose=msg->pose;
 	state_data.twist=msg->twist;
 
-	float vel=sqrt(state_data.twist.twist.linear.x*state_data.twist.twist.linear.x+state_data.twist.twist.linear.y*state_data.twist.twist.linear.y);
-    // ROS_INFO("vel is %f", vel);
+	// float vel=sqrt(state_data.twist.twist.linear.x*state_data.twist.twist.linear.x+state_data.twist.twist.linear.y*state_data.twist.twist.linear.y);
+    float vel = state_data.twist.twist.linear.x;
+    ROS_INFO("vel is %f", vel);
 
 	//NED Frame
 	//the same issue applies here as in the the sim state class
 	// yaw_angle=tf::getYaw(state_data.pose.pose.orientation); //use tf::transform_datatypes function getYaw to convert Odom's quaternion to yaw
-	// if(is_sim)
-	// {
-	//     yaw_angle=(-1)*yaw_angle;
-	// }
+	
+    // if(is_sim)
+    // {
+    //     yaw_angle=(-1)*yaw_angle;
+    // }
 
 	//ROS_WARN("The yaw angle is %f.", yaw_angle);
 
@@ -140,7 +126,7 @@ void pid_controller::pid::set_error_los()
 	velocity_error.at(0) = velocity_command-vel;// Current error goes to slot 0
 	//ROS_DEBUG("velocity error is %f", velocity_error.at(0));
 	//ROS_DEBUG("control_command is %f", velocity_command);
-    // ROS_INFO("vel is %f", vel);
+    ROS_INFO("vel is %f", vel);
 }
 void pid_controller::pid::set_error_ebs()
 {

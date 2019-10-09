@@ -65,8 +65,9 @@ void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
 	//R_y << cos(M_PI), 0, sin(M_PI), 0, 1, 0, -sin(M_PI), 0, cos(M_PI);
 	//R_z << cos(M_PI/2), sin(M_PI/2), 0, -sin(M_PI/2), cos(M_PI/2), 0, 0, 0, 1;
 
-	tf::Matrix3x3 R_z(cos(M_PI/2), sin(M_PI/2), 0, -sin(M_PI/2), cos(M_PI/2), 0, 0, 0, 1);
-	tf::Matrix3x3 R_x(cos(M_PI), 0, sin(M_PI), 0, 1, 0, -sin(M_PI), 0, cos(M_PI));
+	tf::Matrix3x3 R_z(cos(-M_PI/2), sin(-M_PI/2), 0, -sin(-M_PI/2), cos(-M_PI/2), 0, 0, 0, 1);
+    // tf::Matrix3x3 R_x(cos(M_PI), 0, sin(M_PI), 0, 1, 0, -sin(M_PI), 0, cos(M_PI));
+    tf::Matrix3x3 R_x(1, 0, 0, 0, cos(M_PI), sin(M_PI), 0, -sin(M_PI), cos(M_PI));
 	tf::Vector3 enuHolder(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
 	tf::Vector3 nedHolder=R_z*R_x*enuHolder;
 	the_odometry.pose.pose.position.x=nedHolder[0];
@@ -107,7 +108,18 @@ void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
 	
 	//create heading
 	//im not sure why, but the above rotation "enu_to_ned_tf.setRPY(M_PI,0,-M_PI/2);" is not properly rotating about the roll, therefore we apply a negative sign below
-	yawAngle=-tf::getYaw(tf::Quaternion(the_odometry.pose.pose.orientation.x,the_odometry.pose.pose.orientation.y,the_odometry.pose.pose.orientation.z,the_odometry.pose.pose.orientation.w));
+	// yawAngle=-tf::getYaw(tf::Quaternion(the_odometry.pose.pose.orientation.x,the_odometry.pose.pose.orientation.y,the_odometry.pose.pose.orientation.z,the_odometry.pose.pose.orientation.w));
+
+	yawAngle=tf::getYaw(tf::Quaternion(msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z,msg->pose.pose.orientation.w));
+    
+    // Convert yawAngle from ENU to NED convention
+    if (yawAngle < M_PI/2) {
+        yawAngle = M_PI/2 - yawAngle;
+    }
+    else {
+        yawAngle = 5*M_PI/2 - yawAngle;
+    }
+
 
     // ROS_INFO("yawAngle_vstate = %f", yawAngle);
     // ROS_INFO("orientation_x = %f", the_odometry.pose.pose.orientation.x);

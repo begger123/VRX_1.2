@@ -7,6 +7,7 @@ Panels:
         - /Global Options1
         - /RobotModel1
         - /TF1
+        - /TF1/Frames1
         - /PointCloud21
         - /Path1
         - /globalMap1
@@ -191,76 +192,72 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        All Enabled: true
+        All Enabled: false
         base_link_ned:
-          Value: true
+          Value: false
         camera_optical:
-          Value: true
-        enu_origin:
-          Value: true
+          Value: false
         lidar_nwu:
-          Value: true
+          Value: false
         ned_origin:
           Value: true
         utm:
-          Value: true
+          Value: false
         wamv/base_link:
           Value: true
         wamv/cpu_cases_link:
-          Value: true
+          Value: false
         wamv/dummy_link:
-          Value: true
+          Value: false
         wamv/front_left_camera_link:
-          Value: true
+          Value: false
         wamv/front_left_camera_post_arm_link:
-          Value: true
+          Value: false
         wamv/front_left_camera_post_link:
-          Value: true
+          Value: false
         wamv/front_right_camera_link:
-          Value: true
+          Value: false
         wamv/front_right_camera_post_arm_link:
-          Value: true
+          Value: false
         wamv/front_right_camera_post_link:
-          Value: true
+          Value: false
         wamv/gps_wamv_link:
-          Value: true
+          Value: false
         wamv/imu_wamv_link:
-          Value: true
+          Value: false
         wamv/left_battery_link:
-          Value: true
+          Value: false
         wamv/left_engine_link:
-          Value: true
+          Value: false
         wamv/left_propeller_link:
-          Value: true
+          Value: false
         wamv/lidar_wamv_link:
-          Value: true
+          Value: false
         wamv/lidar_wamv_post_arm_link:
-          Value: true
+          Value: false
         wamv/lidar_wamv_post_link:
-          Value: true
+          Value: false
         wamv/middle_right_camera_link:
-          Value: true
+          Value: false
         wamv/middle_right_camera_post_arm_link:
-          Value: true
+          Value: false
         wamv/middle_right_camera_post_link:
-          Value: true
+          Value: false
         wamv/odom:
-          Value: true
+          Value: false
         wamv/right_battery_link:
-          Value: true
+          Value: false
         wamv/right_engine_link:
-          Value: true
+          Value: false
         wamv/right_propeller_link:
-          Value: true
-      Marker Scale: 1
+          Value: false
+      Marker Scale: 20
       Name: TF
       Show Arrows: false
       Show Axes: true
       Show Names: false
       Tree:
         wamv/odom:
-          enu_origin:
-            {}
           ned_origin:
             base_link_ned:
               camera_optical:
@@ -442,26 +439,21 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/Orbit
-      Distance: 70.49017333984375
+      Angle: 0
+      Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
-      Focal Shape Fixed Size: false
-      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3903983533382416
+      Scale: 15
       Target Frame: wamv/base_link
-      Value: Orbit (rviz)
-      Yaw: 5.988582134246826
+      Value: TopDownOrtho (rviz)
+      X: 4.644589900970459
+      Y: -8.194178581237793
     Saved: ~
 Window Geometry:
   Displays:

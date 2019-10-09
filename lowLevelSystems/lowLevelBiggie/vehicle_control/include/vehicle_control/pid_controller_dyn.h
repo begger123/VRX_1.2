@@ -30,6 +30,7 @@ namespace pid_controller
 	public:
 		pid(ros::NodeHandle &nh);
 		~pid();
+        void pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
 		void target_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
 		void state_callback(const nav_msgs::Odometry::ConstPtr& msg);
 		void set_error_los();
@@ -55,6 +56,7 @@ namespace pid_controller
 
 		//Message based data
 		ros::NodeHandle *pid_nh;
+        ros::Subscriber pose_sub;
 		ros::Subscriber target_sub;
 		ros::Subscriber state_sub;
 		ros::Publisher control_effort_pub;

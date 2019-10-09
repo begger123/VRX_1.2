@@ -9,6 +9,7 @@ pid_controller::pid::pid(ros::NodeHandle &nh) : pid_nh(&nh), loop_rate(4) //sets
 	}
 	ROS_DEBUG("Entering initializer, next stop get_params");
 	target_sub = pid_nh->subscribe("control_target", 10, &pid_controller::pid::target_callback, this);
+    pose_sub   = pid_nh->subscribe("/vehicle_pose", 10, &pid_controller::pid::pose_callback, this);
 	//state_sub = pid_nh->subscribe("vehicle_state", 10, &pid_controller::pid::state_callback, this);//use this for real vehicle
 	state_sub = pid_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::pid::state_callback, this);//use this for simulation
 	control_effort_pub = pid_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10); //published TAU = {X,Y,Eta}
@@ -22,6 +23,12 @@ pid_controller::pid::pid(ros::NodeHandle &nh) : pid_nh(&nh), loop_rate(4) //sets
 pid_controller::pid::~pid()
 {
 
+}
+
+void pid_controller::pid::pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg)
+{
+    yaw_angle = msg->theta;
+    ROS_INFO("yaw_angle = %f", yaw_angle);
 }
 
 void pid_controller::pid::target_callback(const geometry_msgs::Pose2D::ConstPtr& msg)
@@ -84,16 +91,16 @@ void pid_controller::pid::state_callback(const nav_msgs::Odometry::ConstPtr& msg
 	state_data.twist=msg->twist;
 
 	float vel=sqrt(state_data.twist.twist.linear.x*state_data.twist.twist.linear.x+state_data.twist.twist.linear.y*state_data.twist.twist.linear.y);
-    ROS_INFO("vel is %f", vel);
+    // ROS_INFO("vel is %f", vel);
 
 	//NED Frame
 	//the same issue applies here as in the the sim state class
-	yaw_angle=tf::getYaw(state_data.pose.pose.orientation); //use tf::transform_datatypes function getYaw to convert Odom's quaternion to yaw
+    // yaw_angle=tf::getYaw(state_data.pose.pose.orientation); //use tf::transform_datatypes function getYaw to convert Odom's quaternion to yaw
 	
-	if(is_sim)
-	{
-		yaw_angle=(-1)*yaw_angle;
-	}
+	// if(is_sim)
+	// {
+	//     yaw_angle=(-1)*yaw_angle;
+	// }
 
 	//ROS_WARN("The yaw angle is %f.", yaw_angle);
 

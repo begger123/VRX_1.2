@@ -28,7 +28,7 @@ pid_controller::pid::~pid()
 void pid_controller::pid::pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg)
 {
     yaw_angle = msg->theta;
-    ROS_INFO("yaw_angle = %f", yaw_angle);
+    // ROS_INFO("yaw_angle = %f", yaw_angle);
 }
 
 void pid_controller::pid::target_callback(const geometry_msgs::Pose2D::ConstPtr& msg)
@@ -252,11 +252,15 @@ void pid_controller::pid::set_error_ebs()
 	velocity_error.at(2) = velocity_error.at(1);
 	velocity_error.at(1) = velocity_error.at(0);
 	//velocity is NED body fixed
-	float vel=sqrt(state_data.twist.twist.linear.x*state_data.twist.twist.linear.x+state_data.twist.twist.linear.y*state_data.twist.twist.linear.y);
+    // Compute surge speed
+    // float vel=sqrt(state_data.twist.twist.linear.x*state_data.twist.twist.linear.x+state_data.twist.twist.linear.y*state_data.twist.twist.linear.y);
+    float vel = state_data.twist.twist.linear.x;
 	velocity_error.at(0) = velocity_command-vel;// Current error goes to slot 0
+    ROS_INFO(">>>>>>>>>>>>>>>>> [surge, heading] = [%f, %f] <<<<<<<<<<<<<<<<<<<<<<<<<<", vel, yaw_angle);
+
 	//ROS_DEBUG("velocity error is %f", velocity_error.at(0));
 	//ROS_DEBUG("control_command is %f", velocity_command);
-	//ROS_DEBUG("vel is %f", vel);
+    // ROS_DEBUG("vel is %f", vel);
 }
 
 double pid_controller::pid::wrap_heading(double heading)
@@ -518,8 +522,8 @@ void pid_controller::pid::get_theGains(vehicle_control::pidGainsConfig &config, 
     Ki_v = config.Ki_v;
     Kd_v = config.Kd_v;
 
-    ROS_INFO("Heading controller gains: [Kp_h, Ki_h, Kd_h] = [%g, %g, %g]", Kp_h, Ki_h, Kd_h);
-    ROS_INFO("Velocity controller gains: [Kp_v, Ki_v, Kd_v] = [%g, %g, %g]", Kp_v, Ki_v, Kd_v);
+    // ROS_INFO("Heading controller gains: [Kp_h, Ki_h, Kd_h] = [%g, %g, %g]", Kp_h, Ki_h, Kd_h);
+    // ROS_INFO("Velocity controller gains: [Kp_v, Ki_v, Kd_v] = [%g, %g, %g]", Kp_v, Ki_v, Kd_v);
 }
 
 void pid_controller::pid::check_pid_gains()

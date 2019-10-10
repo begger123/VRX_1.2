@@ -28,7 +28,7 @@ pid_controller::pid::~pid()
 void pid_controller::pid::pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg)
 {
     yaw_angle = msg->theta;
-    ROS_INFO("yaw_angle = %f", yaw_angle);
+    // ROS_INFO("yaw_angle = %f", yaw_angle);
 }
 
 void pid_controller::pid::target_callback(const geometry_msgs::Pose2D::ConstPtr& msg)
@@ -253,11 +253,12 @@ void pid_controller::pid::set_error_ebs()
 	velocity_error.at(2) = velocity_error.at(1);
 	velocity_error.at(1) = velocity_error.at(0);
 	//velocity is NED body fixed
-	float vel=sqrt(state_data.twist.twist.linear.x*state_data.twist.twist.linear.x+state_data.twist.twist.linear.y*state_data.twist.twist.linear.y);
+	// float vel=sqrt(state_data.twist.twist.linear.x*state_data.twist.twist.linear.x+state_data.twist.twist.linear.y*state_data.twist.twist.linear.y);
+    float vel = state_data.twist.twist.linear.x;
 	velocity_error.at(0) = velocity_command-vel;// Current error goes to slot 0
 	//ROS_DEBUG("velocity error is %f", velocity_error.at(0));
 	//ROS_DEBUG("control_command is %f", velocity_command);
-	//ROS_DEBUG("vel is %f", vel);
+    ROS_DEBUG("vel is %f", vel);
 }
 
 double pid_controller::pid::wrap_heading(double heading)

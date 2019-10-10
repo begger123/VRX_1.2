@@ -170,10 +170,10 @@ class QP:
         #  curtime = rospy.Time.now()
         #  difftime = curtime.nsecs - self.lastTime.nsecs
 
-        rospy.loginfo("tau = [%g, %g, %g]", tau[0], tau[1], tau[2])
+        #  rospy.loginfo("tau = [%g, %g, %g]", tau[0], tau[1], tau[2])
         rospy.loginfo("[left_thrust, left_angle] = [%g, %g]", self.left_thrust, self.left_angle);
         rospy.loginfo("[right_thrust, right_angle] = [%g, %g]", self.right_thrust, self.right_angle);
-        rospy.loginfo("difftime = %g", difftime)
+        #  rospy.loginfo("difftime = %f", difftime)
         #  now = rospy.Time.now()
         #  rospy.loginfo("time_now = %i %i", now.secs, now.nsecs)
 

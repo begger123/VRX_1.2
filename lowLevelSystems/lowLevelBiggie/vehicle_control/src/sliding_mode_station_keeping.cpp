@@ -54,7 +54,6 @@ sm_controller::sl_mode_st_keep::sl_mode_st_keep(ros::NodeHandle &nh) : sm_sk_nh_
 
 	//Because this is strictly the station keeping type, the desired velocity is 0
 	eta_d_dot_ << 0.0, 0.0, 0;
-	//Because thius is strictly the station keeping type, eta_t_dot_ is the body fixed velocity
 }
 
 sm_controller::sl_mode_st_keep::~sl_mode_st_keep()
@@ -127,8 +126,8 @@ void sm_controller::sl_mode_st_keep::state_callback(const nav_msgs::Odometry::Co
 
 	//ROS_WARN("The yaw angle is %f.", yaw_angle);
 
-	//Because thius is strictly the station keeping type, eta_t_dot_ is the body fixed velocity
-	eta_t_dot_ << state_data_.twist.twist.linear.x, state_data_.twist.twist.linear.y, state_data_.twist.twist.linear.z;
+	//Because this is strictly the station keeping type, eta_t_dot_ is the body fixed velocity
+	//eta_t_dot_ << state_data_.twist.twist.linear.x, state_data_.twist.twist.linear.y, state_data_.twist.twist.linear.z;
 
 	//This matrix is velocity dependent, therefore handled here
 	C_m3x3_.setZero();//ensures we start fresh every time we have a new state

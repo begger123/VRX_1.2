@@ -155,7 +155,7 @@ class QP:
         G = np.concatenate((np.identity(7), -np.identity(7)), axis=0)
         h = np.concatenate((UB, -LB), axis=0)
 
-        x = solve_qp(self.P, f, G, h, A, b, solver="quadprog")
+        x = solve_qp(self.P.astype(np.double), f.astype(np.double), G.astype(np.double), h.astype(np.double), A.astype(np.double), b.astype(np.double), solver="quadprog")
         print("QP solution: x = {}".format(x))
 
         # Store as previous values

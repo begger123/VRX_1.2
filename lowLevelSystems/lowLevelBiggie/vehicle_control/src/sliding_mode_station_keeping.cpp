@@ -16,7 +16,7 @@
 //tau:=M*(J(eta)^T*eta_r_dot_dot+J(eta)_dot^T*eta_r_dot)+C(v)*J(eta)^T*eta_r_dot+D(v)*J(eta)^T*eta_r_dot-J(eta)^T*R*sat(E^-1*s)
 sm_controller::sl_mode_st_keep::sl_mode_st_keep(ros::NodeHandle &nh) : sm_sk_nh_(&nh), loop_rate(4) //sets default loop rate
 {
-	if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info) ) 
+	if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) 
 	{
    		ros::console::notifyLoggerLevelsChanged();
 	}

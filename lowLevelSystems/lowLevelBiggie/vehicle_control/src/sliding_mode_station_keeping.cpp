@@ -115,10 +115,10 @@ void sm_controller::sl_mode_st_keep::state_callback(const nav_msgs::Odometry::Co
 
 	eta_ << state_data_.pose.pose.position.x, state_data_.pose.pose.position.y, yaw_angle;
 
-	if(is_sim)
-	{
-		yaw_angle=(-1)*yaw_angle;
-	}
+	//if(is_sim)
+	//{
+	//	yaw_angle=(-1)*yaw_angle;
+	//}
 	if(yaw_angle<0)
 	{
 		yaw_angle=2*M_PI+yaw_angle;

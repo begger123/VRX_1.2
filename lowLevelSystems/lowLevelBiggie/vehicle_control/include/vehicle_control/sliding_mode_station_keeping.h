@@ -30,6 +30,7 @@ namespace sm_controller
 		void get_params();
 		void target_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
 		void state_callback(const nav_msgs::Odometry::ConstPtr& msg);
+		void pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
 		double wrap_heading(double heading);
 		void set_timestep();
 		void calc_eta_t();
@@ -44,6 +45,7 @@ namespace sm_controller
 		ros::NodeHandle *sm_sk_nh_;
 		ros::Subscriber target_sub_;
 		ros::Subscriber state_sub_;
+		ros::Subscriber pose_sub_;
 		ros::Publisher control_effort_pub_;
 
 		//controller variables

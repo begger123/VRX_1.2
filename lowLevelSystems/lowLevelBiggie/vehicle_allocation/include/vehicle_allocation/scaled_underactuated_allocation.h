@@ -44,6 +44,7 @@ namespace alloc {
 		Eigen::MatrixXf T_inv_over_;
 
 		bool is_sim_;
+        ros::Time lastTime;
 
 		Eigen::Vector4f allocate_under(const Eigen::Vector3f& ctrlForces);
 		Eigen::Vector4f allocate_over(const Eigen::Vector3f& ctrlForces);

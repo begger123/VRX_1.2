@@ -40,7 +40,13 @@ namespace alloc {
 		// allocation specific parameters
 		tau_t tau_max_;		// maximum force produced by actuators on vehicle
 		tau_t tau_min_;		// minimum force produced by actuators on vehicle
-		double act_max_T_;	// maximum thrust from actuators
+        double T_Max;   // maximum thrust from actuators
+        double T_Min;   // minimum thrust from actuators
+        double P_Max;   // maximum moment from actuators
+        double P_Min;   // minimum moment from actuators
+        double moment_scalar;   // threshold for cutting velocity and adjusting heading
+
+        double act_max_T_;	// maximum thrust from actuators
 		double act_min_T_;	// minimum thrust from actuators
 		double act_max_alpha_;	// maximum actuator angle from actuators
 		double act_min_alpha_;	// minimum actuator angle from actuators

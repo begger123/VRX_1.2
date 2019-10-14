@@ -26,7 +26,7 @@ void vehicle_state_sim::set_transforms()
 	base_link_ned_tf.setOrigin(tf::Vector3(the_odometry.pose.pose.position.x, the_odometry.pose.pose.position.y, the_odometry.pose.pose.position.z));
 	q_base_link_ned.setRPY(0, 0, yawAngle);
 
-    ROS_INFO("yawAngle = %f", yawAngle);
+    // ROS_INFO("yawAngle = %f", yawAngle);
 
 	q_base_link_ned.normalize();
 	base_link_ned_tf.setRotation(q_base_link_ned);
@@ -58,20 +58,24 @@ void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
 	//converts from ENU to NED
 	the_odometry.header.seq++;
 	the_odometry.header.frame_id="ned_origin";
-	//the_odometry.child_frame_id="base_link_ned";
+    the_odometry.child_frame_id="base_link_ned";
 
 	//Convert Position from ENU to NED with 2 Rotations
 	//The conversion from ENU to BFF is a 90 degree rotation about Z (yaw), and a 180 degree rotation about X (roll)
 	//R_y << cos(M_PI), 0, sin(M_PI), 0, 1, 0, -sin(M_PI), 0, cos(M_PI);
 	//R_z << cos(M_PI/2), sin(M_PI/2), 0, -sin(M_PI/2), cos(M_PI/2), 0, 0, 0, 1;
 
-	tf::Matrix3x3 R_z(cos(M_PI/2), sin(M_PI/2), 0, -sin(M_PI/2), cos(M_PI/2), 0, 0, 0, 1);
-	tf::Matrix3x3 R_x(cos(M_PI), 0, sin(M_PI), 0, 1, 0, -sin(M_PI), 0, cos(M_PI));
+	tf::Matrix3x3 R_z(cos(-M_PI/2), sin(-M_PI/2), 0, -sin(-M_PI/2), cos(-M_PI/2), 0, 0, 0, 1);
+    // tf::Matrix3x3 R_x(cos(M_PI), 0, sin(M_PI), 0, 1, 0, -sin(M_PI), 0, cos(M_PI));
+    tf::Matrix3x3 R_x(1, 0, 0, 0, cos(M_PI), sin(M_PI), 0, -sin(M_PI), cos(M_PI));
+
 	tf::Vector3 enuHolder(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
 	tf::Vector3 nedHolder=R_z*R_x*enuHolder;
 	the_odometry.pose.pose.position.x=nedHolder[0];
 	the_odometry.pose.pose.position.y=nedHolder[1];
 	the_odometry.pose.pose.position.z=nedHolder[2];
+
+    // ROS_INFO("[x, y]_ned = [%f, %f]", nedHolder[0], nedHolder[1]);
 
  	//from my testing this approach appears to be very slow, maxing out at about 2hz
 	//tf::TransformListener enu_to_ned_listener;
@@ -130,8 +134,6 @@ void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
     // ROS_INFO("yawAngle_vstate = %f", yawAngle);
     // ROS_INFO("orientation_x = %f", the_odometry.pose.pose.orientation.x);
     // ROS_INFO("orientation_y = %f", the_odometry.pose.pose.orientation.y);
-    // tf::Matrix3x3 R_x(cos(M_PI), 0, sin(M_PI), 0, 1, 0, -sin(M_PI), 0, cos(M_PI));
-    //tf::Matrix3x3 R_x(1, 0, 0, 0, cos(M_PI), sin(M_PI), 0, -sin(M_PI), cos(M_PI));
     // ROS_INFO("orientation_z = %f", the_odometry.pose.pose.orientation.z);
     // ROS_INFO("orientation_w = %f", the_odometry.pose.pose.orientation.w);
 }

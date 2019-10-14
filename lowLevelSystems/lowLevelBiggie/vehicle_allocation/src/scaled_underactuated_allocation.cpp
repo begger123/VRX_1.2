@@ -9,10 +9,10 @@ namespace alloc {
 
 	scaledUnderactuatedAllocation::scaledUnderactuatedAllocation(ros::NodeHandle &nh) : alloc_nh(&nh), loop_rate(4)
 	{
-		if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info) ) 
-		{
-			ros::console::notifyLoggerLevelsChanged();
-		}
+		// if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info) )
+		// {
+		//     ros::console::notifyLoggerLevelsChanged();
+		// }
 
 		control_effort_sub = alloc_nh->subscribe("control_effort", 10, &alloc::scaledUnderactuatedAllocation::tau_callback_, this);
 		
@@ -398,24 +398,36 @@ namespace alloc {
 		//a.actuator_inputs[3] = u(3);
 
 		//pub_->publish(a);
+
+		std_msgs::Float32 leftCmd;
+		std_msgs::Float32 rightCmd;
 		if(is_sim_)
 		{
-			std_msgs::Float32 leftCmd;
+			// std_msgs::Float32 leftCmd;
 			leftCmd.data=u(0)/210;
 			sim_port_pub.publish(leftCmd);
-			std_msgs::Float32 rightCmd;
+			// std_msgs::Float32 rightCmd;
 			rightCmd.data=u(2)/210;
 			sim_stbd_pub.publish(rightCmd);
 		}
 		else
 		{
-			std_msgs::Float32 leftCmd;
+			// std_msgs::Float32 leftCmd;
 			leftCmd.data=u(0);
 			sim_port_pub.publish(leftCmd);
-			std_msgs::Float32 rightCmd;
+			// std_msgs::Float32 rightCmd;
 			rightCmd.data=u(2);
 			sim_stbd_pub.publish(rightCmd);
 		}
+
+        ros::Time curTime = ros::Time::now();
+        ros::Duration diffTime = curTime - lastTime;
+
+        ROS_INFO("[left_thrust, right_thrus] = [%g, %g]", u(0), u(2));
+        ROS_INFO("diffTime = %g", diffTime.toSec());
+        // cout << "diffTime = " << diffTime << endl;
+
+        lastTime = curTime;
 	}
 
 	int scaledUnderactuatedAllocation::run(void)

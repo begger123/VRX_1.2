@@ -19,6 +19,9 @@
 #include <tf/tf.h>
 #include <tf/transform_datatypes.h> //this gives axis to Matrix3x3
 
+// The following is to perform dynamic reconfigure of the PID gains
+#include <dynamic_reconfigure/server.h>
+#include <vehicle_control/pidGainsConfig.h>
 
 namespace pid_controller
 {
@@ -45,7 +48,12 @@ namespace pid_controller
 		void get_params();
 		void check_pid_gains();
 		void run();
+        void get_theGains(vehicle_control::pidGainsConfig &config, uint32_t level);
 	private:
+        // dynamic_reconfigure stuff
+        dynamic_reconfigure::Server<vehicle_control::pidGainsConfig> server;
+        dynamic_reconfigure::Server<vehicle_control::pidGainsConfig>::CallbackType f;
+
 		//Message based data
 		ros::NodeHandle *pid_nh;
         ros::Subscriber pose_sub;

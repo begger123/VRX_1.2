@@ -1,0 +1,27 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  Kd_h: 45.0
+  Kd_v: 10.0
+  Ki_h: 0.0
+  Ki_v: 85.0
+  Kp_h: 115.0
+  Kp_v: 60.0
+  groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+    dictitems:
+      Kd_h: 45.0
+      Kd_v: 10.0
+      Ki_h: 0.0
+      Ki_v: 85.0
+      Kp_h: 115.0
+      Kp_v: 60.0
+      groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      id: 0
+      name: Default
+      parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      parent: 0
+      state: true
+      type: ''
+    state: []
+state: []

@@ -10,19 +10,20 @@
 //s:=eta_t_dot+2*lamda*eta_t+lamda^2*integral(eta_t*dt):0:t
 //eta_r_dot:=eta_d_dot-2*lamda*eta_t-lamda^2*integral(eta_t*dt):0:t
 //eta_t:=eta-eta_d
-//eta_t_dot - 
-//eta_d_dot - 
+//eta_t_dot:=eta_dot-eta_d_dot 
+//eta_d_dot:=0 
 //output:
 //tau:=M*(J(eta)^T*eta_r_dot_dot+J(eta)_dot^T*eta_r_dot)+C(v)*J(eta)^T*eta_r_dot+D(v)*J(eta)^T*eta_r_dot-J(eta)^T*R*sat(E^-1*s)
 sm_controller::sl_mode_st_keep::sl_mode_st_keep(ros::NodeHandle &nh) : sm_sk_nh_(&nh), loop_rate(4) //sets default loop rate
 {
-	if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) 
+	if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Warn) ) 
 	{
    		ros::console::notifyLoggerLevelsChanged();
 	}
 	ROS_DEBUG("Entering initializer, next stop get_params");
 	target_sub_ = sm_sk_nh_->subscribe("control_target", 10, &sm_controller::sl_mode_st_keep::target_callback, this);
 	state_sub_ = sm_sk_nh_->subscribe("/p3d_wamv_ned", 10, &sm_controller::sl_mode_st_keep::state_callback, this);
+	pose_sub_ = sm_sk_nh_->subscribe("/vehicle_pose", 10, &sm_controller::sl_mode_st_keep::pose_callback, this);
 	control_effort_pub_ = sm_sk_nh_->advertise<custom_messages_biggie::control_effort>("/control_effort_sk", 10); //published TAU = {X,Y,Eta}
 
 	this->get_params();
@@ -110,8 +111,7 @@ void sm_controller::sl_mode_st_keep::state_callback(const nav_msgs::Odometry::Co
 	state_data_.twist=msg->twist;
 
 	//NED Frame
-	//the same issue applies here as in the the sim state class
-	yaw_angle=tf::getYaw(state_data_.pose.pose.orientation); //use tf::transform_datatypes function getYaw to convert Odom's quaternion to yaw
+	//yaw_angle=tf::getYaw(state_data_.pose.pose.orientation); //use tf::transform_datatypes function getYaw to convert Odom's quaternion to yaw
 
 	eta_ << state_data_.pose.pose.position.x, state_data_.pose.pose.position.y, yaw_angle;
 
@@ -119,29 +119,40 @@ void sm_controller::sl_mode_st_keep::state_callback(const nav_msgs::Odometry::Co
 	//{
 	//	yaw_angle=(-1)*yaw_angle;
 	//}
-	if(yaw_angle<0)
-	{
-		yaw_angle=2*M_PI+yaw_angle;
-	}
+	//if(yaw_angle<0)
+	//{
+	//	yaw_angle=2*M_PI+yaw_angle;
+	//}
 
-	//ROS_WARN("The yaw angle is %f.", yaw_angle);
+    //This should be in NED with body fixed yaw, 0:180 from north to clockwise south, 0:-180 from north to counter clockwise south
+    ROS_ERROR("Needs to be made more robust by putting a check in to ensure that yaw_angle has been updated");
+    ROS_WARN("This should be in NED with body fixed yaw, 0:180 from north to clockwise south, 0:-180 from north to counter clockwise south");
+	ROS_WARN("The eta(0) is %f.", eta_(0));
+	ROS_WARN("The eta(1) is %f.", eta_(1));
+	ROS_WARN("The yaw angle is %f.", yaw_angle);
 
-	//Because this is strictly the station keeping type, eta_t_dot_ is the body fixed velocity
-	//eta_t_dot_ << state_data_.twist.twist.linear.x, state_data_.twist.twist.linear.y, state_data_.twist.twist.linear.z;
+	//TODO - eta_t and eta_t_dot_ need to be in the earth fixed frame
+	eta_t_dot_ << state_data_.twist.twist.linear.x, state_data_.twist.twist.linear.y, state_data_.twist.twist.linear.z;
 
 	//This matrix is velocity dependent, therefore handled here
+    //TODO - The velocities here need to be in the body fixed frame
 	C_m3x3_.setZero();//ensures we start fresh every time we have a new state
 	C_m3x3_ 	<<	0.0, 0.0, -(m_-Yv_dot_)*state_data_.twist.twist.linear.y,
 					0.0, 0.0, (m_-Xu_dot_)*state_data_.twist.twist.linear.x,
 					(m_-Yv_dot_)*state_data_.twist.twist.linear.y, -(m_-Xu_dot_)*state_data_.twist.twist.linear.x, 0.0;
 
-	J_ 	<<  cos(yaw_angle), -sin(yaw_angle), 0.0,
+	J_ 	<<          cos(yaw_angle), -sin(yaw_angle), 0.0,
 					sin(yaw_angle),  cos(yaw_angle), 0.0,
 					0.0, 			 0.0, 			 1;
 
-	J_dot_<<  -sin(yaw_angle)*state_data_.twist.twist.linear.z, -cos(yaw_angle)*state_data_.twist.twist.linear.z, 0.0,
-					 cos(yaw_angle)*state_data_.twist.twist.linear.z, -sin(yaw_angle)*state_data_.twist.twist.linear.z, 0.0,
-					 0.0, 			  								   0.0, 			  								0.0;
+    //TODO - As this depends on eta_t_dot_, it needs to be in the earth fixed frame
+	J_dot_ 	<<      cos(state_data_.twist.twist.angular.z), -sin(state_data_.twist.twist.angular.z), 0.0,
+					sin(state_data_.twist.twist.angular.z),  cos(state_data_.twist.twist.angular.z), 0.0,
+					0.0, 			 0.0, 			 1;
+	
+    //J_dot_<<        -sin(yaw_angle)*state_data_.twist.twist.linear.z, -cos(yaw_angle)*state_data_.twist.twist.linear.z, 0.0,
+	//				 cos(yaw_angle)*state_data_.twist.twist.linear.z, -sin(yaw_angle)*state_data_.twist.twist.linear.z, 0.0,
+	//				 0.0, 			  								   0.0, 			  								0.0;
 
 	J_trans_=J_.transpose();
 	J_trans_dot_=J_dot_.transpose();
@@ -149,9 +160,14 @@ void sm_controller::sl_mode_st_keep::state_callback(const nav_msgs::Odometry::Co
 	newState=true;
 }
 
+void sm_controller::sl_mode_st_keep::pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg)
+{
+    yaw_angle=msg->theta;
+}
+
 double sm_controller::sl_mode_st_keep::wrap_heading(double heading)
 {
-	ROS_DEBUG("In heading wrapper");
+	ROS_WARN("In heading wrapper");
 	//ROS_DEBUG("Entering wrap_heading");
 	if(heading>=M_PI)
 	{
@@ -165,6 +181,7 @@ double sm_controller::sl_mode_st_keep::wrap_heading(double heading)
 	{
 		return heading;
 	}
+	ROS_WARN("The heading is %f.", heading);
 }
 
 void sm_controller::sl_mode_st_keep::set_timestep()
@@ -192,8 +209,7 @@ void sm_controller::sl_mode_st_keep::calc_eta_t()
 {
 	ROS_DEBUG("In calc eta_t");
 	eta_t_=eta_-eta_d_;
-	double temp=
-	eta_t_(2)=this->wrap_heading(eta_t_(2));
+	//eta_t_(2)=this->wrap_heading(eta_t_(2));
 
 }
 
@@ -254,17 +270,17 @@ void sm_controller::sl_mode_st_keep::calc_variales()
 	ROS_DEBUG("In calc variables");
 	this->calc_eta_t();
 	this->integrate_eta_t();
-	eta_r_dot_=eta_d_dot_-2*lamda_m3x3_*eta_t_;//-lamda_m3x3_*lamda_m3x3_*integral_eta_t_;
-	s_=eta_t_dot_+2*lamda_m3x3_*eta_t_;//+lamda_m3x3_*lamda_m3x3_*integral_eta_t_;
+	eta_r_dot_=eta_d_dot_-2*lamda_m3x3_*eta_t_-lamda_m3x3_*lamda_m3x3_*integral_eta_t_;
+
+    s_=eta_t_dot_+2*lamda_m3x3_*eta_t_+lamda_m3x3_*lamda_m3x3_*integral_eta_t_;
+    
+    //eta_d_dot is already 0, so eta_d_dot_dot will also be 0
+	eta_r_dot_dot_=-2*lamda_m3x3_*eta_t_dot_-lamda_m3x3_*lamda_m3x3_*eta_t_;
 }
 
 void sm_controller::sl_mode_st_keep::calc_tau()
 {
 	ROS_DEBUG("In calc tau");
-	//remember:
-	//eta_r_dot is calculated
-	//eta_r_dot_dot is -2*lamda*eta_t_dot-lamda^2*eta_t
-	eta_r_dot_dot_=-2*lamda_m3x3_*eta_t_dot_-lamda_m3x3_*lamda_m3x3_*eta_t_;
 	ROS_DEBUG("lamda_m3x3_ %f %f %f \n %f %f %f \n %f %f %f",lamda_m3x3_(0,0),lamda_m3x3_(0,1),lamda_m3x3_(0,2),lamda_m3x3_(1,0),lamda_m3x3_(1,1),lamda_m3x3_(1,2),lamda_m3x3_(2,0),lamda_m3x3_(2,1),lamda_m3x3_(2,2));
 	ROS_DEBUG("eta_t_ %f %f %f",eta_t_(0),eta_t_(1),eta_t_(2));
 	ROS_DEBUG("eta_t_dot_ %f %f %f",eta_t_dot_(0),eta_t_dot_(1),eta_t_dot_(2));
@@ -291,13 +307,13 @@ void sm_controller::sl_mode_st_keep::pub()
 	custom_messages_biggie::control_effort control_effort_msg;
 
 	control_effort_msg.header.stamp=ros::Time::now();
-	control_effort_msg.type.data="PID";
+	control_effort_msg.type.data="SM";
 	
 	std_msgs::Float64 temp;
 
 	temp.data=tau_(0);
 	control_effort_msg.tau.push_back(temp);//X
-	temp.data=0;	
+	temp.data=tau_(1);	
 	control_effort_msg.tau.push_back(temp);//Y
 	temp.data=tau_(2);
 	control_effort_msg.tau.push_back(temp);//Eta

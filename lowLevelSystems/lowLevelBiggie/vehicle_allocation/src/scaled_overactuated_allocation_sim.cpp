@@ -48,116 +48,169 @@ namespace alloc {
 	////////////////////
 	Vector4f scaledOveractuatedAllocationSim::allocate(const Vector3f& ctrlForces)
 	{
-		//checks to see if the error is large enough to warrant cutting speed and fixing heading
-		if(ctrlForces(2)>150||ctrlForces(2)<-150)
-		{
-			Vector2f tau((Vector2f() << 0.0, ctrlForces(2)).finished());
-			// calculate the tranformation and actuator inputs
-			Vector2f u = T_inv_*tau;
-			// return u in four element manner
-			return (Vector4f() << u(0), 0.0, u(1), 0.0).finished();
-		}
+        //checks to see if the heading error is large enough to warrant cutting speed and fixing heading
+        if(sqrt(ctrlForces(2)*ctrlForces(2))>moment_scalar*sqrt(ctrlForces(0)*ctrlForces(0)))
+        {
+            ROS_WARN("Adjusting heading, error is too large");
+            Vector2f tau((Vector2f() << 0.0, ctrlForces(2)).finished());
+            // calculate the tranformation and actuator inputs
+            Vector2f u = T_inv_over_*tau;
+            // return u in four element manner
+            return (Vector4f() << u(0), 0.0, u(1), 0.0).finished();
+        }
 		else
 		{
-			Vector2f tau((Vector2f() << ctrlForces(0), ctrlForces(2)).finished());
-			//we scale tau in a coupled manner such that:
-			//if both need scaling, we scale 1:1
-			//if only one needs scaling, we scale 
-			if(tau(0)>420&&tau(1)>360)
-			{
-				//scale both
-				if(tau(0)>tau(1))
-				{
-					//scale moment by (moment/velocity)*maxMoment
-					tau(1)=tau(1)*420/tau(0);
-					//saturate velocity
-					tau(0)=420;
-				}
-				else if(tau(0)>tau(1))
-				{
-					//scale velocity by (velocity/moment)*maxVelocity
-					tau(0)=tau(0)*360/tau(1);
-					//saturate velocity
-					tau(1)=360;
-				}
-				else
-				{
-					tau(0)=420;
-					tau(1)=360;
-				}
-			}
-			else if(tau(0)<-300&&tau(1)<-360)
-			{
-				//scale both
-				if(tau(0)<tau(1))
-				{
-					//scale moment by (moment/velocity)*maxMoment
-					tau(1)=tau(1)*-300/tau(0);
-					//saturate velocity
-					tau(0)=-300;
-				}
-				else if(tau(0)>tau(2))
-				{
-					//scale velocity by (velocity/moment)*maxVelocity
-					tau(0)=tau(0)*-360/tau(1);
-					//saturate velocity
-					tau(1)=-360;
-				}
-				else
-				{
-					tau(0)=-300;
-					tau(1)=-360;
-				}
-			}
-			else if(tau(0)>420 && tau(1)<360 && tau(1)>-360)
-			{
-				//scale moment by (moment/velocity)*maxMoment
-				tau(1)=tau(1)*420/tau(0);
-				//saturate velocity
-				tau(0)=420;
-			}
-			else if(tau(0)<-300 && tau(1)<360 && tau(1)>-360)
-			{
-				//scale moment by (moment/velocity)*maxMoment
-				tau(1)=tau(1)*-300/tau(0);
-				//saturate velocity
-				tau(0)=-300;
-			}
-			else if(tau(0)<420 && tau(0)>-300 && tau(1)>360)
-			{
-				//scale velocity by (velocity/moment)*maxVelocity
-				tau(0)=tau(0)*360/tau(1);
-				//saturate velocity
-				tau(1)=360;
-			}
-			else if(tau(0)<420 && tau(0)>-300 && tau(1)<-360)
-			{
-				//scale velocity by (velocity/moment)*maxVelocity
-				tau(0)=tau(0)*360/tau(1);
-				//saturate velocity
-				tau(1)=360;
-			}
-			else
-			{
-				ROS_DEBUG("No Saturation Required");
-			}
-			// calculate the tranformation and actuator inputs
-			Vector2f u = T_inv_*tau;
+		    Vector2f tau((Vector2f() << ctrlForces(0), ctrlForces(2)).finished());
+            //Reminder: tau(0)=velocity, tau(1)=moment 
 
-			// scaled desired control force/moment on vehicle
-			//if(tau(1)>0)
-			//{
-			//	u(0) -= (ctrlForces(2)/2);
-			//	u(1) -= (ctrlForces(2)/2);
-			//}
-			//else
-			//{
-			//	u(0) += (ctrlForces(2)/2);
-			//	u(1) += (ctrlForces(2)/2);
-			//}
-			// return u in four element manner
-			return (Vector4f() << u(0), 0.0, u(1), 0.0).finished();
-		}
+            //Both are out of bounds positive
+            if(tau(0)>T_Max&&tau(1)>P_Max)
+            {
+                //velocity is more out of bounds than moment, so make velocity=max, and moment<max
+                if(tau(0)>tau(1))
+                {
+                    //scale moment by (moment/velocity)*maxMoment
+                    tau(1)=tau(1)*T_Max/tau(0);
+                    //saturate velocity
+                    tau(0)=T_Max;
+                }
+                //moment is more out of bounds than velocity, so make moment=max, and velocity<max
+                else if(tau(0)<tau(1))
+                {
+                    //scale velocity by (velocity/moment)*maxVelocity
+                    tau(0)=tau(0)*P_Max/tau(1);
+                    //saturate velocity
+                    tau(1)=P_Max;
+                }
+                //unlikely, but both are equally out of bounds, so just set both to max
+                else
+                {
+                    tau(0)=T_Max;
+                    tau(1)=P_Max;
+                }
+            }
+            //Both are out of bounds negative
+            else if(tau(0)<T_Min&&tau(1)<P_Min)
+            {
+                //velocity is more out of bounds than moment, so make velocity=max, and moment<max
+                if(tau(0)<tau(1))
+                {
+                    //scale moment by (moment/velocity)*maxMoment
+                    tau(1)=tau(1)*T_Min/tau(0);
+                    //saturate velocity
+                    tau(0)=T_Min;
+                }
+                //moment is more out of bounds than velocity, so make moment=max, and velocity<max
+                else if(tau(0)>tau(1))
+                {
+                    //scale velocity by (velocity/moment)*maxVelocity
+                    tau(0)=tau(0)*P_Min/tau(1);
+                    //saturate velocity
+                    tau(1)=P_Min;
+                }
+                //unlikely, but both are equally out of bounds, so just set both to max
+                else
+                {
+                    tau(0)=T_Min;
+                    tau(1)=P_Min;
+                }
+            }
+            //velocity is out of bounds positive, moment is out of bounds negative
+            else if(tau(0)>T_Max&&tau(1)<P_Min)
+            {
+                //velocity is more out of bounds than moment, so make velocity=max, and moment<max
+                if(tau(0)>-tau(1))
+                {
+                    //scale moment by (moment/velocity)*maxMoment
+                    tau(1)=tau(1)*T_Max/tau(0);
+                    //saturate velocity
+                    tau(0)=T_Max;
+                }
+                //moment is more out of bounds than velocity, so make moment=max, and velocity<max
+                else if(tau(0)<-tau(1))
+                {
+                    //scale velocity by (velocity/moment)*maxVelocity
+                    tau(0)=tau(0)*P_Min/tau(1);
+                    //saturate velocity
+                    tau(1)=P_Min;
+                }
+                //unlikely, but both are equally out of bounds, so just set both to max
+                else
+                {
+                    tau(0)=T_Max;
+                    tau(1)=P_Min;
+                }
+            }
+            //velocity is out of bounds negative, moment is out of bounds positive
+            else if(tau(0)<T_Min&&tau(1)>P_Max)
+            {
+                //velocity is more out of bounds than moment, so make velocity=max, and moment<max
+                if(-tau(0)>tau(1))
+                {
+                    //scale moment by (moment/velocity)*maxMoment
+                    tau(1)=tau(1)*T_Min/tau(0);
+                    //saturate velocity
+                    tau(0)=T_Min;
+                }
+                //moment is more out of bounds than velocity, so make moment=max, and velocity<max
+                else if(-tau(0)<tau(1))
+                {
+                    //scale velocity by (velocity/moment)*maxVelocity
+                    tau(0)=tau(0)*P_Max/tau(1);
+                    //saturate velocity
+                    tau(1)=P_Max;
+                }
+                //unlikely, but both are equally out of bounds, so just set both to max
+                else
+                {
+                    tau(0)=T_Min;
+                    tau(1)=P_Max;
+                }
+            }
+            //velocity is out of bounds positive, but moment is in bounds
+            else if(tau(0)>T_Max && tau(1)<P_Max && tau(1)>P_Min)
+            {
+                //scale moment by (moment/velocity)*maxMoment
+                tau(1)=tau(1)*T_Max/tau(0);
+                //saturate velocity
+                tau(0)=T_Max;
+            }
+            //velocity is out of bounds negative, but moment is in bounds
+            else if(tau(0)<T_Min && tau(1)<P_Max && tau(1)>P_Min)
+            {
+                //scale moment by (moment/velocity)*maxMoment
+                tau(1)=tau(1)*T_Min/tau(0);
+                //saturate velocity
+                tau(0)=T_Min;
+            }
+            //moment is out of bounds negative, but velocity is in bounds
+            else if(tau(0)<T_Max && tau(0)>T_Min && tau(1)>P_Max)
+            {
+                //scale velocity by (velocity/moment)*maxVelocity
+                tau(0)=tau(0)*P_Max/tau(1);
+                //saturate velocity
+                tau(1)=P_Max;
+            }
+            //moment is out of bounds negative, but velocity is in bounds
+            else if(tau(0)<T_Max && tau(0)>T_Min && tau(1)<P_Min)
+            {
+                //scale velocity by (velocity/moment)*maxVelocity
+                tau(0)=tau(0)*P_Max/tau(1);
+                //saturate moment
+                tau(1)=P_Max;
+            }
+            else
+            {
+                ROS_WARN("Tau 0 is %f", tau(0));
+                ROS_WARN("Tau 1 is %f", tau(1));
+                ROS_DEBUG("No Saturation Required");
+            }
+            // calculate the tranformation and actuator inputs
+            Vector2f u = T_inv_over_*tau;
+
+            /// return u in four element manner
+            return (Vector4f() << u(0), 0.0, u(1), 0.0).finished();
+        }
 	}
 
    	Eigen::Vector4f scaledOveractuatedAllocationSim::allocate_over(const Eigen::Vector3f& ctrlForces)
@@ -409,6 +462,13 @@ namespace alloc {
 		// actuator limits
 		ros::param::get("ctrl/alloc/T_max",act_max_T_);
 		ros::param::get("ctrl/alloc/T_min",act_min_T_);
+        
+        ros::param::get("ctrl/alloc/T_Max",T_Max);
+        ros::param::get("ctrl/alloc/T_Min",T_Min);
+        ros::param::get("ctrl/alloc/P_Max",P_Max);
+        ros::param::get("ctrl/alloc/P_Min",P_Min);
+        ros::param::get("ctrl/alloc/moment_scalar",moment_scalar);
+
 
 		ros::param::get("ctrl/alloc/alpha_max",act_max_alpha_);
 		ros::param::get("ctrl/alloc/alpha_min",act_min_alpha_);
@@ -432,7 +492,7 @@ namespace alloc {
 		//pub_->publish(a);
 
 		std_msgs::Float32 leftCmd;
-		leftCmd.data=u(0)/210;
+		leftCmd.data=u(0)/250;
 		sim_port_pub.publish(leftCmd);
 		
 		std_msgs::Float32 leftAngCmd;
@@ -440,7 +500,7 @@ namespace alloc {
 		sim_port_ang_pub.publish(leftAngCmd);
         
         std_msgs::Float32 rightCmd;
-		rightCmd.data=u(2)/210;
+		rightCmd.data=u(2)/250;
 		sim_stbd_pub.publish(rightCmd);
 
 		std_msgs::Float32 rightAngCmd;

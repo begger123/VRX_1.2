@@ -1,5 +1,8 @@
 #include <vehicle_control/stationKeep_controller.h>
 
+// Program written by Armando J. Sinisterra for the VRX challenge
+// October 19, 2019
+
 pid_controller::sk::sk(ros::NodeHandle &nh) : sk_nh(&nh), loop_rate(60) //sets default loop rate
 {
 	if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info) ) 
@@ -67,9 +70,7 @@ void pid_controller::sk::pose_callback(const geometry_msgs::Pose2D::ConstPtr& ms
         yaw_angle = msg->theta;
         eta << x, y, yaw_angle;
         eta_t = eta - eta_des;
-        // ROS_INFO("psi_unwrapped = %g", eta_t(2));
         eta_t(2) = piwrap(eta_t(2));
-        // eta_t(2) = eta_t(2)*1.1;
         ROS_INFO("eta_t = [%g, %g, %g]", eta_t(0), eta_t(1), eta_t(2));
         newPose = true;
     }

@@ -21,6 +21,8 @@ public:
 	~vehicle_state_sim();
 	void sim_callback(const nav_msgs::Odometry::ConstPtr& msg);
 	int loop();
+    double piwrap(double angle);
+    double twopiwrap(double angle);
 	geometry_msgs::Pose2D the_pose;
 
 
@@ -31,6 +33,10 @@ private:
 	ros::Subscriber sim_sub;
 	ros::Publisher base_link_ned_pub;
 	ros::Publisher base_link_pose2d_pub;
+
+    // Time variables
+    ros::Time curr_time, prev_time;
+    ros::Duration delta_time;
 
 	tf::Transform enu_to_ned_tf;
 

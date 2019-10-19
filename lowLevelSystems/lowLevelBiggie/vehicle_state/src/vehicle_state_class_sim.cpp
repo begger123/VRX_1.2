@@ -2,7 +2,7 @@
 
 //the purpose of this class take the p3d_wamv nav_msgs/Odometry message from the VMRC simulator and
 //convert it so that the system behaves the same whether running with real or simulated data
-vehicle_state_sim::vehicle_state_sim(ros::NodeHandle &nh) : state_nh_(&nh), loop_rate(100)
+vehicle_state_sim::vehicle_state_sim(ros::NodeHandle &nh) : state_nh_(&nh), loop_rate(60)
 {
 	sim_sub = state_nh_->subscribe("/wamv/robot_localization/odometry/filtered", 10, &vehicle_state_sim::sim_callback, this);
 	base_link_ned_pub = state_nh_->advertise<nav_msgs::Odometry>("/p3d_wamv_ned", 10);
@@ -13,6 +13,9 @@ vehicle_state_sim::vehicle_state_sim(ros::NodeHandle &nh) : state_nh_(&nh), loop
   	ros::param::get("state/tf/cameraXOffset", cameraXOffset);
   	ros::param::get("state/tf/cameraYOffset", cameraYOffset);
   	ros::param::get("state/tf/cameraZOffset", cameraZOffset);
+
+    // Initialize some variables
+    prev_time = ros::Time::now();
 }
 
 vehicle_state_sim::~vehicle_state_sim()
@@ -55,6 +58,11 @@ void vehicle_state_sim::send_transforms()
 
 void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
 {
+    curr_time = ros::Time::now();
+    delta_time = curr_time - prev_time;
+    prev_time = curr_time;
+    // ROS_INFO("delta_time = %g", delta_time.toSec());
+    
 	//converts from ENU to NED
 	the_odometry.header.seq++;
 	the_odometry.header.frame_id="ned_origin";
@@ -122,6 +130,7 @@ void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
 	// yawAngle=-tf::getYaw(tf::Quaternion(the_odometry.pose.pose.orientation.x,the_odometry.pose.pose.orientation.y,the_odometry.pose.pose.orientation.z,the_odometry.pose.pose.orientation.w));
 
 	yawAngle=tf::getYaw(tf::Quaternion(msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z,msg->pose.pose.orientation.w));
+    yawAngle = twopiwrap(yawAngle);
     
     // Convert yawAngle from ENU to NED convention
     if (yawAngle < M_PI/2) {
@@ -131,12 +140,32 @@ void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
         yawAngle = 5*M_PI/2 - yawAngle;
     }
 
+    // yawAngle = piwrap(yawAngle);
+    // ROS_INFO("yawAngle = %g", yawAngle);
+
 
     // ROS_INFO("yawAngle_vstate = %f", yawAngle);
     // ROS_INFO("orientation_x = %f", the_odometry.pose.pose.orientation.x);
     // ROS_INFO("orientation_y = %f", the_odometry.pose.pose.orientation.y);
     // ROS_INFO("orientation_z = %f", the_odometry.pose.pose.orientation.z);
     // ROS_INFO("orientation_w = %f", the_odometry.pose.pose.orientation.w);
+}
+
+double vehicle_state_sim::twopiwrap(double angle)
+{
+    angle = fmod(angle, 2*M_PI);
+    return(angle);
+}
+
+double vehicle_state_sim::piwrap(double angle)
+{
+   angle = fmod(angle, 2*M_PI);
+   if (angle >= 0 && angle <= M_PI) {
+       return(angle);
+   }
+   else {
+       return(angle - 2*M_PI);
+   }
 }
 
 int vehicle_state_sim::loop()

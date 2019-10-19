@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Program made by Armando J. Sinisterra for VRX Challenge
+# Program written by Armando J. Sinisterra for VRX Challenge
 # Based on paper: "Constrained Nonlinear Control Allocation With Singularity Avoidance Using
 # Sequential Quadratic Programming" from T. A. Johansen et al
 # QP function based on the following expression:
@@ -47,10 +47,10 @@ class QP:
         self.x = np.zeros((self.n+2*self.m, 1)) # This is the vector to be optimized [deltaU_left, deltaU_right, Sx, Sy, Sz, d_left_angle, d_right_angle]
         fact =  10
         self.w = 0.018*fact                     # 0.018 - quadratic term coeff. of the quadratic fit of the power function
-        self.q = 10                             # weights for Q>0 which penalize the error s between commanded and achieved forces
-        self.omega = 180                        # 180 - weights for OMEGA>0 for tunning angle rate (delta_alpha)
-        self.lx = 1.3                           # bf x-magnitude of the thrusters
-        self.ly = 0.915                         # bf y-magnitude of the thrusters
+        self.q = 300                             # weights for Q>0 which penalize the error s between commanded and achieved forces
+        self.omega = 10                        # 180 - weights for OMEGA>0 for tunning angle rate (delta_alpha)
+        self.lx = 2.37                           #  1.3 bf x-magnitude of the thrusters
+        self.ly = 1.03                         # 0.915 bf y-magnitude of the thrusters
         self.rho = 100                          # weighting parameter of the singularity avoidance term
         self.eps = 0.0001                       # small term to avoid division by zero in singularity avoidance term
         self.gradC1 = gradC1                    # gradient of singularity avoidance (SA) term (not yet implemented)                    
@@ -83,6 +83,7 @@ class QP:
 
         # Set some variables
         tau = np.array([msg.tau[0].data, msg.tau[1].data, msg.tau[2].data])
+        #  tau = np.array([msg.tau[0].data, msg.tau[1].data, 100*msg.tau[2].data])
         lx = self.lx
         ly = self.ly
         left_thrust = self.left_thrust
@@ -156,7 +157,7 @@ class QP:
         h = np.concatenate((UB, -LB), axis=0)
 
         x = solve_qp(self.P.astype(np.double), f.astype(np.double), G.astype(np.double), h.astype(np.double), A.astype(np.double), b.astype(np.double), solver="quadprog")
-        print("QP solution: x = {}".format(x))
+        #  print("QP solution: x = {}".format(x))
 
         # Store as previous values
         self.left_thrust  = x[0] + self.left_thrust
@@ -166,28 +167,20 @@ class QP:
 
         curtime = rospy.get_time()
         difftime = curtime - self.lastTime
-
-        #  curtime = rospy.Time.now()
-        #  difftime = curtime.nsecs - self.lastTime.nsecs
-
-        #  rospy.loginfo("tau = [%g, %g, %g]", tau[0], tau[1], tau[2])
-        rospy.loginfo("[left_thrust, left_angle] = [%g, %g]", self.left_thrust, self.left_angle);
-        rospy.loginfo("[right_thrust, right_angle] = [%g, %g]", self.right_thrust, self.right_angle);
         #  rospy.loginfo("difftime = %f", difftime)
-        #  now = rospy.Time.now()
-        #  rospy.loginfo("time_now = %i %i", now.secs, now.nsecs)
+
 
         if (self.left_thrust > 0):
-            self.left_command = self.left_thrust/self.max_thrust
+            self.left_command = self.left_thrust/np.absolute(self.max_thrust)
         elif (self.left_thrust < 0):
-            self.left_command = self.left_thrust/self.min_thrust
+            self.left_command = self.left_thrust/np.absolute(self.min_thrust)
         else:
             self.left_command = 0
 
         if (self.right_thrust > 0):
-            self.right_command = self.right_thrust/self.max_thrust
+            self.right_command = self.right_thrust/np.absolute(self.max_thrust)
         elif (self.right_thrust < 0):
-            self.right_command = self.right_thrust/self.min_thrust
+            self.right_command = self.right_thrust/np.absolute(self.min_thrust)
         else:
             self.right_command = 0
 
@@ -206,6 +199,14 @@ class QP:
         self.right_thrust_pub.publish(right_thrust_msg)
         self.left_angle_pub.publish(left_angle_msg)
         self.right_angle_pub.publish(right_angle_msg)
+
+        #  rospy.loginfo("tau = [%g, %g, %g]", tau[0], tau[1], tau[2])
+
+        #  rospy.loginfo("[left_thrust, left_angle] = [%g, %g]", self.left_thrust, self.left_angle);
+        #  rospy.loginfo("[left_command, left_angle_enu] = [%g, %g]", left_thrust_msg.data, left_angle_msg.data);
+
+        #  rospy.loginfo("[right_thrust, right_angle] = [%g, %g]", self.right_thrust, self.right_angle);
+        #  rospy.loginfo("[right_command, right_angle_enu] = [%g, %g]", right_thrust_msg.data, right_angle_msg.data);
 
         self.lastTime = curtime
 

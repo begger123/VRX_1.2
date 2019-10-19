@@ -285,7 +285,7 @@ void sm_controller::sl_mode_st_keep::integrate_eta_t()
 	ROS_DEBUG("In integrate eta_t");
 	this->set_timestep();
     ROS_ERROR("The integral is set as non cumulative");
-	integral_eta_t_ = eta_t_ * delta_t.toSec();
+	integral_eta_t_ += eta_t_ * delta_t.toSec();
 
     ROS_DEBUG("This is position tracking error metric in integrate");
 	ROS_DEBUG("The eta_t_(0) is %f.", eta_t_(0));

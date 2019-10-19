@@ -2,7 +2,7 @@
 
 //the purpose of this class take the p3d_wamv nav_msgs/Odometry message from the VMRC simulator and
 //convert it so that the system behaves the same whether running with real or simulated data
-vehicle_state_sim::vehicle_state_sim(ros::NodeHandle &nh) : state_nh_(&nh), loop_rate(100)
+vehicle_state_sim::vehicle_state_sim(ros::NodeHandle &nh) : state_nh_(&nh), loop_rate(60)
 {
 	sim_sub = state_nh_->subscribe("/wamv/robot_localization/odometry/filtered", 10, &vehicle_state_sim::sim_callback, this);
 	base_link_ned_pub = state_nh_->advertise<nav_msgs::Odometry>("/p3d_wamv_ned", 10);
@@ -106,7 +106,7 @@ void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
     // linear velocity corrected values
     the_odometry.twist.twist.linear.x = msg->twist.twist.linear.x;
     the_odometry.twist.twist.linear.y = -msg->twist.twist.linear.y;
-    the_odometry.twist.twist.linear.z = msg->twist.twist.linear.z;
+    the_odometry.twist.twist.linear.z = -msg->twist.twist.linear.z;
 
     // ROS_INFO("enu_velocity = [vel_x, vel_y] = [%f, %f]", msg->twist.twist.linear.x, msg->twist.twist.linear.y);
     // ROS_INFO("ned_velocity = [v_x, v_y] = [%f, %f]", the_odometry.twist.twist.linear.x, the_odometry.twist.twist.linear.y);

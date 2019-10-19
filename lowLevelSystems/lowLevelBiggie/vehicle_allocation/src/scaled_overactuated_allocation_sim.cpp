@@ -46,7 +46,7 @@ namespace alloc {
 	////////////////////
 	// Public Methods //
 	////////////////////
-	Vector4f scaledOveractuatedAllocationSim::allocate(const Vector3f& ctrlForces)
+/*	Vector4f scaledOveractuatedAllocationSim::allocate(const Vector3f& ctrlForces)
 	{
         //checks to see if the heading error is large enough to warrant cutting speed and fixing heading
         if(sqrt(ctrlForces(2)*ctrlForces(2))>moment_scalar*sqrt(ctrlForces(0)*ctrlForces(0)))
@@ -212,7 +212,7 @@ namespace alloc {
             return (Vector4f() << u(0), 0.0, u(1), 0.0).finished();
         }
 	}
-
+*/
    	Eigen::Vector4f scaledOveractuatedAllocationSim::allocate_over(const Eigen::Vector3f& ctrlForces)
     {/*
       *	ALL ANGLES HERE USE DEGREE REPRESENTATION
@@ -233,12 +233,9 @@ namespace alloc {
     
     	// calculate using MP Inverse of transfo
     	f = T_inv_over_*ctrlForces;
-    	ROS_WARN("f is %f %f %f %f",f(0), f(1), f(2), f(3));
-    	ROS_WARN("T_inv_over_ is %f %f %f",T_inv_over_(0,0), T_inv_over_(0,1), T_inv_over_(0,2));
-    	ROS_WARN("T_inv_over_ is %f %f %f",T_inv_over_(1,0), T_inv_over_(1,1), T_inv_over_(1,2));
-    	ROS_WARN("T_inv_over_ is %f %f %f",T_inv_over_(2,0), T_inv_over_(2,1), T_inv_over_(2,2));
-    	ROS_WARN("T_inv_over_ is %f %f %f",T_inv_over_(3,0), T_inv_over_(3,1), T_inv_over_(3,2));
-    	ROS_WARN("ctrlForces is %f %f %f",ctrlForces(0), ctrlForces(1), ctrlForces(2));
+    	
+    	ROS_DEBUG("ctrlForces is %f %f %f",ctrlForces(0), ctrlForces(1), ctrlForces(2));
+        ROS_DEBUG("extended thrust is %f %f %f %f",f(0), f(1), f(2), f(3));
     
     	// calculate using simple trigonometric functions
     	Tp = sqrt( pow(f(0),2) + pow(f(1),2) );
@@ -247,8 +244,8 @@ namespace alloc {
     	alphap = RAD2DEG(atan2(f(1),f(0)));
     	alphas = RAD2DEG(atan2(f(3),f(2)));
     
-    	double pos_rev_limit =  180.0 + act_min_alpha_;
-    	double neg_rev_limit = -180.0 + act_max_alpha_;
+    	double pos_rev_limit =  180.0 + RAD2DEG(act_min_alpha_);
+    	double neg_rev_limit = -180.0 + RAD2DEG(act_max_alpha_);
 
         ROS_WARN("pos_rev_limit is %f", pos_rev_limit);
         ROS_WARN("neg_rev_limit is %f", neg_rev_limit);
@@ -303,7 +300,7 @@ namespace alloc {
     
     	// load all act inputs into a vecotr
     	sysInputs << Tp, alphap, Ts, alphas;
-    	ROS_INFO("sysInputs are %f %f %f %f",Tp, alphap, Ts, alphas);
+    	//ROS_DEBUG("sysInputs are %f %f %f %f",Tp, alphap, Ts, alphas);
     
     	// if there is saturation scale scale SCALE!
     	if(sat_flag)
@@ -334,29 +331,29 @@ namespace alloc {
     		/////////////////////
     
     		// not within deadband continue
-    		if(alphap >= pos_rev_limit)
-    		{
-    			Tp *= -1;
-    			alphap -= 180.0;
-    		}
-    		else if(alphap <= neg_rev_limit)
-    		{
-    			// reverse port direction
-    			Tp *= -1;
-    			alphap += 180.0;
-    		}
+    		//if(alphap >= pos_rev_limit)
+    		//{
+    		//	Tp *= -1;
+    		//	alphap -= 180.0;
+    		//}
+    		//else if(alphap <= neg_rev_limit)
+    		//{
+    		//	// reverse port direction
+    		//	Tp *= -1;
+    		//	alphap += 180.0;
+    		//}
     
-    		if(alphas >= pos_rev_limit)
-    		{
-    			Ts *= -1;
-    			alphas -= 180.0;
-    		}
-    		else if(alphas <= neg_rev_limit)
-    		{
-    			// reverse port direction
-    			Ts *= -1;
-    			alphas += 180.0;
-    		}
+    		//if(alphas >= pos_rev_limit)
+    		//{
+    		//	Ts *= -1;
+    		//	alphas -= 180.0;
+    		//}
+    		//else if(alphas <= neg_rev_limit)
+    		//{
+    		//	// reverse port direction
+    		//	Ts *= -1;
+    		//	alphas += 180.0;
+    		//}
     
     		// check for actuator saturation
     		if(Tp > act_max_T_)
@@ -417,11 +414,9 @@ namespace alloc {
 		{
 			if(tau_flg)
 			{
-				ROS_DEBUG("before Vector3f tau generated");
 				// convert from message to Eigen vector
 				Vector3f tau = (Vector3f() << tau_msg.tau[0].data, tau_msg.tau[1].data, tau_msg.tau[2].data).finished();
 
-				ROS_DEBUG("before publisher");
 				// allocate and publish to motors
 				publish_actuator_inputs_(this->allocate_over(tau));
 
@@ -460,11 +455,8 @@ namespace alloc {
 		tau_min_.N = v_tau[2];
 
 		// actuator limits
-		ros::param::get("ctrl/alloc/T_max",act_max_T_);
-		ros::param::get("ctrl/alloc/T_min",act_min_T_);
-        
-        ros::param::get("ctrl/alloc/T_Max",T_Max);
-        ros::param::get("ctrl/alloc/T_Min",T_Min);
+        ros::param::get("ctrl/alloc/T_max",act_max_T_);
+        ros::param::get("ctrl/alloc/T_min",act_min_T_);
         ros::param::get("ctrl/alloc/P_Max",P_Max);
         ros::param::get("ctrl/alloc/P_Min",P_Min);
         ros::param::get("ctrl/alloc/moment_scalar",moment_scalar);
@@ -476,36 +468,59 @@ namespace alloc {
 
 	void scaledOveractuatedAllocationSim::publish_actuator_inputs_(const Vector4f& u)
 	{
-		//usv16_msgs::Usv16ActuatorInputs a;
-
-		//a.timeNow = ros::Time::now();
-
-		// timestamp
-		//a.t 				 = msg->t;
-
-		// actuator inputs
-		//a.actuator_inputs[0] = u(0);
-		//a.actuator_inputs[1] = u(1);
-		//a.actuator_inputs[2] = u(2);
-		//a.actuator_inputs[3] = u(3);
-
-		//pub_->publish(a);
-
 		std_msgs::Float32 leftCmd;
-		leftCmd.data=u(0)/250;
-		sim_port_pub.publish(leftCmd);
+        if(u(0)>=0)
+        {
+		    leftCmd.data=u(0)/act_max_T_;
+        }
+        else
+        {
+            leftCmd.data=u(0)/act_min_T_;
+        }
+        sim_port_pub.publish(leftCmd);
 		
 		std_msgs::Float32 leftAngCmd;
-		leftAngCmd.data=u(1);
+        if(u(1)>=0)
+        {
+		    //leftAngCmd.data=(u(1)-M_PI)/DEG2RAD(act_max_alpha_);
+		    leftAngCmd.data=u(1);
+        }
+        else
+        {
+		    //leftAngCmd.data=-(u(1)+M_PI)/DEG2RAD(act_max_alpha_);
+		    leftAngCmd.data=u(1);
+        }
 		sim_port_ang_pub.publish(leftAngCmd);
         
+        //ROS_WARN("u(1), %f",u(1));
+        //ROS_WARN("leftCmd.data, %f",leftAngCmd.data);
+        
+        
         std_msgs::Float32 rightCmd;
-		rightCmd.data=u(2)/250;
+        if(u(2)>=0)
+        {
+		    rightCmd.data=u(2)/act_max_T_;
+        }
+        else
+        {
+		    rightCmd.data=u(2)/act_min_T_;
+        }
 		sim_stbd_pub.publish(rightCmd);
 
 		std_msgs::Float32 rightAngCmd;
-		rightAngCmd.data=u(3);
+        if(u(3)>=0)
+        {
+		    //rightAngCmd.data=(u(3)-180)/DEG2RAD(act_max_alpha_);
+		    rightAngCmd.data=u(3);
+        }
+        else
+        {
+		    //rightAngCmd.data=-(u(3)+180)/DEG2RAD(act_max_alpha_);
+		    rightAngCmd.data=u(3);
+        }
 		sim_stbd_ang_pub.publish(rightAngCmd);
+    	
+        ROS_WARN("Finall Alloc outputs are %f %f %f %f",leftCmd.data, leftAngCmd.data, rightCmd.data, rightAngCmd.data);
 	}
 
 	void scaledOveractuatedAllocationSim::tau_callback_(const custom_messages_biggie::control_effort::ConstPtr& msg)

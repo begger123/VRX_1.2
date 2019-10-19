@@ -13,21 +13,25 @@ smsk:
   Nr_dot_: 0
  
   # Again, our real values 
-  Xu: 56.2
-  Yv: 300
-  Nr_: 400
+  #Xu: 56.2
+  #Yv: 300
+  #Nr_: 400
   #VRX Values
   Xu: 51.3
   Yv: 40
-  Nr_: 400
-  
+  Nr: 400
+
+  XuU: 72.4
+  YvV: 0.0
+  NrR: 0.0
+
   lamda: 0.16
   r_kx_: 12.5
   r_ky_: 12.5
   r_kpsi_: 12.5
   e_kx_: 0.125
   e_ky_: 0.125
-  e_kpsi_: 0.52359878 #3*3.14159265359/180.0
+  e_kpsi_: 3 #3*3.14159265359/180.0
 
 ctrl:
   alloc:
@@ -35,11 +39,11 @@ ctrl:
     ly: 1.2
     T_max: 250
     T_min: -100
-    P_Max: 300
-    P_Min: -300
-    alpha_max: rad(90)
-    alpha_min: rad(-90)
+    P_Max: 400
+    P_Min: -400
+    alpha_max: 1.57
+    alpha_min:  -1.57 #-1.31
     moment_scalar: 1000
   ctrlr:
-    tau_max: [500.0, 300.0, 300.0]
-    tau_min: [-200.0, -300.0, -300.0]
+    tau_max: [500.0, 300.0, 400.0]
+    tau_min: [-200.0, -300.0, -400.0]

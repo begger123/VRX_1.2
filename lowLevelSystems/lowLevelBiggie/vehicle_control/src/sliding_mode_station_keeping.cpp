@@ -25,7 +25,7 @@ sm_controller::sl_mode_st_keep::sl_mode_st_keep(ros::NodeHandle &nh) : sm_sk_nh_
 	state_sub_ = sm_sk_nh_->subscribe("/p3d_wamv_ned", 10, &sm_controller::sl_mode_st_keep::state_callback, this);
 	pose_sub_ = sm_sk_nh_->subscribe("/vehicle_pose", 10, &sm_controller::sl_mode_st_keep::pose_callback, this);
 	accel_sub_ = sm_sk_nh_->subscribe("/wamv/sensors/imu/imu/data", 10, &sm_controller::sl_mode_st_keep::accel_callback, this);
-	control_effort_pub_ = sm_sk_nh_->advertise<custom_messages_biggie::control_effort>("/control_effort_sk", 10); //published TAU = {X,Y,Eta}
+	control_effort_pub_ = sm_sk_nh_->advertise<custom_messages_biggie::control_effort>("/control_effort", 10); //published TAU = {X,Y,Eta}
 
 	this->get_params();
 
@@ -164,11 +164,11 @@ void sm_controller::sl_mode_st_keep::state_callback(const nav_msgs::Odometry::Co
     eta_dot_dot_ = J_dot_*nu_+J_*nu_dot_;
 
     eta_t_ = -(eta_ - eta_d_);
-    eta_t_(2) = this->wrap_heading(-eta_t_(2));//ensures the vehicle turns the shortest distance to address heading error
+    eta_t_(2) = this->wrap_heading(eta_t_(2));//ensures the vehicle turns the shortest distance to address heading error
     eta_t_dot_ = -(eta_dot_ - eta_d_dot_);
-    eta_t_dot_(2)=-eta_t_dot_(2);
+    //eta_t_dot_(2)=-eta_t_dot_(2);
     eta_t_dot_dot_ = -(eta_dot_dot_ - eta_d_dot_dot_);
-    eta_t_dot_dot_(2) = -eta_t_dot_dot_(2);
+    //eta_t_dot_dot_(2) = -eta_t_dot_dot_(2);
 
     ROS_DEBUG("J_ is %f %f %f", J_(0,0), J_(0,1), J_(0,2));
     ROS_DEBUG("J_ is %f %f %f", J_(1,0), J_(1,1), J_(1,2));

@@ -13,6 +13,9 @@ vehicle_state_sim::vehicle_state_sim(ros::NodeHandle &nh) : state_nh_(&nh), loop
   	ros::param::get("state/tf/cameraXOffset", cameraXOffset);
   	ros::param::get("state/tf/cameraYOffset", cameraYOffset);
   	ros::param::get("state/tf/cameraZOffset", cameraZOffset);
+
+    // Initialize some variables
+    prev_time = ros::Time::now();
 }
 
 vehicle_state_sim::~vehicle_state_sim()
@@ -55,6 +58,11 @@ void vehicle_state_sim::send_transforms()
 
 void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
 {
+    curr_time = ros::Time::now();
+    delta_time = curr_time - prev_time;
+    prev_time = curr_time;
+    // ROS_INFO("delta_time = %g", delta_time.toSec());
+    
 	//converts from ENU to NED
 	the_odometry.header.seq++;
 	the_odometry.header.frame_id="ned_origin";
@@ -111,18 +119,19 @@ void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
     // ROS_INFO("enu_velocity = [vel_x, vel_y] = [%f, %f]", msg->twist.twist.linear.x, msg->twist.twist.linear.y);
     // ROS_INFO("ned_velocity = [v_x, v_y] = [%f, %f]", the_odometry.twist.twist.linear.x, the_odometry.twist.twist.linear.y);
 
-    tf::Vector3 enuAngularVel(msg->twist.twist.angular.x, msg->twist.twist.angular.y, msg->twist.twist.angular.z);
-    tf::Vector3 nedAngularVel=R_z*R_x*enuAngularVel;
-    the_odometry.twist.twist.angular.x=nedAngularVel[0];
-    the_odometry.twist.twist.angular.y=nedAngularVel[1];
-    the_odometry.twist.twist.angular.z=nedAngularVel[2];
+	tf::Vector3 enuAngularVel(msg->twist.twist.angular.x, msg->twist.twist.angular.y, msg->twist.twist.angular.z);
+	tf::Vector3 nedAngularVel=R_z*R_x*enuAngularVel;
+	the_odometry.twist.twist.angular.x=nedAngularVel[0];
+	the_odometry.twist.twist.angular.y=nedAngularVel[1];
+	the_odometry.twist.twist.angular.z=nedAngularVel[2];
+	
+	//create heading
+	//im not sure why, but the above rotation "enu_to_ned_tf.setRPY(M_PI,0,-M_PI/2);" is not properly rotating about the roll, therefore we apply a negative sign below
+	// yawAngle=-tf::getYaw(tf::Quaternion(the_odometry.pose.pose.orientation.x,the_odometry.pose.pose.orientation.y,the_odometry.pose.pose.orientation.z,the_odometry.pose.pose.orientation.w));
 
-    //create heading
-    //im not sure why, but the above rotation "enu_to_ned_tf.setRPY(M_PI,0,-M_PI/2);" is not properly rotating about the roll, therefore we apply a negative sign below
-    // yawAngle=-tf::getYaw(tf::Quaternion(the_odometry.pose.pose.orientation.x,the_odometry.pose.pose.orientation.y,the_odometry.pose.pose.orientation.z,the_odometry.pose.pose.orientation.w));
-
-    yawAngle=tf::getYaw(tf::Quaternion(msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z,msg->pose.pose.orientation.w));
-
+	yawAngle=tf::getYaw(tf::Quaternion(msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z,msg->pose.pose.orientation.w));
+    yawAngle = twopiwrap(yawAngle);
+    
     // Convert yawAngle from ENU to NED convention
     if (yawAngle < M_PI/2) {
         yawAngle = M_PI/2 - yawAngle;
@@ -131,11 +140,27 @@ void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
         yawAngle = 5*M_PI/2 - yawAngle;
     }
 
-    // ROS_INFO("yawAngle_vstate = %f", yawAngle);
     // ROS_INFO("orientation_x = %f", the_odometry.pose.pose.orientation.x);
     // ROS_INFO("orientation_y = %f", the_odometry.pose.pose.orientation.y);
     // ROS_INFO("orientation_z = %f", the_odometry.pose.pose.orientation.z);
     // ROS_INFO("orientation_w = %f", the_odometry.pose.pose.orientation.w);
+}
+
+double vehicle_state_sim::twopiwrap(double angle)
+{
+    angle = fmod(angle, 2*M_PI);
+    return(angle);
+}
+
+double vehicle_state_sim::piwrap(double angle)
+{
+   angle = fmod(angle, 2*M_PI);
+   if (angle >= 0 && angle <= M_PI) {
+       return(angle);
+   }
+   else {
+       return(angle - 2*M_PI);
+   }
 }
 
 int vehicle_state_sim::loop()

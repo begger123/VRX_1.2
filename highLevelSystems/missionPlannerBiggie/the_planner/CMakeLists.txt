@@ -86,7 +86,7 @@ set(MISSIONS src/missions/tester.cpp src/missions/navigation_channel.cpp src/mis
 
 add_executable(planner src/plannerV3.cpp src/highLevelPlanner.cpp src/Missions.cpp ${MISSIONS})
 target_link_libraries(planner ${catkin_LIBRARIES})
-add_dependencies(planner the_planner_generate_messages_cpp ${${custom_messages_biggie}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(planner the_planner_generate_messages_cpp ${${vrx_gazebo}_EXPORTED_TARGETS} ${${custom_messages_biggie}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 #######################
 ## Trajectory Server ##

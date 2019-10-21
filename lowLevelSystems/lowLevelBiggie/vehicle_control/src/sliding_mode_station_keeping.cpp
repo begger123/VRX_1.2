@@ -164,11 +164,11 @@ void sm_controller::sl_mode_st_keep::state_callback(const nav_msgs::Odometry::Co
     eta_dot_dot_ = J_dot_*nu_+J_*nu_dot_;
 
     eta_t_ = -(eta_ - eta_d_);
-    eta_t_(2) = this->wrap_heading(eta_t_(2));//ensures the vehicle turns the shortest distance to address heading error
+    eta_t_(2) = this->wrap_heading(-eta_t_(2));//ensures the vehicle turns the shortest distance to address heading error
     eta_t_dot_ = -(eta_dot_ - eta_d_dot_);
-    //eta_t_dot_(2)=-eta_t_dot_(2);
+    eta_t_dot_(2)=-eta_t_dot_(2);
     eta_t_dot_dot_ = -(eta_dot_dot_ - eta_d_dot_dot_);
-    //eta_t_dot_dot_(2) = -eta_t_dot_dot_(2);
+    eta_t_dot_dot_(2) = -eta_t_dot_dot_(2);
 
     ROS_DEBUG("J_ is %f %f %f", J_(0,0), J_(0,1), J_(0,2));
     ROS_DEBUG("J_ is %f %f %f", J_(1,0), J_(1,1), J_(1,2));

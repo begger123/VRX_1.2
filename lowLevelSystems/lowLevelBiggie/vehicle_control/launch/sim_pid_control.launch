@@ -24,8 +24,8 @@
 
     <!-- Run control system -->
     <!-- <node pkg="vehicle_control" name="control" type="vehicle_control" output="screen"/> -->
-    <node pkg="vehicle_control" name="control" type="vehicle_control_dyn" output="screen"/>
-    <!-- <node pkg="vehicle_control" name="control" type="vehicle_skcontrol_dyn" output="screen"/> -->
+    <!-- <node pkg="vehicle_control" name="control" type="vehicle_control_dyn" output="screen"/> -->
+    <node pkg="vehicle_control" name="control" type="vehicle_skcontrol_dyn" output="screen"/>
 
     <!-- Run allocation -->
     <!-- <node pkg="vehicle_allocation" name="allocation" type="vehicle_allocation" output="screen"/> -->

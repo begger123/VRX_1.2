@@ -15,8 +15,8 @@ pid_controller::sk::sk(ros::NodeHandle &nh) : sk_nh(&nh), loop_rate(60) //sets d
     control_pub = sk_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10);  // published tau = {Tx, Ty, Mz}
 
     // Initialize some variables
-    double x_des = 10;
-    double y_des = 2;
+    double x_des = 20;
+    double y_des = 0;
     double psi_des = M_PI/2;
     eta_des << x_des, y_des, psi_des;
     initialized = false;

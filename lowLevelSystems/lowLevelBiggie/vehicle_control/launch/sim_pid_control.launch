@@ -3,13 +3,13 @@
 
 	<!-- Run Gazebo Simulator -->
     <!-- <include file="$(find vrx_gazebo)/launch/sandisland.launch"/> -->
-    <include file="$(find vrx_gazebo)/launch/my_vrx.launch"/>
+    <!-- <include file="$(find vrx_gazebo)/launch/my_vrx.launch"/> -->
 
 	<!-- Run Gazebo State Simulator -->
-    <include file="$(find wamv_gazebo)/launch/localization_example.launch"/>
+    <!-- <include file="$(find wamv_gazebo)/launch/localization_example.launch"/> -->
 
 	<!-- Run RViz -->
-	<include file="$(find wamv_gazebo)/launch/rviz_vrx.launch" />
+    <!-- <include file="$(find wamv_gazebo)/launch/rviz_vrx.launch" /> -->
 
     <!-- Publish the static TF Tree -->
     <node pkg="tf_tree" name="tf_tree_sim" type="tf_tree_sim" output="screen"/>

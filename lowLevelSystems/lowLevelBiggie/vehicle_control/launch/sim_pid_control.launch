@@ -1,16 +1,6 @@
 <?xml version="1.0"?>
 <launch>
 
-	<!-- Run Gazebo Simulator -->
-    <!-- <include file="$(find vrx_gazebo)/launch/sandisland.launch"/> -->
-    <!-- <include file="$(find vrx_gazebo)/launch/my_vrx.launch"/> -->
-
-	<!-- Run Gazebo State Simulator -->
-    <!-- <include file="$(find wamv_gazebo)/launch/localization_example.launch"/> -->
-
-	<!-- Run RViz -->
-    <!-- <include file="$(find wamv_gazebo)/launch/rviz_vrx.launch" /> -->
-
     <!-- Publish the static TF Tree -->
     <node pkg="tf_tree" name="tf_tree_sim" type="tf_tree_sim" output="screen"/>
 
@@ -30,9 +20,6 @@
     <!-- Run allocation -->
     <!-- <node pkg="vehicle_allocation" name="allocation" type="vehicle_allocation" output="screen"/> -->
     <node pkg="qp_allocation" name="qp_allocation" type="qp_allocation.py" output="screen"/>
-
-    <!-- Start High To Low Parser -->
-    <node pkg="high_to_low" type="high_to_low" name="high_to_low" output="screen"></node>
 
     <!-- Start Simulated Drivers and State Accumulator -->
     <include file="$(find vehicle_state)/launch/sim_vehicle_state.launch" />
@@ -64,7 +51,10 @@
     </rosparam>
     </node>
 
-    <!-- Run Armando's Suite -->
-    <include file="$(find wamv_navigation)/launch/vehicle_sim.launch" />
+    <node pkg="high_to_low" type="high_to_low" name="waypoints_to_waypoint" output="screen" respawn="true"/>
 
+    <node pkg="the_planner" type="planner" name="planner" output="screen">
+            <rosparam param="mission_string">[tester]</rosparam>
+        <rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load" respawn="true"></rosparam>
+    </node>
 </launch>

@@ -6,7 +6,8 @@ tester::tester(ros::NodeHandle &nh) : Mission(nh)
 	ROS_DEBUG("tester has started");
 	task_subscriber = mission_nh_->subscribe("/vrx/task/info", 10, &tester::task_callback, this);
 	station_keeping_subscriber = mission_nh_->subscribe("/vrx/station_keeping/goal", 10, &tester::sk_goal_callback, this);
-	sk_publisher = mission_nh_->advertise<geometry_msgs::Pose2D>("/control_target", 10);
+	waypoint_subscriber = mission_nh_->subscribe("/vrx/wayfinding/waypoints", 10, &tester::wp_goal_callback, this);
+	sk_publisher = mission_nh_->advertise<geometry_msgs::Pose2D>("/control_target_sk", 10);
 	tester_publisher = mission_nh_->advertise<std_msgs::Bool>("shouldIStart", 10);
 	traj_client = mission_nh_->serviceClient<the_planner::initTraj>("gen_init_traj");
     newTask=false;
@@ -38,7 +39,12 @@ void tester::task_callback(const vrx_gazebo::Task::ConstPtr& msg)
         this->task=STATIONKEEP;
         newTask=true;
     }
-
+    
+    if (theTaskMsg.name=="wayfinding")
+    {
+        this->task=WAYPOINTS;
+        newTask=true;
+    }
 }
 
 void tester::sk_goal_callback(const geographic_msgs::GeoPoseStamped::ConstPtr& msg)
@@ -52,9 +58,42 @@ void tester::sk_goal_callback(const geographic_msgs::GeoPoseStamped::ConstPtr& m
     skPoint.x=nedPoint.north;
     skPoint.y=nedPoint.east;
 
-    ROS_INFO("The target in NED is %f %f", nedPoint.north, nedPoint.east);    
+    skPoint.theta=tf::getYaw(tf::Quaternion(msg->pose.orientation.x,msg->pose.orientation.y,msg->pose.orientation.z,msg->pose.orientation.w));
 
+    //wraps heading between 0 and 2PI    
+    //skPoint.theta=fmod(skPoint.theta, 2*M_PI); 
+
+    // Convert yawAngle from ENU to NED convention
+    //if (skPoint.theta < M_PI/2)
+    //{
+    //    skPoint.theta = M_PI/2 - skPoint.theta;
+    //}
+    //else 
+    //{
+    //    skPoint.theta = 5*M_PI/2 - skPoint.theta;
+    //}
+
+    ROS_INFO("The target in NED is %f %f %f", skPoint.x, skPoint.y, skPoint.theta);    
     skGoal=true;
+}
+
+void tester::wp_goal_callback(const geographic_msgs::GeoPath::ConstPtr& msg)
+{
+    wpGoalMsg.header=msg->header;
+    wpGoalMsg.poses=msg->poses;
+
+    ROS_WARN("the number of waypoints is %lu", wpGoalMsg.poses.size()); 
+    
+    for (int i=0; i<wpGoalMsg.poses.size(); i++)
+    {
+       NED_struct tempPoint; 
+       tempPoint=this->Geo2NED(wpGoalMsg.poses[i].pose.position.latitude, wpGoalMsg.poses[i].pose.position.longitude, datum[0], datum[1]);
+       
+       theArray.waypoint_array.push_back(tempPoint.north);// tempPoint.east, 1.5};
+       theArray.waypoint_array.push_back(tempPoint.east);// tempPoint.east, 1.5};
+       theArray.waypoint_array.push_back(2.5);// tempPoint.east, 1.5};
+    }
+    wpGoal=true;
 }
 
 NED_struct tester::Geo2NED(double lat, double lon, double latref, double lonref)
@@ -146,7 +185,7 @@ void tester::loop()
             //publish this sucker to the controller as long as needed
             while(ros::ok())
             {
-                ros::Rate loop_rate(4);
+                ros::Rate loop_rate(60);
                 loop_rate.sleep();
                 sk_publisher.publish(skPoint);
             }
@@ -156,57 +195,10 @@ void tester::loop()
 		}
 		case WAYPOINTS:
 		{
-            //rosservice call to /gen_init_traj
-            //pipe this into array.waypoint_array
-            the_planner::initTraj theTraj;
-            geometry_msgs::Point garbageCanPoint;
-            theTraj.request.pointA = garbageCanPoint;
-            theTraj.request.pointB = garbageCanPoint;
-            theTraj.request.pointC = garbageCanPoint;
-            theTraj.request.pointD = garbageCanPoint;
-            if (traj_client.call(theTraj))
-            {   
-                ROS_INFO("Initial Trajectory Obtained");
-            }
-            else
-            {
-                ROS_ERROR("Failed to call service gen_init_traj");
-            }
-
             //directly to high_to_low_node
-            custom_messages_biggie::waypoint_array array;
-            //for(int i=0; i<theTraj.response.initial_trajectory.size(); i++)
-            //{
-            //  array.waypoint_array.push_back(theTraj.response.initial_trajectory[i].x);
-            //  array.waypoint_array.push_back(theTraj.response.initial_trajectory[i].y);
-            //  array.waypoint_array.push_back(theTraj.response.initial_trajectory[i].theta);
-            //}
+            custom_waypoint_array_publisher.publish(theArray);
 
-            //running through Armando's obstacle avoidance node    
-            //geometry_msgs::PoseArray theArray; 
-            //for(int i=0; i<theTraj.response.initial_trajectory.size(); i++)
-            //{
-            //    geometry_msgs::Pose elem;
-            //    elem.position.x = theTraj.response.initial_trajectory[i].y;
-            //    elem.position.y = theTraj.response.initial_trajectory[i].x;
-            //    elem.orientation.z = theTraj.response.initial_trajectory[i].theta;
-            //    elem.orientation.w = 1.0;
-            //    theArray.poses.push_back(elem);
-            //}         
-            //pose_array_pub.publish(theArray);
-            //theArray.poses.clear();
-
-            //POINTS IN NED
-            array.waypoint_array={
-                                    40, 40, 1.5,
-                                    40, -40, 1.5,
-                                    -40, -40, 1.5,
-                                    -40, 40, 1.5,
-                                    40, 40, 1.5,
-                                                };//in ned
-
-            custom_waypoint_array_publisher.publish(array);
-
+            ROS_WARN("Publishing the array");
             while(ros::ok())
             {
                 ros::Rate loop_rate(4);

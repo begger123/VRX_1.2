@@ -66,7 +66,7 @@ namespace waypoints_to_waypoint
 		//Params
 		ros::Rate loop_rate;
 		double the_rate;
-		float error_bound=4.0;
+		float error_bound=5.0;
 		float error_magnitude;
 		std_msgs::Bool missionComplete;
 		

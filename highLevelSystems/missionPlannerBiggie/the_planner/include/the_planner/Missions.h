@@ -30,6 +30,7 @@
 
 #include "vrx_gazebo/Task.h"
 #include "geographic_msgs/GeoPoseStamped.h"
+#include "geographic_msgs/GeoPath.h"
 #include <vector>
 #include <float.h>
 

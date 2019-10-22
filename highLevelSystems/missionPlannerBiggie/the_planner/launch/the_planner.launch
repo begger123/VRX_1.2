@@ -6,6 +6,7 @@
 	<!-- <node pkg="the_planner" type="gen_traj_server" name="gen_traj_server" output="screen"></node> -->
 
     <!-- <node pkg="the_planner" type="fake_persist_table" name="fake_persist_table" output="screen"/> -->
+    <node pkg="high_to_low" type="high_to_low" name="shuffle_pass" output="screen"/> -->
 
 	<node pkg="the_planner" type="planner" name="planner" output="screen">
             <rosparam param="mission_string">[tester]</rosparam>

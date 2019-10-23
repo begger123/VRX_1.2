@@ -2,7 +2,7 @@
 <launch>
 
     <!-- Start wamv_localization -->
-    <include file="$(find wamv_localization/launch/localization_example.launch" />
+    <include file="$(find wamv_gazebo)/launch/localization_example.launch" />
     
     <!-- Publish the static TF Tree -->
     <node pkg="tf_tree" name="tf_tree_sim" type="tf_tree_sim" output="screen"/>
@@ -54,10 +54,10 @@
     </rosparam>
     </node>
 
-    <node pkg="high_to_low" type="high_to_low" name="waypoints_to_waypoint" output="screen" respawn="true"/>
+    <node pkg="high_to_low" type="high_to_low" name="waypoints_to_waypoint" output="screen"/>
 
     <node pkg="the_planner" type="planner" name="planner" output="screen">
             <rosparam param="mission_string">[tester]</rosparam>
-        <rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load" respawn="true"></rosparam>
+        <rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load" ></rosparam>
     </node>
 </launch>

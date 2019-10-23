@@ -39,6 +39,7 @@ private:
     bool newTask;
     bool skGoal;
     bool wpGoal;
+    bool finished;
    
     geometry_msgs::Pose2D skPoint;
     custom_messages_biggie::waypoint_array theArray;

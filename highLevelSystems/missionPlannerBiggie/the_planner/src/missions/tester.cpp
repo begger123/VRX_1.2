@@ -12,9 +12,6 @@ tester::tester(ros::NodeHandle &nh) : Mission(nh)
 	traj_client = mission_nh_->serviceClient<the_planner::initTraj>("gen_init_traj");
     newTask=false;
     
-    mission_nh_->getParam("/wamv/robot_localization/navsat_transform_node/datum", datum);
-    ROS_WARN("DATUM IS %f %f", datum[0], datum[1]);
-    
 }
 
 tester::~tester()
@@ -34,21 +31,28 @@ void tester::task_callback(const vrx_gazebo::Task::ConstPtr& msg)
     theTaskMsg.timed_out=msg->timed_out;	
     theTaskMsg.score=msg->score;	
 
-    if (theTaskMsg.name=="stationkeeping")
+    if (theTaskMsg.name=="stationkeeping" && theTaskMsg.state=="ready")
     {
         this->task=STATIONKEEP;
         newTask=true;
+        finished=false;
     }
     
-    if (theTaskMsg.name=="wayfinding")
+    if (theTaskMsg.name=="wayfinding" && theTaskMsg.state=="ready")
     {
         this->task=WAYPOINTS;
         newTask=true;
+        finished=false;
+    }
+    if (theTaskMsg.state=="finished")
+    {
+        finished=true;
     }
 }
 
 void tester::sk_goal_callback(const geographic_msgs::GeoPoseStamped::ConstPtr& msg)
 {
+    mission_nh_->getParam("/wamv/robot_localization/navsat_transform_node/datum", datum);
     skGoalMsg.header=msg->header;
     skGoalMsg.pose=msg->pose;
 
@@ -79,6 +83,8 @@ void tester::sk_goal_callback(const geographic_msgs::GeoPoseStamped::ConstPtr& m
 
 void tester::wp_goal_callback(const geographic_msgs::GeoPath::ConstPtr& msg)
 {
+    mission_nh_->getParam("/wamv/robot_localization/navsat_transform_node/datum", datum);
+    
     wpGoalMsg.header=msg->header;
     wpGoalMsg.poses=msg->poses;
 
@@ -91,7 +97,7 @@ void tester::wp_goal_callback(const geographic_msgs::GeoPath::ConstPtr& msg)
        
        theArray.waypoint_array.push_back(tempPoint.north);// tempPoint.east, 1.5};
        theArray.waypoint_array.push_back(tempPoint.east);// tempPoint.east, 1.5};
-       theArray.waypoint_array.push_back(2.5);// tempPoint.east, 1.5};
+       theArray.waypoint_array.push_back(2.0);// tempPoint.east, 1.5};
     }
     wpGoal=true;
 }
@@ -183,7 +189,7 @@ void tester::loop()
                 ros::spinOnce();
             }
             //publish this sucker to the controller as long as needed
-            while(ros::ok())
+            while(ros::ok()&&!finished)
             {
                 ros::Rate loop_rate(60);
                 loop_rate.sleep();
@@ -199,9 +205,9 @@ void tester::loop()
             custom_waypoint_array_publisher.publish(theArray);
 
             ROS_WARN("Publishing the array");
-            while(ros::ok())
+            while(ros::ok()&&!finished)
             {
-                ros::Rate loop_rate(4);
+                ros::Rate loop_rate(60);
                 loop_rate.sleep();
             }
             this->task=FINISHED;

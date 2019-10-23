@@ -18,6 +18,7 @@
 #include <std_msgs/Bool.h>
 #include "custom_messages_biggie/waypoint_array.h"
 #include <tf/tf.h>
+#include "vrx_gazebo/Task.h" 
 
 
 //This class will take in an array from the high level planner that contains an array of waypoints.
@@ -34,6 +35,7 @@ namespace waypoints_to_waypoint
 		ws2w(ros::NodeHandle &nh);
 		~ws2w();
 		//Needed things
+        void task_callback(const vrx_gazebo::Task::ConstPtr& msg);
 		//subscribe to the_planner to get array of waypoints
 		void waypoint_array_callback(const custom_messages_biggie::waypoint_array::ConstPtr& msg);
 		//subscribe to state
@@ -49,6 +51,7 @@ namespace waypoints_to_waypoint
 	private:
 		//Message based data
 		ros::NodeHandle *ws2w_nh;
+		ros::Subscriber task_subscriber;
 		ros::Subscriber waypoint_array_sub;
 		ros::Subscriber state_sub;
 		ros::Publisher control_target_pub;
@@ -58,15 +61,17 @@ namespace waypoints_to_waypoint
 		nav_msgs::Odometry state_data;
 		geometry_msgs::Pose2D current_waypoint;
 		custom_messages_biggie::waypoint_array the_array;
+        vrx_gazebo::Task theTaskMsg;
 
 		bool newState=false;
 		bool newWaypoint=false;
+		bool finished=false;
 		int index=0;
 
 		//Params
 		ros::Rate loop_rate;
 		double the_rate;
-		float error_bound=5.0;
+		float error_bound=7.0;
 		float error_magnitude;
 		std_msgs::Bool missionComplete;
 		

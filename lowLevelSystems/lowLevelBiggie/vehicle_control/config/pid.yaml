@@ -4,17 +4,17 @@ pid:
   Kp_h: 400
   Ki_h: 0
   Kd_h: 175
-  anti_windup_limit_h: 5
+  anti_windup_limit_h: 30
   cutoff_frequency_h: 40
   heading_scalar: 1.5
   Kp_v: 400
   Ki_v: 0
   Kd_v: 150
-  anti_windup_limit_v: 5
+  anti_windup_limit_v: 30
   cutoff_frequency_v: 40
   velocity_scalar: 1
   is_sim: true
-  R: 4.0
+  R: 10.0
 
 ctrl:
   alloc:

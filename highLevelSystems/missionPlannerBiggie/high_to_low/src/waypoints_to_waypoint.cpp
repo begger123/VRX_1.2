@@ -1,14 +1,15 @@
 //This will be a cascaded heading and velocity controller
 #include <high_to_low/waypoints_to_waypoint.h>
 
-waypoints_to_waypoint::ws2w::ws2w(ros::NodeHandle &nh) : ws2w_nh(&nh), loop_rate(4) //sets default loop rate
+waypoints_to_waypoint::ws2w::ws2w(ros::NodeHandle &nh) : ws2w_nh(&nh), loop_rate(60) //sets default loop rate
 {
 	if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) 
 	{
    		ros::console::notifyLoggerLevelsChanged();
 	}
 	ROS_DEBUG("waypoints_to_waypoint started");
-
+    
+    task_subscriber = ws2w_nh->subscribe("/vrx/task/info", 10, &waypoints_to_waypoint::ws2w::task_callback, this);
 	waypoint_array_sub = ws2w_nh->subscribe("/waypoint_array", 10, &waypoints_to_waypoint::ws2w::waypoint_array_callback, this);
 	state_sub = ws2w_nh->subscribe("/p3d_wamv_ned", 10, &waypoints_to_waypoint::ws2w::state_callback, this);
 	control_target_pub = ws2w_nh->advertise<geometry_msgs::Pose2D>("/control_target", 10); //published TAU = {X,Y,Eta}
@@ -20,6 +21,28 @@ waypoints_to_waypoint::ws2w::ws2w(ros::NodeHandle &nh) : ws2w_nh(&nh), loop_rate
 waypoints_to_waypoint::ws2w::~ws2w()
 {
 
+}
+
+void waypoints_to_waypoint::ws2w::task_callback(const vrx_gazebo::Task::ConstPtr& msg)
+{
+    ROS_DEBUG("New Task Received");
+    theTaskMsg.name=msg->name;
+    theTaskMsg.state=msg->state;
+    theTaskMsg.ready_time=msg->ready_time;
+    theTaskMsg.running_time=msg->running_time;
+    theTaskMsg.elapsed_time=msg->elapsed_time;
+    theTaskMsg.remaining_time=msg->remaining_time;
+    theTaskMsg.timed_out=msg->timed_out;
+    theTaskMsg.score=msg->score;
+
+    if (theTaskMsg.state=="finished")
+    {
+        finished=true;
+    }
+    else
+    {
+        finished=false;
+    }
 }
 
 void waypoints_to_waypoint::ws2w::waypoint_array_callback(const custom_messages_biggie::waypoint_array::ConstPtr& msg)
@@ -78,7 +101,7 @@ void waypoints_to_waypoint::ws2w::run()
 	{
 		//if we have a new state message and a new waypoint message
 		//ROS_WARN("newState and newWaypoint %d, %d", newState, newWaypoint);
-		if(newState&&newWaypoint)
+		if(newState&&newWaypoint&&!finished)
 		{
 			//if the error is within bounds, and error_checking is clear, iterate array to publish the next waypoint
 			if(!within_error_bound())

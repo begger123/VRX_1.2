@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <launch>
 
+    <!-- Start wamv_localization -->
+    <include file="$(find wamv_localization/launch/localization_example.launch" />
+    
     <!-- Publish the static TF Tree -->
     <node pkg="tf_tree" name="tf_tree_sim" type="tf_tree_sim" output="screen"/>
 

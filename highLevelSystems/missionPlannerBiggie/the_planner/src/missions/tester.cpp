@@ -31,14 +31,14 @@ void tester::task_callback(const vrx_gazebo::Task::ConstPtr& msg)
     theTaskMsg.timed_out=msg->timed_out;	
     theTaskMsg.score=msg->score;	
 
-    if (theTaskMsg.name=="stationkeeping" && theTaskMsg.state=="ready")
+    if (theTaskMsg.name=="stationkeeping" && theTaskMsg.state=="running")
     {
         this->task=STATIONKEEP;
         newTask=true;
         finished=false;
     }
     
-    if (theTaskMsg.name=="wayfinding" && theTaskMsg.state=="ready")
+    if (theTaskMsg.name=="wayfinding" && theTaskMsg.state=="running")
     {
         this->task=WAYPOINTS;
         newTask=true;

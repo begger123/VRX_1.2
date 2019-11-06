@@ -21,7 +21,7 @@ tester::~tester()
 
 void tester::task_callback(const vrx_gazebo::Task::ConstPtr& msg)
 {
-    ROS_DEBUG("New Task Received");
+    ROS_DEBUG("New Task Received High Level");
     theTaskMsg.name=msg->name;	
     theTaskMsg.state=msg->state;	
     theTaskMsg.ready_time=msg->ready_time;	

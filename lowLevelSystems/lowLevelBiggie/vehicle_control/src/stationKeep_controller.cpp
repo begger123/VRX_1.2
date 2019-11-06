@@ -118,6 +118,8 @@ void pid_controller::sk::compute_tau()
         // ROS_INFO("yaw_angle = %g", yaw_angle);
         // ROS_INFO("init_heading = %g", init_heading);
 
+        ROS_WARN("Heading controller gains: [Kp, Ki, Kd] = [%g, %g, %g]", Kp, Ki, Kd);
+        
         Eigen::Matrix3d Jt_d;
         Jt_d = (Jt - Jt_prev)/delta_t.toSec();
         tau = -Kp*Jt*eta_t - Kd*(Jt_d*eta_t + Jt*eta_td);

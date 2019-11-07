@@ -69,6 +69,7 @@ void pid_controller::sk::pose_callback(const geometry_msgs::Pose2D::ConstPtr& ms
                    0,              0,              1;
         prev_time = ros::Time::now();
         initialized = true;
+        eta_ti << 0, 0, 0;
     }
     else {
         x = msg->x;
@@ -118,11 +119,13 @@ void pid_controller::sk::compute_tau()
         // ROS_INFO("yaw_angle = %g", yaw_angle);
         // ROS_INFO("init_heading = %g", init_heading);
 
-        ROS_WARN("Heading controller gains: [Kp, Ki, Kd] = [%g, %g, %g]", Kp, Ki, Kd);
+        // ROS_WARN("Heading controller gains: [Kp, Ki, Kd] = [%g, %g, %g]", Kp, Ki, Kd);
+
+        eta_ti = eta_ti + Jt*eta_t*delta_t.toSec();
         
         Eigen::Matrix3d Jt_d;
         Jt_d = (Jt - Jt_prev)/delta_t.toSec();
-        tau = -Kp*Jt*eta_t - Kd*(Jt_d*eta_t + Jt*eta_td);
+        tau = -Kp*Jt*eta_t - Ki*eta_ti - Kd*(Jt_d*eta_t + Jt*eta_td);
 
         Jt_prev = Jt;
         prev_time = curr_time;

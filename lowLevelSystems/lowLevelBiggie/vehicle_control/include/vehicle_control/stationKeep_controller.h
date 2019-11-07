@@ -58,6 +58,7 @@ namespace pid_controller
         Eigen::Vector3d eta;
         Eigen::Vector3d eta_t;
         Eigen::Vector3d eta_td;
+        Eigen::Vector3d eta_ti;
         Eigen::Vector3d tau;
         Eigen::Matrix3d Jt_prev;
 

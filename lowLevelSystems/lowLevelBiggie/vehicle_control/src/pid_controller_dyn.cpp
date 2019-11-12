@@ -1,7 +1,7 @@
 //This will be a cascaded heading and velocity controller
 #include <vehicle_control/pid_controller_dyn.h>
 
-pid_controller::pid::pid(ros::NodeHandle &nh) : pid_nh(&nh), loop_rate(4) //sets default loop rate
+pid_controller::pid::pid(ros::NodeHandle &nh) : pid_nh(&nh), loop_rate(60) //sets default loop rate
 {
 	if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info) ) 
 	{

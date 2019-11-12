@@ -25,6 +25,7 @@ namespace pid_controller
 	public:
 		sk(ros::NodeHandle &nh);
 		~sk();
+        void target_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
         void pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
         void velo_callback(const nav_msgs::Odometry::ConstPtr& msg);
         void get_theSKGains(vehicle_control::pidSKGainsConfig &config, uint32_t level);
@@ -35,6 +36,7 @@ namespace pid_controller
     private:
         // ROS stuff...
         ros::NodeHandle *sk_nh;
+        ros::Subscriber target_sub;
         ros::Subscriber pose_sub;
         ros::Subscriber state_sub;
         ros::Publisher control_pub;
@@ -46,7 +48,7 @@ namespace pid_controller
         dynamic_reconfigure::Server<vehicle_control::pidSKGainsConfig> server;
         dynamic_reconfigure::Server<vehicle_control::pidSKGainsConfig>::CallbackType f;
         // Flags and variables
-        bool initialized, newPose, newVelo, newControl;
+        bool initialized, newPose, newVelo, newControl, newCommand;
         double Kp, Ki, Kd;
         double x, y, yaw_angle;
         double init_heading;

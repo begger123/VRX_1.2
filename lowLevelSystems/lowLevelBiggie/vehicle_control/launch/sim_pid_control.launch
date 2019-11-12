@@ -1,16 +1,9 @@
 <?xml version="1.0"?>
 <launch>
 
-	<!-- Run Gazebo Simulator -->
-    <!-- <include file="$(find vrx_gazebo)/launch/sandisland.launch"/> -->
-    <include file="$(find vrx_gazebo)/launch/my_vrx.launch"/>
-
-	<!-- Run Gazebo State Simulator -->
-    <include file="$(find wamv_gazebo)/launch/localization_example.launch"/>
-
-	<!-- Run RViz -->
-	<include file="$(find wamv_gazebo)/launch/rviz_vrx.launch" />
-
+    <!-- Start wamv_localization -->
+    <include file="$(find wamv_gazebo)/launch/localization_example.launch" />
+    
     <!-- Publish the static TF Tree -->
     <node pkg="tf_tree" name="tf_tree_sim" type="tf_tree_sim" output="screen"/>
 
@@ -24,8 +17,8 @@
 
     <!-- Run control system -->
     <!-- <node pkg="vehicle_control" name="control" type="vehicle_control" output="screen"/> -->
-    <!-- <node pkg="vehicle_control" name="control" type="vehicle_control_dyn" output="screen"/> -->
-    <node pkg="vehicle_control" name="control" type="vehicle_skcontrol_dyn" output="screen"/>
+    <node pkg="vehicle_control" name="control" type="vehicle_control_dyn" output="screen"/>
+    <node pkg="vehicle_control" name="control_sk" type="vehicle_skcontrol_dyn" output="screen"/>
 
     <!-- Run allocation -->
     <!-- <node pkg="vehicle_allocation" name="allocation" type="vehicle_allocation" output="screen"/> -->
@@ -67,4 +60,8 @@
     <!-- Run Armando's Suite -->
     <include file="$(find wamv_navigation)/launch/vehicle_sim.launch" />
 
+    <node pkg="the_planner" type="planner" name="planner" output="screen">
+            <rosparam param="mission_string">[tester]</rosparam>
+        <rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load" ></rosparam>
+    </node>
 </launch>

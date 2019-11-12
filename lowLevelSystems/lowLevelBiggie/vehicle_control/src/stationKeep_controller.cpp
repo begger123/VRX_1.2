@@ -10,15 +10,16 @@ pid_controller::sk::sk(ros::NodeHandle &nh) : sk_nh(&nh), loop_rate(60) //sets d
    		ros::console::notifyLoggerLevelsChanged();
 	}
 	ROS_DEBUG("Entering initializer, next stop get_params");
+    target_sub   = sk_nh->subscribe("/control_target_sk", 10, &pid_controller::sk::target_callback, this);
     pose_sub   = sk_nh->subscribe("/vehicle_pose", 10, &pid_controller::sk::pose_callback, this);
 	state_sub = sk_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::sk::velo_callback, this);
     control_pub = sk_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10);  // published tau = {Tx, Ty, Mz}
 
     // Initialize some variables
-    double x_des = 20;
-    double y_des = 0;
-    double psi_des = M_PI/2;
-    eta_des << x_des, y_des, psi_des;
+    //double x_des = 10;
+    //double y_des = 2;
+    //double psi_des = M_PI/2;
+    //eta_des << x_des, y_des, psi_des;
     initialized = false;
     newPose = false;
     newVelo = false;
@@ -46,6 +47,11 @@ double pid_controller::sk::piwrap(double angle)
    }
 }
 
+void pid_controller::sk::target_callback(const geometry_msgs::Pose2D::ConstPtr& msg)
+{
+    eta_des << msg->x, msg->y, msg->theta;
+    newCommand=true;
+}
 
 void pid_controller::sk::pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg)
 {
@@ -112,6 +118,8 @@ void pid_controller::sk::compute_tau()
         // ROS_INFO("yaw_angle = %g", yaw_angle);
         // ROS_INFO("init_heading = %g", init_heading);
 
+        ROS_WARN("Heading controller gains: [Kp, Ki, Kd] = [%g, %g, %g]", Kp, Ki, Kd);
+        
         Eigen::Matrix3d Jt_d;
         Jt_d = (Jt - Jt_prev)/delta_t.toSec();
         tau = -Kp*Jt*eta_t - Kd*(Jt_d*eta_t + Jt*eta_td);
@@ -162,8 +170,12 @@ void pid_controller::sk::run()
 	while(ros::ok())
 	{
 		ros::spinOnce();
-        this->compute_tau();
-        this->pub_control();
+        if(newCommand)
+        {
+            this->compute_tau();
+            this->pub_control();
+            newCommand=false;
+        }
         // dynamic_reconfigure stuff
         f = boost::bind(&pid_controller::sk::get_theSKGains, this, _1, _2);
         server.setCallback(f);

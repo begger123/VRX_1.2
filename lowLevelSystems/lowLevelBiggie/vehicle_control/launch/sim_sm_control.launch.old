@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <launch>
+    <!-- Start wamv_localization -->
+    <include file="$(find wamv_gazebo)/launch/localization_example.launch" />
 
 	<!-- Publish the static TF Tree -->
 	<node pkg="tf_tree" name="tf_tree_sim" type="tf_tree_sim" output="screen"/>
@@ -13,10 +15,12 @@
 	<rosparam command="load" file="$(find vehicle_control)/config/sm_sk.yaml" />
 
 	<!-- Run control system -->
+    <node pkg="vehicle_control" name="control" type="vehicle_control_dyn" output="screen"/>
 	<!-- <node pkg="vehicle_control" name="control" type="sm_sk_control" output="screen"/> -->
 
 	<!-- Run allocation -->
-	<node pkg="vehicle_allocation" name="allocation" type="vehicle_allocation" output="screen"/>
+    <node pkg="qp_allocation" name="qp_allocation" type="qp_allocation.py" output="screen"/>
+    <!-- <node pkg="vehicle_allocation" name="allocation" type="vehicle_allocation" output="screen"/> -->
 
 	<!-- Start High To Low Parser -->
 	<node pkg="high_to_low" type="high_to_low" name="high_to_low" output="screen"></node>
@@ -25,17 +29,11 @@
 	<include file="$(find vehicle_state)/launch/sim_vehicle_state.launch" />
 
 	<!-- Run Gazebo Simulator -->
-	<include file="$(find vrx_gazebo)/launch/sandisland.launch"> 
+	<include file="$(find vrx_gazebo)/launch/vrx.launch"> 
 		<!-- <arg name="urdf" value="$(find wamv_gazebo)/urdf/wamv_gazebo_sensors.urdf"/>	 -->
-		<arg name="urdf" value="$(find wamv_gazebo)/urdf/wamv_gazebo.urdf"/>	
+        <!-- <arg name="urdf" value="$(find wamv_gazebo)/urdf/wamv_gazebo.urdf"/> -->
 	</include>
 	
-	<!-- Run Gazebo State Simulator -->
-	<include file="$(find wamv_gazebo)/launch/localization_example.launch"/>
-
-	<!-- Clear Water From Simulated LiDAR -->
-	<node pkg="clear_water" name="clear_water" type="clear_water.py" output="screen"/>
-
 	<!-- Run RViz -->
 	<include file="$(find wamv_gazebo)/launch/rviz_example.launch" />
 
@@ -60,5 +58,5 @@
     </node>
 
 	<!-- Run Armando's Suite -->
-	<include file="$(find wamv_navigation)/launch/vehicle_sim.launch" />
+    <!-- <include file="$(find wamv_navigation)/launch/vehicle_sim.launch" /> -->
 </launch>

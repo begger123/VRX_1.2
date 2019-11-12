@@ -28,6 +28,13 @@
 #include <move_base_msgs/MoveBaseActionResult.h>
 #include <ros/console.h>
 
+#include "vrx_gazebo/Task.h"
+#include "geographic_msgs/GeoPoseStamped.h"
+#include "geographic_msgs/GeoPath.h"
+#include <vector>
+#include <float.h>
+
+
 //Mission class used for inheritance
 class Mission
 {

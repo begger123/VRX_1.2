@@ -8,7 +8,7 @@
   <!-- If true, run gazebo in verbose mode -->
   <arg name="verbose" default="false"/>
   <!-- If true, start in paused state -->
-  <!-- <arg name="paused"  default="false"/> -->
+  <arg name="paused"  default="false"/>
   <!-- Set various other gazebo arguments-->
   <arg name="extra_gazebo_args" default=""/>
   <!-- Start in a default namespace -->
@@ -23,7 +23,7 @@
   <arg name="Y" default="-2.76" />
 
   <!-- If true, show non-competition ROS topics (/gazebo/model_states, /vrx/debug/wind/direction, etc.)-->
-  <arg name="non_competition_mode" default="false"/>
+  <arg name="non_competition_mode" default="true"/>
   <arg name="enable_ros_network" value="$(arg non_competition_mode)"/>
   <env name="VRX_DEBUG" value="$(arg non_competition_mode)"/>
   <env unless="$(arg non_competition_mode)" name="GAZEBO_MODEL_PATH" value="$(find vrx_gazebo)/models:$(find wamv_gazebo)/models:$(find wamv_description)/models:$(optenv GAZEBO_MODEL_PATH)"/>
@@ -45,25 +45,15 @@
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name"   value="$(arg world)"/>
     <arg name="verbose"      value="$(arg verbose)"/>
-    <!-- <arg name="paused"       value="$(arg paused)"/> -->
+    <arg name="paused"       value="$(arg paused)"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="gui"          value="$(arg gui)" />
     <arg name="enable_ros_network" value="$(arg enable_ros_network)"/>
     <arg name="extra_gazebo_args" value="$(arg extra_gazebo_args)"/>
   </include>
 
-  <!-- Do we load the VRX sensor suite? -->
-  <!-- <arg name="vrx_sensors_enabled" default="true" /> -->
-
   <!-- Load robot model -->
   <arg name="urdf" default="$(find wamv_gazebo)/urdf/wamv_gazebo.urdf.xacro"/>
-
-  <!-- <param name="$(arg namespace)/robot_description" -->
-  <!--        command="$(find xacro)/xacro &#x002D;&#x002D;inorder '$(arg urdf)' -->
-  <!--        thruster_config:=$(arg thrust_config) -->
-  <!--        vrx_sensors_enabled:=$(arg vrx_sensors_enabled) -->
-  <!--        namespace:=$(arg namespace) "/> -->
-
   <param name="$(arg namespace)/robot_description"
          command="$(find xacro)/xacro &#x002D;&#x002D;inorder '$(arg urdf)'
          thruster_config:=$(arg thrust_config)
@@ -84,6 +74,5 @@
         args="-x $(arg x) -y $(arg y) -z $(arg z)
               -R $(arg R) -P $(arg P) -Y $(arg Y)
               --urdf $(arg urdf) --model wamv"/>
-
 </launch>
 

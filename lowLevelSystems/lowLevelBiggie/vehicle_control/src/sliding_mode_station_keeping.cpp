@@ -163,12 +163,10 @@ void sm_controller::sl_mode_st_keep::state_callback(const nav_msgs::Odometry::Co
     eta_dot_ = J_*nu_; 
     eta_dot_dot_ = J_dot_*nu_+J_*nu_dot_;
 
-    eta_t_ = -(eta_ - eta_d_);
-    eta_t_(2) = this->wrap_heading(-eta_t_(2));//ensures the vehicle turns the shortest distance to address heading error
-    eta_t_dot_ = -(eta_dot_ - eta_d_dot_);
-    eta_t_dot_(2)=-eta_t_dot_(2);
-    eta_t_dot_dot_ = -(eta_dot_dot_ - eta_d_dot_dot_);
-    eta_t_dot_dot_(2) = -eta_t_dot_dot_(2);
+    eta_t_ = eta_ - eta_d_;
+    eta_t_(2) = this->wrap_heading(eta_t_(2));//ensures the vehicle turns the shortest distance to address heading error
+    eta_t_dot_ = eta_dot_ - eta_d_dot_;
+    eta_t_dot_dot_ = eta_dot_dot_ - eta_d_dot_dot_;
 
     ROS_DEBUG("J_ is %f %f %f", J_(0,0), J_(0,1), J_(0,2));
     ROS_DEBUG("J_ is %f %f %f", J_(1,0), J_(1,1), J_(1,2));
@@ -284,7 +282,7 @@ void sm_controller::sl_mode_st_keep::integrate_eta_t()
 {
 	ROS_DEBUG("In integrate eta_t");
 	this->set_timestep();
-    ROS_ERROR("The integral is set as non cumulative");
+    //ROS_ERROR("The integral is set as non cumulative");
 	integral_eta_t_ += eta_t_ * delta_t.toSec();
 
     ROS_DEBUG("This is position tracking error metric in integrate");
@@ -350,8 +348,8 @@ void sm_controller::sl_mode_st_keep::calc_variales()
 {
 	ROS_DEBUG("In calc variables");
 	this->integrate_eta_t();
-	eta_r_dot_=eta_t_dot_-2*lamda_m3x3_*eta_t_;//-lamda_m3x3_*lamda_m3x3_*integral_eta_t_;
-	eta_r_dot_dot_=eta_t_dot_dot_-2*lamda_m3x3_*eta_t_dot_;//-lamda_m3x3_*lamda_m3x3_*eta_t_;
+	eta_r_dot_=eta_t_dot_-2*lamda_m3x3_*eta_t_-lamda_m3x3_*lamda_m3x3_*integral_eta_t_;
+	eta_r_dot_dot_=eta_t_dot_dot_-2*lamda_m3x3_*eta_t_dot_-lamda_m3x3_*lamda_m3x3_*eta_t_;
     
     s_=eta_t_dot_+2*lamda_m3x3_*eta_t_+lamda_m3x3_*lamda_m3x3_*integral_eta_t_;
 
@@ -365,11 +363,6 @@ void sm_controller::sl_mode_st_keep::calc_tau()
 {
 	ROS_DEBUG("In calc tau");
     tau_=M_m3x3_*(J_trans_*eta_r_dot_dot_+J_trans_dot_*eta_r_dot_)+C_m3x3_*J_trans_*eta_r_dot_+D_m3x3_*J_trans_*eta_r_dot_-J_trans_*R_m3x3_*this->sat_function(e_m3x3_.inverse()*s_);
-    //tau_=M_m3x3_*(J_trans_*eta_r_dot_dot_+J_trans_dot_*eta_r_dot_)+C_m3x3_*J_trans_*eta_r_dot_+D_m3x3_*J_trans_*eta_r_dot_-J_trans_*R_m3x3_*this->sat_function(e_m3x3_.inverse()*s_);
-    //tau_=M_m3x3_*(J_trans_*eta_dot_dot_+J_trans_dot_*eta_dot_)+C_m3x3_*J_trans_*eta_dot_+D_m3x3_*J_trans_*eta_dot_-J_trans_*R_m3x3_*this->sat_function(e_m3x3_.inverse()*s_);
-
-    //tau_(1)=tau_(1);
-    //tau_(2)=tau_(2);
 
     ROS_WARN("tau_ %f %f %f",tau_(0),tau_(1),tau_(2));
 	
@@ -397,11 +390,11 @@ void sm_controller::sl_mode_st_keep::pub()
 	
 	std_msgs::Float64 temp;
 
-	temp.data=tau_(0);
+	temp.data=-tau_(0);
 	control_effort_msg.tau.push_back(temp);//X
-	temp.data=tau_(1);	
+	temp.data=-tau_(1);	
 	control_effort_msg.tau.push_back(temp);//Y
-	temp.data=tau_(2);
+	temp.data=-tau_(2);
 	control_effort_msg.tau.push_back(temp);//Eta
 
 	//ROS_DEBUG("control_effort_heading %f", control_effort_heading);

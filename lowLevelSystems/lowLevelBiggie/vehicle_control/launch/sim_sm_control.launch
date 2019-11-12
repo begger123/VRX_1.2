@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <launch>
     <!-- Start wamv_localization -->
+    <include file="$(find vrx_gazebo)/launch/vrx.launch" />
+
+    <!-- Start wamv_localization -->
     <include file="$(find wamv_gazebo)/launch/localization_example.launch" />
 
 	<!-- Publish the static TF Tree -->

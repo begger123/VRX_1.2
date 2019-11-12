@@ -13,8 +13,8 @@
 #include <ros/console.h>
 #include <std_msgs/Float64.h>
 #include <nav_msgs/Odometry.h>
-#include <std_msgs/Float64.h>
 #include <geometry_msgs/Pose2D.h>
+#include <sensor_msgs/Imu.h>
 #include <tf/tf.h>
 #include <tf/transform_datatypes.h> //this gives axis to Matrix3x3
 #include "custom_messages_biggie/control_target.h"
@@ -30,6 +30,10 @@ namespace sm_controller
 		void get_params();
 		void target_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
 		void state_callback(const nav_msgs::Odometry::ConstPtr& msg);
+		void pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
+		void accel_callback(const sensor_msgs::Imu::ConstPtr& msg);
+		void set_C();
+		void set_J_and_J_dot();
 		double wrap_heading(double heading);
 		void set_timestep();
 		void calc_eta_t();
@@ -44,19 +48,33 @@ namespace sm_controller
 		ros::NodeHandle *sm_sk_nh_;
 		ros::Subscriber target_sub_;
 		ros::Subscriber state_sub_;
+		ros::Subscriber pose_sub_;
+		ros::Subscriber accel_sub_;
 		ros::Publisher control_effort_pub_;
 
 		//controller variables
-		//pose
+		//inertial pose
 		Eigen::Vector3f eta_;
+		//inertial velocities
+        Eigen::Vector3f eta_dot_;
+		//inertial accelerations
+        Eigen::Vector3f eta_dot_dot_;
+		//bff velocities
+        Eigen::Vector3f nu_;
+		//bff acceleration
+        Eigen::Vector3f nu_dot_;
 		//desired pose
 		Eigen::Vector3f eta_d_;
 		//desired velocity
 		Eigen::Vector3f eta_d_dot_;
+		//desired acceleration
+		Eigen::Vector3f eta_d_dot_dot_;
 		//pose error
 		Eigen::Vector3f eta_t_;
 		//velocity error
 		Eigen::Vector3f eta_t_dot_;
+		//acceleration error
+		Eigen::Vector3f eta_t_dot_dot_;
 		//pose error
 		Eigen::Vector3f integral_eta_t_;
 
@@ -94,11 +112,15 @@ namespace sm_controller
 		//Not sure what to classify these as yet
 		ros::Rate loop_rate;
 		nav_msgs::Odometry state_data_;
+		sensor_msgs::Imu accel_data_;
+        std_msgs::Float64 last_accel_;
 		double yaw_angle;
 		ros::Time prev_time;
 		ros::Duration delta_t;
 		bool newCommand=false;
 		bool newState=false;
+		bool newHeading=false;
+		bool newAccel=false;
 		bool is_sim;
 	};
 

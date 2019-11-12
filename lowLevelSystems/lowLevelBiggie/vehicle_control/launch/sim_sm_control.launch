@@ -11,7 +11,7 @@
 	<rosparam command="load" file="$(find vehicle_control)/config/control.yaml" />
 
 	<!-- Based on the selected controller, load params for the requested control type -->
-	<!-- Load ROS params PID control -->
+	<!-- Load ROS params SM_SK control -->
 	<rosparam command="load" file="$(find vehicle_control)/config/sm_sk.yaml" />
 
 	<!-- Run control system -->
@@ -22,20 +22,8 @@
     <node pkg="qp_allocation" name="qp_allocation" type="qp_allocation.py" output="screen"/>
     <!-- <node pkg="vehicle_allocation" name="allocation" type="vehicle_allocation" output="screen"/> -->
 
-	<!-- Start High To Low Parser -->
-	<node pkg="high_to_low" type="high_to_low" name="high_to_low" output="screen"></node>
-
 	<!-- Start Simulated Drivers and State Accumulator -->
 	<include file="$(find vehicle_state)/launch/sim_vehicle_state.launch" />
-
-	<!-- Run Gazebo Simulator -->
-	<include file="$(find vrx_gazebo)/launch/vrx.launch"> 
-		<!-- <arg name="urdf" value="$(find wamv_gazebo)/urdf/wamv_gazebo_sensors.urdf"/>	 -->
-        <!-- <arg name="urdf" value="$(find wamv_gazebo)/urdf/wamv_gazebo.urdf"/> -->
-	</include>
-	
-	<!-- Run RViz -->
-	<include file="$(find wamv_gazebo)/launch/rviz_example.launch" />
 
 	<!-- Run PC Collapser -->  
 	<node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan" output="screen">
@@ -44,19 +32,23 @@
     <rosparam>
         target_frame: wamv/base_link
         transform_tolerance: 0.01
-        min_height: 0.0
-        max_height: 1.0
+        min_height: 0.1
+        max_height: 3.0
         angle_min: -3.1415
         angle_max: 3.1415
         angle_increment: 0.01
         scan_time: 0.1
         range_min: 0.9
-        range_max: 130
+        range_max: 100
         use_inf: true
         concurrency_level: 0
     </rosparam>
     </node>
 
-	<!-- Run Armando's Suite -->
-    <!-- <include file="$(find wamv_navigation)/launch/vehicle_sim.launch" /> -->
+    <node pkg="high_to_low" type="high_to_low" name="waypoints_to_waypoint" output="screen"/>
+
+    <node pkg="the_planner" type="planner" name="planner" output="screen">
+            <rosparam param="mission_string">[tester]</rosparam>
+        <rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load" ></rosparam>
+    </node>
 </launch>

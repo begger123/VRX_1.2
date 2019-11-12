@@ -266,7 +266,6 @@ data/robotx_gazebo/models/dock_2018_base/model.sdf.erb.i
 data/robotx_gazebo/launch/vmrc.launch.i
 data/wave_gazebo/world_models/ocean_waves/materials/programs/GerstnerWaves.frag.i
 data/vrx_gazebo/models/navigation_course5/model.sdf.i
-data/vrx_gazebo/worlds/nav_challenge0b.world.i
 data/vrx_gazebo/models/navigation_course4/model.config.i
 data/wamv_gazebo/models/wamv_gazebo/model.config.i
 data/wamv_description/urdf/wamv_inerita_estimate.ods.i

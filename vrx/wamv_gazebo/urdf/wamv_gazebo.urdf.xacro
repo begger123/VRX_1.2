@@ -8,7 +8,7 @@
   <xacro:arg name="gps_enabled" default="false" />
   <xacro:arg name="imu_enabled" default="false" />
   <xacro:arg name="lidar_enabled" default="false" />
-  <xacro:arg name="ground_truth_enabled" default="true" />
+  <xacro:arg name="ground_truth_enabled" default="false" />
   <xacro:arg name="vrx_sensors_enabled" default="false" />
   <xacro:arg name="thruster_namespace" default="thrusters/"/>
   <xacro:arg name="camera_namespace" default="cameras/"/>  
@@ -150,7 +150,7 @@
       <xacro:wamv_imu name="imu_wamv" y="-0.2" />
     
       <!-- Add 3D LIDAR -->
-      <xacro:lidar name="lidar_wamv" type="32_beam"/>
+      <xacro:lidar name="lidar_wamv" type="16_beam"/>
       
     </xacro:if>
   </xacro:unless>

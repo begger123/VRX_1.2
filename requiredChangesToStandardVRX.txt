@@ -1,0 +1,8 @@
+The following commands are required when a user is cloning a fresh instance of the VRX and wants that instance to run inside of the FAU VRX workspace
+
+in file - vrx/vrx_gazebo/launch/vrx.launch line 30
+change thrust_config default value to H
+
+in file - vrx/wamv_gazebo/urdf/wamv_gazebo.urdf.xacro line 153
+change lidar_wamv type value to 32_beam
+

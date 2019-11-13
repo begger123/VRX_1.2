@@ -1,0 +1,38 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+	<node pkg="uvc_camera" type="uvc_camera_node" name="cameraDriver" respawn = "true"/>
+	
+	<group ns="rotationTheta">
+		<param name="theta" type="double" value=".04"/>
+	</group>
+
+	<node name="urg_node" pkg="urg_node" type="urg_node" respawn="true">
+		<param name="angle_min" value="-.8" />
+		<param name="angle_max" value=".8" />
+		<param name="frame_id" value="/laser" />
+	</node>
+
+	<node name="sulu" pkg="sulu" type="vision" respawn="true" output="screen">
+	</node> 
+
+	<node name="lidarTilter" pkg="sulu" type="tiltNnodder" respawn="true">
+	</node> 
+
+	<node name="lidarFramePublisher" pkg="sulu" type="lidarFramePublisher" respawn="true" output="log"/>
+
+	<group ns="lidarOrigin">
+		<param name="x" type="double" value="0.0"/>
+		<param name="y" type="double" value="0.0"/>
+		<param name="z" type="double" value="0.0"/>
+	</group>
+
+	<include file="$(find sulu)/start_tilt_controller.launch"/>
+
+	<include file="$(find sulu)/controller_manager.launch"/>
+
+	<node type="laser_scan_assembler" pkg="laser_assembler" name="my_assembler">
+	    <param name="max_scans" type="int" value="2000" />
+	    <param name="fixed_frame" type="string" value="world"/>
+	</node>
+</launch>

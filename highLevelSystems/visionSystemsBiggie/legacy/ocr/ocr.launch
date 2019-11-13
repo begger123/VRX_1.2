@@ -1,0 +1,5 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+	<node pkg="ocr" type="ocr" name="ocr" respawn = "false" output="screen"/>
+</launch>

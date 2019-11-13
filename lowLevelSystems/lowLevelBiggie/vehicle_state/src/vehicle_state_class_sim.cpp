@@ -100,38 +100,38 @@ void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
 	//	ROS_ERROR("%s",ex.what());
     //}
 
-	tf::Quaternion q_enu_temp;
-	tf::quaternionMsgToTF(msg->pose.pose.orientation,q_enu_temp);
-	tf::Quaternion enu_to_ned_tf;
-	enu_to_ned_tf.setRPY(M_PI,0,-M_PI/2);
-	tf::quaternionTFToMsg((q_enu_temp*enu_to_ned_tf).normalize(), the_odometry.pose.pose.orientation);
+    tf::Quaternion q_enu_temp;
+    tf::quaternionMsgToTF(msg->pose.pose.orientation,q_enu_temp);
+    tf::Quaternion enu_to_ned_tf;
+    enu_to_ned_tf.setRPY(M_PI,0,-M_PI/2);
+    tf::quaternionTFToMsg((q_enu_temp*enu_to_ned_tf).normalize(), the_odometry.pose.pose.orientation);
 
-	// tf::Vector3 enuLinearVel(msg->twist.twist.linear.x, msg->twist.twist.linear.y, msg->twist.twist.linear.z);
-	// tf::Vector3 nedLinearVel=R_z*R_x*enuLinearVel;
-	// the_odometry.twist.twist.linear.x=nedLinearVel[0];
-	// the_odometry.twist.twist.linear.y=nedLinearVel[1];
-	// the_odometry.twist.twist.linear.z=nedLinearVel[2];
+    // tf::Vector3 enuLinearVel(msg->twist.twist.linear.x, msg->twist.twist.linear.y, msg->twist.twist.linear.z);
+    // tf::Vector3 nedLinearVel=R_z*R_x*enuLinearVel;
+    // the_odometry.twist.twist.linear.x=nedLinearVel[0];
+    // the_odometry.twist.twist.linear.y=nedLinearVel[1];
+    // the_odometry.twist.twist.linear.z=nedLinearVel[2];
 
     // linear velocity corrected values
     the_odometry.twist.twist.linear.x = msg->twist.twist.linear.x;
     the_odometry.twist.twist.linear.y = -msg->twist.twist.linear.y;
     the_odometry.twist.twist.linear.z = msg->twist.twist.linear.z;
-    
+
     // ROS_INFO("enu_velocity = [vel_x, vel_y] = [%f, %f]", msg->twist.twist.linear.x, msg->twist.twist.linear.y);
     // ROS_INFO("ned_velocity = [v_x, v_y] = [%f, %f]", the_odometry.twist.twist.linear.x, the_odometry.twist.twist.linear.y);
 
-	tf::Vector3 enuAngularVel(msg->twist.twist.angular.x, msg->twist.twist.angular.y, msg->twist.twist.angular.z);
-	tf::Vector3 nedAngularVel=R_z*R_x*enuAngularVel;
-	the_odometry.twist.twist.angular.x=nedAngularVel[0];
-	the_odometry.twist.twist.angular.y=nedAngularVel[1];
-	the_odometry.twist.twist.angular.z=nedAngularVel[2];
-	
-	//create heading
-	//im not sure why, but the above rotation "enu_to_ned_tf.setRPY(M_PI,0,-M_PI/2);" is not properly rotating about the roll, therefore we apply a negative sign below
-	// yawAngle=-tf::getYaw(tf::Quaternion(the_odometry.pose.pose.orientation.x,the_odometry.pose.pose.orientation.y,the_odometry.pose.pose.orientation.z,the_odometry.pose.pose.orientation.w));
+    tf::Vector3 enuAngularVel(msg->twist.twist.angular.x, msg->twist.twist.angular.y, msg->twist.twist.angular.z);
+    tf::Vector3 nedAngularVel=R_z*R_x*enuAngularVel;
+    the_odometry.twist.twist.angular.x=nedAngularVel[0];
+    the_odometry.twist.twist.angular.y=nedAngularVel[1];
+    the_odometry.twist.twist.angular.z=nedAngularVel[2];
 
-	yawAngle=tf::getYaw(tf::Quaternion(msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z,msg->pose.pose.orientation.w));
-    yawAngle = twopiwrap(yawAngle);
+    //create heading
+    //im not sure why, but the above rotation "enu_to_ned_tf.setRPY(M_PI,0,-M_PI/2);" is not properly rotating about the roll, therefore we apply a negative sign below
+    // yawAngle=-tf::getYaw(tf::Quaternion(the_odometry.pose.pose.orientation.x,the_odometry.pose.pose.orientation.y,the_odometry.pose.pose.orientation.z,the_odometry.pose.pose.orientation.w));
+
+    yawAngle=tf::getYaw(tf::Quaternion(msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z,msg->pose.pose.orientation.w));
+
     
     // Convert yawAngle from ENU to NED convention
     if (yawAngle < M_PI/2) {

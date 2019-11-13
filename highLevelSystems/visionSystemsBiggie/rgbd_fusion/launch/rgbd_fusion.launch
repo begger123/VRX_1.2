@@ -1,0 +1,5 @@
+<launch>
+    <rosparam command="load" file="$(find rgbd_fusion)/config/config.yaml" />
+    <param name="path" value="$(find rgbd_fusion)" />
+    <node name="rgbd_node" pkg="rgbd_fusion" type="rgbd_fusion_node" output="screen" />
+</launch>

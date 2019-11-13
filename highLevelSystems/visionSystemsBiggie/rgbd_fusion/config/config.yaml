@@ -1,0 +1,22 @@
+#transform can be found in simulation using command:
+#rosrun tf tf_echo /wamv/lidar_wamv_link /wamv/front_left_camera_link
+#note this is using left camera
+
+#cartesian point of camera in respect to lidar in unit
+camera_transform:
+#x coord
+ - -0.02
+#y coord
+ - 0.27
+#z coord
+ - 0.1
+
+#rotation of camera in respect to lidar in radians
+camera_rotation:
+#pitch
+ - -0.26
+#roll
+ - 0
+#yaw
+ - 0
+

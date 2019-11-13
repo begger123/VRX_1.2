@@ -1,0 +1,11 @@
+sensor_msgs/Image image
+---
+float32[] confidence_blue
+float32[] confidence_green
+float32[] confidence_red
+float32[] confidence_black
+uint8 BLUE=0
+uint8 GREEN=1
+uint8 RED=2
+uint8 BLACK=3
+int32 color

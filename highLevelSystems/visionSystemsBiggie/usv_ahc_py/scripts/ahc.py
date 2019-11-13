@@ -187,7 +187,7 @@ def cloudCallback(point_cloud_2):
     for p in gen:
         #only take elements above the water plane
         #this number is 1.5, and not 0, because the points are in the lidar frame of reference, which is 1.5 meters above the water surface
-        if(math.sqrt(p[0]*p[0]+p[1]*p[1])> 2 and math.sqrt(p[0]*p[0]+p[1]*p[1])< 25 and p[2]>-1.3):
+        if(math.sqrt(p[0]*p[0]+p[1]*p[1])> 1 and math.sqrt(p[0]*p[0]+p[1]*p[1])< 50):
             np_point_cloud.append([p[0], p[1], p[2]])
             tempPoint=Point32()
             tempPoint.x=p[0]
@@ -199,7 +199,7 @@ def cloudCallback(point_cloud_2):
     #this publisher was used to publish to rviz to visually validate that the data is doing what we want 
     #pubTest.publish(testingPC)
  
-    thresh=1.25
+    thresh=1.0
     if(not np.size(np_point_cloud)==0):
         Y=pdist(np_point_cloud, metric='euclidean')
         Z=linkage(Y, method='average')
@@ -219,10 +219,12 @@ def cloudCallback(point_cloud_2):
         #clusterPub(hcluster.fclusterdata(np_point_cloud, thresh, criterion='distance', method='centroid'),np_point_cloud)
         #clusterPub(hcluster.fclusterdata(np_point_cloud, thresh, criterion='distance', method='median'),np_point_cloud)
         #clusterPub(hcluster.fclusterdata(np_point_cloud, thresh, criterion='distance', method='ward'),np_point_cloud)
+        #r=rospy.Rate(1)
+        #r.sleep()
 
 def cloudSub():
     rospy.init_node('cloud_sub', anonymous=False)
-    rospy.Subscriber('/lidar_wamv/points', PointCloud2, cloudCallback)
+    rospy.Subscriber('/wamv/sensors/lidars/lidar_wamv/points', PointCloud2, cloudCallback)
     #rospy.Subscriber('/full_point_cloud', PointCloud2, cloudCallback)
     rospy.Subscriber('/p3d_wamv_ned', Odometry, state_callback)
     rospy.on_shutdown(shutdownHook)

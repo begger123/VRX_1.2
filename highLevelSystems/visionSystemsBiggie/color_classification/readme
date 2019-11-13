@@ -1,0 +1,13 @@
+This is for color classification. Also Kaan helped cropped images for the data set and said he wanted to be in here, and thats really the only reason I am adding this readme, so... Here you go I guess. Hope you're happy.
+
+Color_classification Reboot:
+The first iteration of this has each color hardcoded into the system. It is just not robust enough to use in any capacity and greatly complicates it. The new data structure shall be as follow:
+
+string <color_name>
+	Mat <hist_h>
+	Mat <hist_s> 
+	Mat <hist_v>
+
+This will allow for an array of colors that can be easily stored and read in a .yaml file
+The ultimate goal of the software is to run a server that a sensor_msgs/Image image is sent to it along with a mask (may have to check if mask is just available, and it returns an array of strings with color name, and an array of float32[3] arrays with confidence values for HSV channels
+

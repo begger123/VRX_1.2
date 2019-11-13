@@ -57,7 +57,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-   LIBRARIES usv_ahc_py
+#  LIBRARIES usv_ahc_py
    CATKIN_DEPENDS message_generation rospy std_msgs geometry_msgs
 #  DEPENDS system_lib
 )

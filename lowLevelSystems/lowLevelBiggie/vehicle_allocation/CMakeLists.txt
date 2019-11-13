@@ -162,3 +162,20 @@ add_dependencies(vehicle_allocation_sim
   vehicle_allocation_sim_generate_messages_cpp
   )
 target_link_libraries(vehicle_allocation_sim ${catkin_LIBRARIES})
+
+##################################
+# Allocation SMSK Sim Executable #
+##################################
+
+add_executable(vehicle_allocation_sk_sim src/scaled_overactuated_allocation_sim_main.cpp
+  src/scaled_overactuated_allocation_sim.cpp
+  )
+
+add_dependencies(vehicle_allocation_sk_sim 
+  ${${PROJECT_NAME}_EXPORTED_TARGETS} 
+  ${catkin_EXPORTED_TARGETS}
+  vehicle_allocation_sk_sim_generate_messages_cpp
+  )
+target_link_libraries(vehicle_allocation_sk_sim ${catkin_LIBRARIES})
+
+

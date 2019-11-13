@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 
   int count = 0;
 
-  while(ros::ok)
+  while(ros::ok())
   {
     ros::spinOnce();	//spins for the subscribers
     
@@ -177,14 +177,14 @@ vector<cv::Rect> generateMasks()
       if(inFrame(x,y,z))
       {
         points.push_back(toCameraCoords(x,y,z));
-        //cv::circle(img, points[points.size()-1],3,cv::Scalar(255,255,0),-1);
+        cv::circle(img, points[points.size()-1],3,cv::Scalar(255,255,0),-1);
       }
     }
     if(points.size() > 3)
     {
       cv::Rect rect = generateMask(points);
       //remap rect if it is to work properly with this
-      //cv::rectangle(img, rect, cv::Scalar(0,255,0));
+      cv::rectangle(img, rect, cv::Scalar(0,255,0));
       rects.push_back(rect);
     }
 

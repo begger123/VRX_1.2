@@ -8,7 +8,7 @@ pid_controller::pid::pid(ros::NodeHandle &nh) : pid_nh(&nh), loop_rate(60) //set
    		ros::console::notifyLoggerLevelsChanged();
 	}
 	ROS_DEBUG("Entering initializer, next stop get_params");
-	target_sub = pid_nh->subscribe("control_target", 10, &pid_controller::pid::target_callback, this);
+	target_sub = pid_nh->subscribe("/control_target", 10, &pid_controller::pid::target_callback, this);
     pose_sub   = pid_nh->subscribe("/vehicle_pose", 10, &pid_controller::pid::pose_callback, this);
 	//state_sub = pid_nh->subscribe("vehicle_state", 10, &pid_controller::pid::state_callback, this);//use this for real vehicle
 	state_sub = pid_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::pid::state_callback, this);//use this for simulation

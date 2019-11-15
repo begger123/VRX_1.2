@@ -1,5 +1,5 @@
 global_frame: wamv/odom
-rolling_window: true
+rolling_window: false    # true
 track_unknown_space: true
 
 # obstacles_laser_g:

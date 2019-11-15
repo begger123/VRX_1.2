@@ -7,7 +7,7 @@
 #include <vector>
 
 /* This node listens for the global_planner message in the "/move_base/NavfnROS/plan" 
- * topic, as well as for the "odom_ned" transform.  Using these two, it transforms the
+ * topic, as well as for the "ned_origin" transform.  Using these two, it transforms the
  * global trajectory from odom_enu to odom_ned reference frame. */
 
 class PathToNED 

@@ -29,6 +29,9 @@
     <arg name="rviz_config" default="$(find wamv_gazebo)/config/rviz_armando.rviz" />
     <node pkg="rviz" type="rviz" name="wamv_visualization" args="-d $(arg rviz_config)" /> 
     
+    <!-- Run lidar geofence -->
+    <node pkg="lidar_geofence" name="lidar_geofence" type="lidar_geofence.py" output="screen"/>
+    
     <!-- Run PC Collapser -->
     <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan" output="screen">
       <remap from="cloud_in" to="/wamv/sensors/lidars/lidar_wamv/points"/>

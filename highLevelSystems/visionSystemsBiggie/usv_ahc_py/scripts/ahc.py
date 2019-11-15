@@ -188,12 +188,12 @@ def cloudCallback(point_cloud_2):
         #only take elements above the water plane
         #this number is 1.5, and not 0, because the points are in the lidar frame of reference, which is 1.5 meters above the water surface
         if(math.sqrt(p[0]*p[0]+p[1]*p[1])> 2 and math.sqrt(p[0]*p[0]+p[1]*p[1])< 100):
-            np_point_cloud.append([p[0], p[1], p[2]])
-            tempPoint=Point32()
-            tempPoint.x=p[0]
-            tempPoint.y=p[1]
-            tempPoint.z=p[2]
-            testingPC.points.append(tempPoint)
+            np_point_cloud.append([p[0], p[1], p[2]+0.9])
+            #tempPoint=Point32()
+            #tempPoint.x=p[0]
+            #tempPoint.y=p[1]
+            #tempPoint.z=p[2]
+            #testingPC.points.append(tempPoint)
             #print p
 
     #this publisher was used to publish to rviz to visually validate that the data is doing what we want 

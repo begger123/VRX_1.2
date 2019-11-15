@@ -27,10 +27,10 @@ class lidarGeofence():
 
         #Define the polygon that corresponds to the beach in NED coordinates, this will be a triangle
         self.verts = [
-           (0., 0.),  # southern most point
-           (0., 5.),  # north western point
-           (5., 5.),  # north eastern point
-           (0., 0.),  # ignored
+           (-65., 209.),  # southern most point
+           (242., 95.),  # north western point
+           (330., 235.),  # north eastern point
+           (-65., 209.),  # ignored
         ]
         
         self.codes = [
@@ -76,6 +76,7 @@ class lidarGeofence():
             #When we set up the point to check, we can easily convert it to EFI inertial frame from the Lidar BFF by adding it to the vehicles current position
             pointsToCheck = [self.theState.pose.pose.position.x+p[0],self.theState.pose.pose.position.y-p[1]]
             inside = self.path.contains_point(pointsToCheck)
+            print pointsToCheck[0]
             #If the point is not within the geofence, append to to a temporary numpy array
             if (inside == False):
                 self.cloud.append([p[0], p[1], p[2], p[3], p[4]])
@@ -91,7 +92,7 @@ class lidarGeofence():
         #Publish the Fenced PointCloud
         self.pubFencedLidar.publish(self.fencedPC2) 
     
-    def shutdownHook():
+    def shutdownHook(self):
         print "Shutting down lidar geofence"
      
 if __name__ == '__main__':

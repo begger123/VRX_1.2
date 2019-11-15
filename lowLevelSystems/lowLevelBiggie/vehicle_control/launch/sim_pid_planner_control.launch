@@ -25,10 +25,6 @@
     <!-- Start Simulated Drivers and State Accumulator -->
     <include file="$(find vehicle_state)/launch/sim_vehicle_state.launch" />
 
-    <!-- Run RViz -->
-    <arg name="rviz_config" default="$(find wamv_gazebo)/config/rviz_armando.rviz" />
-    <node pkg="rviz" type="rviz" name="wamv_visualization" args="-d $(arg rviz_config)" /> 
-    
     <!-- Run PC Collapser -->
     <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan" output="screen">
       <remap from="cloud_in" to="/wamv/sensors/lidars/lidar_wamv/points"/>
@@ -49,13 +45,10 @@
     </rosparam>
     </node>
 
-    <!-- Run Armando's Suite -->
-    <include file="$(find wamv_navigation)/launch/vehicle_sim.launch" />
+    <node pkg="high_to_low" type="high_to_low" name="waypoints_to_waypoint" output="screen"/>
 
-    <node pkg="high_to_low" type="high_to_low" name="waypoints_to_waypoint" output="screen"/> 
-
-    <!-- <node pkg="the_planner" type="planner" name="planner" output="screen"> -->
-        <!--         <rosparam param="mission_string">[tester]</rosparam> -->
-        <!--     <rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load" ></rosparam> -->
-        <!-- </node> -->
+    <node pkg="the_planner" type="planner" name="planner" output="screen">
+            <rosparam param="mission_string">[tester]</rosparam>
+        <rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load" ></rosparam>
+    </node>
 </launch>

@@ -97,7 +97,7 @@ void tester::wp_goal_callback(const geographic_msgs::GeoPath::ConstPtr& msg)
        
        theArray.waypoint_array.push_back(tempPoint.north);// tempPoint.east, 1.5};
        theArray.waypoint_array.push_back(tempPoint.east);// tempPoint.east, 1.5};
-       theArray.waypoint_array.push_back(2.0);// tempPoint.east, 1.5};
+       theArray.waypoint_array.push_back(2.25);// tempPoint.east, 1.5};
     }
     wpGoal=true;
 }

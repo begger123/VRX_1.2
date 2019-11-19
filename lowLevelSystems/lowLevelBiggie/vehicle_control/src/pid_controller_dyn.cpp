@@ -90,7 +90,8 @@ void pid_controller::pid::state_callback(const nav_msgs::Odometry::ConstPtr& msg
 	state_data.pose=msg->pose;
 	state_data.twist=msg->twist;
 
-	float vel=sqrt(state_data.twist.twist.linear.x*state_data.twist.twist.linear.x+state_data.twist.twist.linear.y*state_data.twist.twist.linear.y);
+	float vel=sqrt(state_data.twist.twist.linear.x*state_data.twist.twist.linear.x);
+	//float vel=sqrt(state_data.twist.twist.linear.x*state_data.twist.twist.linear.x+state_data.twist.twist.linear.y*state_data.twist.twist.linear.y);
     // ROS_INFO("vel is %f", vel);
 
 	//NED Frame
@@ -136,7 +137,8 @@ void pid_controller::pid::set_error_los()
 	velocity_error.at(2) = velocity_error.at(1);
 	velocity_error.at(1) = velocity_error.at(0);
 	//velocity is NED body fixed
-	float vel=sqrt(state_data.twist.twist.linear.x*state_data.twist.twist.linear.x+state_data.twist.twist.linear.y*state_data.twist.twist.linear.y);
+	//float vel=sqrt(state_data.twist.twist.linear.x*state_data.twist.twist.linear.x+state_data.twist.twist.linear.y*state_data.twist.twist.linear.y);
+	float vel=sqrt(state_data.twist.twist.linear.x*state_data.twist.twist.linear.x);
 	velocity_error.at(0) = velocity_command-vel;// Current error goes to slot 0
 	//ROS_DEBUG("velocity error is %f", velocity_error.at(0));
 	//ROS_DEBUG("control_command is %f", velocity_command);

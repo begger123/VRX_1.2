@@ -13,9 +13,11 @@
     <!-- Based on the selected controller, load params for the requested control type -->
     <!-- Load ROS params PID control -->
     <rosparam command="load" file="$(find vehicle_control)/config/pid.yaml" />
+    <rosparam command="load" file="$(find vehicle_control)/config/sm_sk.yaml" />
 
     <!-- Run control system -->
     <node pkg="vehicle_control" name="control" type="vehicle_control_dyn" output="screen"/>
+    <!-- <node pkg="vehicle_control" name="control_sk" type="sm_sk_control" output="screen"/> -->
     <node pkg="vehicle_control" name="control_sk" type="vehicle_skcontrol_dyn" output="screen"/>
 
     <!-- Run allocation -->
@@ -53,12 +55,12 @@
     </node>
 
     <!-- Run Armando's Suite -->
-    <include file="$(find wamv_navigation)/launch/vehicle_sim.launch" />
+    <!-- <include file="$(find wamv_navigation)/launch/vehicle_sim.launch" /> -->
 
     <node pkg="high_to_low" type="high_to_low" name="waypoints_to_waypoint" output="screen"/> 
 
-    <!-- <node pkg="the_planner" type="planner" name="planner" output="screen"> -->
-        <!--         <rosparam param="mission_string">[tester]</rosparam> -->
-        <!--     <rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load" ></rosparam> -->
-        <!-- </node> -->
+    <node pkg="the_planner" type="planner" name="planner" output="screen">
+        <rosparam param="mission_string">[tester]</rosparam>
+        <rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load" ></rosparam>
+    </node>
 </launch>

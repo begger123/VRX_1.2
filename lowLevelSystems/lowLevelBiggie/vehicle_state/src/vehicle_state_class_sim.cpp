@@ -117,8 +117,8 @@ void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
     the_odometry.twist.twist.linear.y = -msg->twist.twist.linear.y;
     the_odometry.twist.twist.linear.z = msg->twist.twist.linear.z;
     
-    // ROS_INFO("enu_velocity = [vel_x, vel_y] = [%f, %f]", msg->twist.twist.linear.x, msg->twist.twist.linear.y);
-    // ROS_INFO("ned_velocity = [v_x, v_y] = [%f, %f]", the_odometry.twist.twist.linear.x, the_odometry.twist.twist.linear.y);
+    //ROS_INFO("enu_velocity = [vel_x, vel_y] = [%f, %f]", msg->twist.twist.linear.x, msg->twist.twist.linear.y);
+    //ROS_INFO("ned_velocity = [v_x, v_y] = [%f, %f]", the_odometry.twist.twist.linear.x, the_odometry.twist.twist.linear.y);
 
 	tf::Vector3 enuAngularVel(msg->twist.twist.angular.x, msg->twist.twist.angular.y, msg->twist.twist.angular.z);
 	tf::Vector3 nedAngularVel=R_z*R_x*enuAngularVel;

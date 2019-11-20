@@ -60,9 +60,11 @@ bool segmentCallback(rgbd_fusion::segment::Request  &req,
 
   vector<cv::Rect> rects = generateMasks(); 
   vector<rgbd_fusion::object_image> objects;
+  vector<geometry_msgs::Point32> centroids;
       
 	for(int i = 0; i < rects.size(); i++)
   {
+    //sets mask data
 	  rgbd_fusion::object_image obj;
 	  obj.object_id = i;
 	  geometry_msgs::Point32 temp;
@@ -73,10 +75,13 @@ bool segmentCallback(rgbd_fusion::segment::Request  &req,
 	  temp.y = rects[i].height;
 	  obj.width_height = temp;
 	  objects.push_back(obj);
-	
+
+    //sets centroids
+    centroids.push_back(clusters[i].centroid);
 	}
 
   res.masks = objects;
+  res.centroids = centroids;
 
   return true;
 }

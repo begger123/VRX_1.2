@@ -2,3 +2,4 @@ usv_ahc_py/cluster[] list
 sensor_msgs/CameraInfo cam_info
 ---
 rgbd_fusion/object_image[] masks
+geometry_msgs/Point32[] centroids

@@ -4,7 +4,8 @@
     <include file="$(find wamv_gazebo)/launch/localization_example.launch" />
     
     <!-- Publish the static TF Tree -->
-    <node pkg="tf_tree" name="tf_tree_sim" type="tf_tree_sim" output="screen"/>
+    <node pkg="tf_tree" name="tf_tree_sim" type="tf_tree_sim"/>
+    <!--<node pkg="tf_tree" name="tf_tree_sim" type="tf_tree_sim" output="screen"/>-->
 
     <!-- Load ROS params for the entire control system -->
     <!-- Among other things, this should specifiy which controller to use -->
@@ -16,12 +17,17 @@
     <rosparam command="load" file="$(find vehicle_control)/config/sm_sk.yaml" />
 
     <!-- Run control system -->
-    <node pkg="vehicle_control" name="control" type="vehicle_control_dyn" output="screen"/>
+    <node pkg="vehicle_control" name="control" type="vehicle_control_dyn"/>
+    <!-- <node pkg="vehicle_control" name="control_sk" type="sm_sk_control" /> -->
+    <node pkg="vehicle_control" name="control_sk" type="vehicle_skcontrol_dyn"/>
+    <!--<node pkg="vehicle_control" name="control" type="vehicle_control_dyn" output="screen"/>-->
     <!-- <node pkg="vehicle_control" name="control_sk" type="sm_sk_control" output="screen"/> -->
-    <node pkg="vehicle_control" name="control_sk" type="vehicle_skcontrol_dyn" output="screen"/>
+    <!--<node pkg="vehicle_control" name="control_sk" type="vehicle_skcontrol_dyn" output="screen"/>-->
 
     <!-- Run allocation -->
-    <node pkg="qp_allocation" name="qp_allocation" type="qp_allocation.py" output="screen"/>
+    <node pkg="qp_allocation" name="qp_allocation" type="qp_allocation.py"/>
+    <!-- <node pkg="vehicle_allocation" name="allocation" type="vehicle_allocation"/> -->
+    <!--<node pkg="qp_allocation" name="qp_allocation" type="qp_allocation.py" output="screen"/>-->
     <!-- <node pkg="vehicle_allocation" name="allocation" type="vehicle_allocation" output="screen"/> -->
 
     <!-- Start Simulated Drivers and State Accumulator -->
@@ -32,7 +38,8 @@
     <node pkg="rviz" type="rviz" name="wamv_visualization" args="-d $(arg rviz_config)" /> 
     
     <!-- Run lidar geofence -->
-    <node pkg="lidar_geofence" name="lidar_geofence" type="lidar_geofence.py" output="screen"/>
+    <node pkg="lidar_geofence" name="lidar_geofence" type="lidar_geofence.py"/>
+    <!--<node pkg="lidar_geofence" name="lidar_geofence" type="lidar_geofence.py" output="screen"/>-->
     
     <!-- Run PC Collapser -->
     <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan" output="screen">
@@ -57,7 +64,8 @@
     <!-- Run Armando's Suite -->
     <include file="$(find wamv_navigation)/launch/vehicle_sim.launch" />
 
-    <node pkg="high_to_low" type="high_to_low" name="waypoints_to_waypoint" output="screen"/> 
+    <node pkg="high_to_low" type="high_to_low" name="waypoints_to_waypoint"/> 
+    <!--<node pkg="high_to_low" type="high_to_low" name="waypoints_to_waypoint" output="screen"/> -->
 
     <node pkg="the_planner" type="planner" name="planner" output="screen">
         <rosparam param="mission_string">[tester]</rosparam>

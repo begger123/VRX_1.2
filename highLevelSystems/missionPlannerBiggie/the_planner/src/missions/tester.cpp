@@ -73,19 +73,6 @@ void tester::sk_goal_callback(const geographic_msgs::GeoPoseStamped::ConstPtr& m
 
     skPoint.theta=tf::getYaw(tf::Quaternion(msg->pose.orientation.x,msg->pose.orientation.y,msg->pose.orientation.z,msg->pose.orientation.w));
 
-    //wraps heading between 0 and 2PI    
-    //skPoint.theta=fmod(skPoint.theta, 2*M_PI); 
-
-    // Convert yawAngle from ENU to NED convention
-    //if (skPoint.theta < M_PI/2)
-    //{
-    //    skPoint.theta = M_PI/2 - skPoint.theta;
-    //}
-    //else 
-    //{
-    //    skPoint.theta = 5*M_PI/2 - skPoint.theta;
-    //}
-
     ROS_INFO("The target in NED is %f %f %f", skPoint.x, skPoint.y, skPoint.theta);    
     skGoal=true;
 }
@@ -179,6 +166,15 @@ NED_struct tester::Geo2NED(double lat, double lon, double latref, double lonref)
 //this function will pass the waypoints that have been calculated in the persistanceSortedGates routine to the obstacle avoidance path planner
 void tester::sorted_gate_list_callback(const usv_ahc_py::sorted_gates::ConstPtr& msg)
 {
+    //ROS_WARN("the number of waypoints is %lu", msg->sorted_gate_array.size());
+    theArray.waypoint_array.clear();
+    for (int i=0; i<msg->sorted_gate_array.size(); i++)
+    {
+       theArray.waypoint_array.push_back(msg->sorted_gate_array[i].midpointAndBearing.y);
+       theArray.waypoint_array.push_back(msg->sorted_gate_array[i].midpointAndBearing.x);
+       theArray.waypoint_array.push_back(2.25);// tempPoint.east, 1.5};
+    }
+    navChannelGoal=true;
 }
 
 
@@ -216,8 +212,12 @@ void tester::loop()
 		}
 		case WAYPOINTS:
 		{
-			ROS_INFO("Waypoint command received.");
+            while(ros::ok() && !wpGoal)
+            {
+                ros::spinOnce();
+            }
             
+			ROS_INFO("Waypoint command received.");
             //directly to high_to_low_node
             custom_waypoint_array_publisher.publish(theArray);
 
@@ -232,60 +232,72 @@ void tester::loop()
 		}
         case NAVIGATION_COURSE:
         {
-            //This will provide labels to the persistance table
-            //Vision system is running,
-            //Look through marker message for 2 closest can_buoys
-            //Right can buoy is green, designated index 0
-            //Left can buoy is red, designated index 1
-            //this will need to be organized to ensure the order
-            ROS_INFO("Just looking to get the midpoint");
+            while(ros::ok() && !navChannelGoal)
+            {
+                ros::spinOnce();
+            }
 
-            //the point cloud that is being published in order of ascending order, therefore the buoys in
-            //locations 0 and 1 are the two closest.
-            //however, what we really need to check is for the two closest objects that fit inside of a certain cone
-            //lets say plus minus 20 deg
+            ROS_INFO("Starting Nav Channel.");
+            
+            
+            
+            
+            //directly to high_to_low_node
+            //custom_waypoint_array_publisher.publish(theArray);
 
-            //find the two closest points that are within the cone
-            //bool entryFound=false;
-            //geometry_msgs::Point32 startNavBuoys[2];
-            //while(!entryFound && ros::ok()) {
-            //    for(int i=0; i<point_cloud_t.points.size()-1; i++){
-            //        for(int j=1; j<point_cloud_t.points.size(); j++){
-            //            startNavBuoys[0]=point_cloud_t.points[i];
-            //            startNavBuoys[1]=point_cloud_t.points[j];
-            //            if(gateSetFound(startNavBuoys)){
-            //                entryFound=true;
-            //                i=point_cloud_t.points.size()-1;
-            //                j=point_cloud_t.points.size();
-            //            }
-            //        }
-            //    }
-            //    ros::Rate rate(10);
-            //    rate.sleep();
-            //    ros::spinOnce();
-            //    ROS_INFO("Spinning while waiting for 2 markers");
+            //ROS_WARN("Publishing the array");
+            //while(ros::ok()&&!finished)
+            //{
+                //ros::Rate loop_rate(60);
+                //loop_rate.sleep();
             //}
 
-            ////make sure the right buoy is index 0
-            ////stuff
-            //check_order(startNavBuoys);
 
-            //ROS_INFO("Sufficient detection, calculating next waypoint");
+            int i=0;
+            while(ros::ok() && !finished)
+            {
+                //ROS_WARN("GOING TO FIRST WAYPOINT");
+                //ROS_WARN("THE WAYPOINT ARRAY IS OF SIZE %lu",theArray.waypoint_array.size());
+                ros::spinOnce();
+                geometry_msgs::Pose theGoal;
+                theGoal.position.x = theArray.waypoint_array[i];
+                theGoal.position.y = theArray.waypoint_array[i+1];
 
-            //calculate_midpoint_and_heading(startNavBuoys);
-            //ROS_DEBUG("%f",midpointX);
-            //ROS_DEBUG("%f",midpointY);
+                wamv_navigation::SendGoal goto_srv;
+                goto_srv.request.goal          = theGoal;
+                goto_srv.request.vehicle_pos.x = theOdom.pose.pose.position.x;
+                goto_srv.request.vehicle_pos.y = theOdom.pose.pose.position.y;
+                goto_srv.request.dist_stop     = 0.0;
 
-            ////publish this command
-            //custom_messages_biggie::waypoint_array array;
-            //array.waypoint_array={this->midpointX, this->midpointY, 1.5,};//in ned
-            //ROS_INFO("Traveling to midpoint");
-            //while(!missionComplete.data&&ros::ok()){
-            //    custom_waypoint_array_publisher.publish(array);
-            //    ros::spinOnce();
-            //}
-            //missionComplete.data=false;
-            //ROS_INFO("Midpoint reached");
+                if (client_goal.call(goto_srv)) {
+                    ROS_INFO("Service call to send-goal server was successful");
+                    ROS_INFO("goal_heading_enu = %g deg", goto_srv.response.goal_heading_enu);
+                }
+                else {
+                    ROS_INFO("Service call failed");
+                    finished = true;
+                }
+
+                previous_status = 1;
+                while (ros::ok() && goal_reached == false) {
+                    ros::spinOnce();
+                    //ROS_DEBUG("The vehicle hasn't reached the goal yet");
+                    ros::Rate rate(60);
+                    rate.sleep();
+                }
+                goal_reached=false; 
+                //the reason we check with i+4 is because we are actually indexing one more than what i is)
+                if((i+4)<theArray.waypoint_array.size())
+                    i=i+3;
+                else
+                {
+                    ROS_WARN("Breaking");
+                    break;
+                }
+
+                ROS_WARN("JUST ITERATED i");
+            }
+
 
             this->task=START;
             break;

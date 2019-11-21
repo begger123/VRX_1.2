@@ -41,6 +41,7 @@ private:
     bool newTask;
     bool skGoal;
     bool wpGoal;
+    bool navChannelGoal;
     bool finished;
    
     geometry_msgs::Pose2D skPoint;

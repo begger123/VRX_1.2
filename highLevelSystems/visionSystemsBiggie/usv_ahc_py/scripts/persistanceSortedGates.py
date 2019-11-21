@@ -122,6 +122,12 @@ class persistanceSortedGates():
         
         del(self.clusterListMsgCopy.cluster_list[self.startRedIndex])
         self.startGateFound=True
+        #calculate the midpoint
+        self.startGate.midpointAndBearing.x=(self.startGate.buoyLocations[0].x+self.startGate.buoyLocations[1].x)/2
+        self.startGate.midpointAndBearing.y=(self.startGate.buoyLocations[0].y+self.startGate.buoyLocations[1].y)/2
+        #TODO calulate the bearing
+        # self.startGate.midpointAndBearing.theta=
+
         self.sortedGateList.sorted_gate_array.append(self.startGate)
         #print(len(self.sortedGateList.sorted_gate_array))
 
@@ -167,6 +173,12 @@ class persistanceSortedGates():
         #remove the closest red buoy from the list
         del(self.clusterListMsgCopy.cluster_list[self.nextClosestGreenIndex])
 
+        #calculate the midpoint
+        self.newGate.midpointAndBearing.x=(self.newGate.buoyLocations[0].x+self.newGate.buoyLocations[1].x)/2
+        self.newGate.midpointAndBearing.y=(self.newGate.buoyLocations[0].y+self.newGate.buoyLocations[1].y)/2
+        #TODO calulate the bearing
+        # self.startGate.midpointAndBearing.theta=
+        
         self.sortedGateList.sorted_gate_array.append(self.newGate)
         self.currentGateNumber=self.currentGateNumber+1
 
@@ -198,6 +210,13 @@ class persistanceSortedGates():
     
         del(self.clusterListMsgCopy.cluster_list[self.lastRedIndex])
         self.lastGateFound=True
+        
+        #calculate the midpoint
+        self.lastGate.midpointAndBearing.x=(self.lastGate.buoyLocations[0].x+self.lastGate.buoyLocations[1].x)/2
+        self.lastGate.midpointAndBearing.y=(self.lastGate.buoyLocations[0].y+self.lastGate.buoyLocations[1].y)/2
+        #TODO calulate the bearing
+        # self.startGate.midpointAndBearing.theta=
+        
         self.sortedGateList.sorted_gate_array.append(self.lastGate)
         #print(len(self.sortedGateList.sorted_gate_array))
 

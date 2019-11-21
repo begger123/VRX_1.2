@@ -496,7 +496,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.75
       Style: Flat Squares
-      Topic: /markers
+      Topic: /persistanceCloud
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -529,7 +529,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 88.09381866455078
+      Distance: 58.081214904785156
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1

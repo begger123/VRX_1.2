@@ -105,6 +105,7 @@ def clusterPub(clusters_t,point_cloud_t):
     centroids_as_pointcloud_t.header.frame_id="lidar_nwu"
     for i in range(len(clusters)):
         #each cluster array must be converted into an array of 4d points named depth points
+        #the reason for this conversion is because the 4d dimension will encode which cluster the points belong to
         depth_points_list_msg_temp_t=Cluster_msg()
         for j in range(len(clusters[i])):
             depth_points_msg_t=depth_points_msg()
@@ -119,13 +120,6 @@ def clusterPub(clusters_t,point_cloud_t):
         cluster_msg_t.raw_cluster=depth_points_list_msg_temp_t.raw_cluster
         cluster_msg_t.num_points=len(clusters[i])
         cluster_msg_t.centroid=temp.centroid
-        singleDistance=[]
-        singleDistance=np.array([[theState.pose.pose.position.x,theState.pose.pose.position.y],[cluster_msg_t.centroid.x,cluster_msg_t.centroid.y]])
-        cluster_msg_t.distance=pdist(singleDistance, metric='euclidean')
-        cluster_msg_t.distance=math.sqrt(cluster_msg_t.distance*cluster_msg_t.distance)
-        #print(singleDistance)
-        #print(cluster_msg_t.distance)
-        #print(cluster_msg_t.distance)
         #filters out small objects
         if(cluster_msg_t.num_points>0):
             cluster_list_msg_t.cluster_list.append(cluster_msg_t)

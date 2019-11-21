@@ -37,6 +37,8 @@ add_message_files(
   depth_points.msg
   buoy.msg
   look_up_table.msg
+  gate.msg
+  sorted_gates.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

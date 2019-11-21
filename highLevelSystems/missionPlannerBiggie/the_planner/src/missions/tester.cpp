@@ -7,6 +7,7 @@ tester::tester(ros::NodeHandle &nh) : Mission(nh)
 	task_subscriber = mission_nh_->subscribe("/vrx/task/info", 10, &tester::task_callback, this);
 	station_keeping_subscriber = mission_nh_->subscribe("/vrx/station_keeping/goal", 10, &tester::sk_goal_callback, this);
 	waypoint_subscriber = mission_nh_->subscribe("/vrx/wayfinding/waypoints", 10, &tester::wp_goal_callback, this);
+	nav_channel_subscriber = mission_nh_->subscribe("/sortedGateList", 10, &tester::sorted_gate_list_callback, this);
 	sk_publisher = mission_nh_->advertise<geometry_msgs::Pose2D>("/control_target_sk", 10);
 	tester_publisher = mission_nh_->advertise<std_msgs::Bool>("shouldIStart", 10);
 	traj_client = mission_nh_->serviceClient<the_planner::initTraj>("gen_init_traj");
@@ -175,9 +176,10 @@ NED_struct tester::Geo2NED(double lat, double lon, double latref, double lonref)
     return inner_struct;
 }
 
-//look for open gate
-//go to midpoint
-//look for next gate
+//this function will pass the waypoints that have been calculated in the persistanceSortedGates routine to the obstacle avoidance path planner
+void tester::sorted_gate_list_callback(const usv_ahc_py::sorted_gates::ConstPtr& msg)
+{
+}
 
 
 void tester::loop()

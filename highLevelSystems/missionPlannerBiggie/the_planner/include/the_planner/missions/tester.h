@@ -27,10 +27,12 @@ private:
     ros::Subscriber task_subscriber;
 	ros::Subscriber station_keeping_subscriber;
 	ros::Subscriber waypoint_subscriber;
+	ros::Subscriber nav_channel_subscriber;
 
     void task_callback(const vrx_gazebo::Task::ConstPtr& msg);
 	void sk_goal_callback(const geographic_msgs::GeoPoseStamped::ConstPtr& msg);
 	void wp_goal_callback(const geographic_msgs::GeoPath::ConstPtr& msg);
+    void sorted_gate_list_callback(const usv_ahc_py::sorted_gates::ConstPtr& msg);
 
     vrx_gazebo::Task theTaskMsg;
     geographic_msgs::GeoPoseStamped skGoalMsg;

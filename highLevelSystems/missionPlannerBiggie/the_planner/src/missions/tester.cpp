@@ -44,6 +44,14 @@ void tester::task_callback(const vrx_gazebo::Task::ConstPtr& msg)
         newTask=true;
         finished=false;
     }
+   
+    if (theTaskMsg.name=="navigation_course" && theTaskMsg.state=="ready")
+    {
+        this->task=NAVIGATION_COURSE;
+        newTask=true;
+        finished=false;
+    }
+    
     if (theTaskMsg.state=="finished")
     {
         finished=true;
@@ -167,6 +175,11 @@ NED_struct tester::Geo2NED(double lat, double lon, double latref, double lonref)
     return inner_struct;
 }
 
+//look for open gate
+//go to midpoint
+//look for next gate
+
+
 void tester::loop()
 {
 	switch(this->task)
@@ -201,6 +214,8 @@ void tester::loop()
 		}
 		case WAYPOINTS:
 		{
+			ROS_INFO("Waypoint command received.");
+            
             //directly to high_to_low_node
             custom_waypoint_array_publisher.publish(theArray);
 
@@ -210,9 +225,69 @@ void tester::loop()
                 ros::Rate loop_rate(60);
                 loop_rate.sleep();
             }
-            this->task=FINISHED;
+            this->task=START;
 			break;
 		}
+        case NAVIGATION_COURSE:
+        {
+            //This will provide labels to the persistance table
+            //Vision system is running,
+            //Look through marker message for 2 closest can_buoys
+            //Right can buoy is green, designated index 0
+            //Left can buoy is red, designated index 1
+            //this will need to be organized to ensure the order
+            ROS_INFO("Just looking to get the midpoint");
+
+            //the point cloud that is being published in order of ascending order, therefore the buoys in
+            //locations 0 and 1 are the two closest.
+            //however, what we really need to check is for the two closest objects that fit inside of a certain cone
+            //lets say plus minus 20 deg
+
+            //find the two closest points that are within the cone
+            //bool entryFound=false;
+            //geometry_msgs::Point32 startNavBuoys[2];
+            //while(!entryFound && ros::ok()) {
+            //    for(int i=0; i<point_cloud_t.points.size()-1; i++){
+            //        for(int j=1; j<point_cloud_t.points.size(); j++){
+            //            startNavBuoys[0]=point_cloud_t.points[i];
+            //            startNavBuoys[1]=point_cloud_t.points[j];
+            //            if(gateSetFound(startNavBuoys)){
+            //                entryFound=true;
+            //                i=point_cloud_t.points.size()-1;
+            //                j=point_cloud_t.points.size();
+            //            }
+            //        }
+            //    }
+            //    ros::Rate rate(10);
+            //    rate.sleep();
+            //    ros::spinOnce();
+            //    ROS_INFO("Spinning while waiting for 2 markers");
+            //}
+
+            ////make sure the right buoy is index 0
+            ////stuff
+            //check_order(startNavBuoys);
+
+            //ROS_INFO("Sufficient detection, calculating next waypoint");
+
+            //calculate_midpoint_and_heading(startNavBuoys);
+            //ROS_DEBUG("%f",midpointX);
+            //ROS_DEBUG("%f",midpointY);
+
+            ////publish this command
+            //custom_messages_biggie::waypoint_array array;
+            //array.waypoint_array={this->midpointX, this->midpointY, 1.5,};//in ned
+            //ROS_INFO("Traveling to midpoint");
+            //while(!missionComplete.data&&ros::ok()){
+            //    custom_waypoint_array_publisher.publish(array);
+            //    ros::spinOnce();
+            //}
+            //missionComplete.data=false;
+            //ROS_INFO("Midpoint reached");
+
+            this->task=START;
+            break;
+        }
 		case FINISHED:
 		{
 			finished=true;

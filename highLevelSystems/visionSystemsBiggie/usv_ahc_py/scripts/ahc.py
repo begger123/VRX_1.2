@@ -19,7 +19,7 @@ from scipy.spatial.distance import pdist, squareform
 from operator import itemgetter
 import math
 
-pubClusters = rospy.Publisher('clusters', cluster_list_msg, queue_size=1)
+pubClusters = rospy.Publisher('/clusters', cluster_list_msg, queue_size=1)
 pubCentroids = rospy.Publisher('centroids', PointCloud, queue_size=1)
 pubTest = rospy.Publisher('tester', PointCloud, queue_size=1)
 
@@ -149,6 +149,7 @@ def clusterPub(clusters_t,point_cloud_t):
 
     sortedCluster=np.asarray(sorted(preSortedCluster, key=itemgetter(4)))
     #print("new sorted cluster")
+    cluster_list_msg_t=cluster_list_msg()
     for i in range(len(sortedCluster)):
         cluster_msg_t=Cluster_msg()
         cluster_msg_t.raw_cluster=sortedCluster[i][0]
@@ -158,13 +159,19 @@ def clusterPub(clusters_t,point_cloud_t):
         cluster_msg_t.distance=sortedCluster[i][4]
         #print(cluster_msg_t.distance)
         cluster_list_msg_t.cluster_list.append(cluster_msg_t)
-
         centroids_as_pointcloud_t.points.append(sortedCluster[i][2])
+        #print "cluster_msg_t"
+        #print(cluster_msg_t)
+        #print i
+        #print "cluster_list_msg_t.cluster_list"
+        #print(len(cluster_list_msg_t.cluster_list))
+        #print i
 
-    #print("clusters")
-    #print(centroids_as_pointcloud_t.points)
+    #print("centroids")
+    #print(len(centroids_as_pointcloud_t.points))
     #then publish
-    #print(cluster_list_msg_t)
+    #print("clusters")
+    #print(len(cluster_list_msg_t.cluster_list))
     pubClusters.publish(cluster_list_msg_t)
 
     #go through each cluster
@@ -187,7 +194,7 @@ def cloudCallback(point_cloud_2):
     for p in gen:
         #only take elements above the water plane
         #this number is 1.5, and not 0, because the points are in the lidar frame of reference, which is 1.5 meters above the water surface
-        if(math.sqrt(p[0]*p[0]+p[1]*p[1])> 2 and math.sqrt(p[0]*p[0]+p[1]*p[1])< 100):
+        if(math.sqrt(p[0]*p[0]+p[1]*p[1])> 1 and math.sqrt(p[0]*p[0]+p[1]*p[1])< 50):
             np_point_cloud.append([p[0], p[1], p[2]+0.9])
             #tempPoint=Point32()
             #tempPoint.x=p[0]
@@ -224,7 +231,6 @@ def cloudSub():
     rospy.init_node('cloud_sub', anonymous=False)
     #rospy.Subscriber('/lidar_wamv/points', PointCloud2, cloudCallback)
     rospy.Subscriber('/lidar_fenced', PointCloud2, cloudCallback)
-    #rospy.Subscriber('/full_point_cloud', PointCloud2, cloudCallback)
     rospy.Subscriber('/p3d_wamv_ned', Odometry, state_callback)
     rospy.on_shutdown(shutdownHook)
     rospy.spin()

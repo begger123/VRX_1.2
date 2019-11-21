@@ -53,9 +53,9 @@
         concurrency_level: 0
     </rosparam>
     </node>
-
+  
     <!-- Run Armando's Suite -->
-    <!-- <include file="$(find wamv_navigation)/launch/vehicle_sim.launch" /> -->
+    <include file="$(find wamv_navigation)/launch/vehicle_sim.launch" />
 
     <node pkg="high_to_low" type="high_to_low" name="waypoints_to_waypoint" output="screen"/> 
 
@@ -63,4 +63,6 @@
         <rosparam param="mission_string">[tester]</rosparam>
         <rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load" ></rosparam>
     </node>
+    
+    <!-- <include file="$(find usv_ahc_py)/launch/vision.launch" /> -->
 </launch>

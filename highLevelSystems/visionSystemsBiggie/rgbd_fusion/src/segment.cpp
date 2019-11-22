@@ -1,6 +1,5 @@
 /*
-Uses lots of code from 2016 VBAS sulu package
-TODO: Add 3d point of centroid to message
+Uses process from 2016 VBAS sulu package
 */
 
 #include "ros/ros.h"
@@ -14,8 +13,6 @@ TODO: Add 3d point of centroid to message
 #include <vector> 
 #include <cv_bridge/cv_bridge.h>
 #include "image_geometry/pinhole_camera_model.h"
-#include "rgbd_fusion/object_image.h"
-#include "rgbd_fusion/object_image_list.h"
 #include "rgbd_fusion/segment.h"
 
 
@@ -33,15 +30,16 @@ float theta;
 bool camSettings = false;
 bool isCloud = false;
 
-vector<usv_ahc_py::cluster> clusters;
+usv_ahc_py::cluster clust;
 
 image_geometry::PinholeCameraModel cam_model;
 
 bool inFrame(geometry_msgs::Point32 point);
 bool inFrame(float x, float y, float z);
 cv::Point toCameraCoords(float x, float y, float z);
-vector<cv::Rect> generateMasks();
-cv::Rect generateMask(vector<cv::Point> points);
+cv::Rect formatMask(vector<cv::Point> points);
+cv::Rect generateMask(usv_ahc_py::cluster cluster);
+
 
 float degToRad(float deg){return deg*(PI/180);}
 float radToDeg(float rad){return rad*(180/PI);}
@@ -49,39 +47,26 @@ float radToDeg(float rad){return rad*(180/PI);}
 bool segmentCallback(rgbd_fusion::segment::Request  &req,
 	 rgbd_fusion::segment::Response &res)
 {
-  //loads clusters in
-  clusters.clear();
-  clusters = req.list;
+  //loads cluster in
+  clust = req.clust;
 
   //loads camera settings in
   cam_model.fromCameraInfo(req.cam_info);
   res_x = req.cam_info.width;
   res_y = req.cam_info.height;
 
-  vector<cv::Rect> rects = generateMasks(); 
-  vector<rgbd_fusion::object_image> objects;
-  vector<geometry_msgs::Point32> centroids;
-      
-	for(int i = 0; i < rects.size(); i++)
-  {
-    //sets mask data
-	  rgbd_fusion::object_image obj;
-	  obj.object_id = i;
-	  geometry_msgs::Point32 temp;
-	  temp.x = rects[i].x;
-	  temp.y = rects[i].y;
-	  obj.root_point = temp;
-	  temp.x = rects[i].width;
-	  temp.y = rects[i].height;
-	  obj.width_height = temp;
-	  objects.push_back(obj);
+  cv::Rect rect = generateMask(clust);     
 
-    //sets centroids
-    centroids.push_back(clusters[i].centroid);
-	}
+  //sets message data
+  geometry_msgs::Point32 rootPoint;
+  rootPoint.x = rect.x;
+  rootPoint.y = rect.y;
+  geometry_msgs::Point32 widthHeight;
+  widthHeight.x = rect.width;
+  widthHeight.y = rect.height;
 
-  res.masks = objects;
-  res.centroids = centroids;
+  res.root_point = rootPoint;
+  res.width_height = widthHeight;
 
   return true;
 }
@@ -91,6 +76,9 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "segment");
 
   ros::NodeHandle nh; 
+  
+  nh.getParam("/camera_transform", camera_transform);
+  nh.getParam("/camera_rotation", camera_rotation);
  
   ros::ServiceServer service = nh.advertiseService("RGBD_segmentation", segmentCallback);
   ROS_INFO("Segmentation Service Running");
@@ -118,35 +106,7 @@ cv::Point toCameraCoords(float x, float y, float z)
 }
 
 
-vector<cv::Rect> generateMasks()
-{
-  vector<cv::Rect> rects;
-  for(int i = 0; i < clusters.size(); i++)
-  {
-    vector<cv::Point> points;  
-    for(int j = 0; j < clusters[i].raw_cluster.size(); j++)
-    { 
-      //need to plot point on image
-      float x, y, z, id;
-      x = clusters[i].raw_cluster[j].labeled_point[0];
-      y = clusters[i].raw_cluster[j].labeled_point[1];
-      z = clusters[i].raw_cluster[j].labeled_point[2];
-      id = clusters[i].raw_cluster[j].labeled_point[3];
-      if(inFrame(x,y,z))
-      {
-        points.push_back(toCameraCoords(x,y,z));
-      }
-    }
-    if(points.size() > 3)
-    {
-      cv::Rect rect = generateMask(points);
-      rects.push_back(rect);
-    }
-
-  }
-  return rects;
-}
-
+//use vector to centriod to make sure its within fov; atan2
 bool inFrame(float x, float y, float z)
 {
   //filter out any value that is not in front of the vehicle
@@ -155,7 +115,33 @@ bool inFrame(float x, float y, float z)
   return true;
 }
 
-cv::Rect generateMask(vector<cv::Point> points)
+cv::Rect generateMask(usv_ahc_py::cluster cluster)
+{
+  vector<cv::Point> points; 
+  for(int i = 0; i < cluster.raw_cluster.size(); i++)
+  { 
+    //need to plot point on image
+    float x, y, z;
+    x = cluster.raw_cluster[i].labeled_point[0];
+    y = cluster.raw_cluster[i].labeled_point[1];
+    z = cluster.raw_cluster[i].labeled_point[2];
+    if(inFrame(x,y,z))
+    {
+      points.push_back(toCameraCoords(x,y,z));
+    }
+  }
+  if(points.size() > 3)
+  {
+    cv::Rect rect = formatMask(points);
+    return rect;
+  }
+  else 
+  {
+    return cv::Rect(-999,-999,-999,-999);
+  }
+}
+
+cv::Rect formatMask(vector<cv::Point> points)
 {
   int top, left, right, bottom;
   top = points[0].y;

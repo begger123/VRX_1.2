@@ -55,8 +55,6 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
-   object_image.msg
-   object_image_list.msg
  )
 
 ## Generate services in the 'srv' folder

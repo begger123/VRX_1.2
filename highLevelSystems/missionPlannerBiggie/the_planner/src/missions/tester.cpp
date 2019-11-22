@@ -170,8 +170,8 @@ void tester::sorted_gate_list_callback(const usv_ahc_py::sorted_gates::ConstPtr&
     theArray.waypoint_array.clear();
     for (int i=0; i<msg->sorted_gate_array.size(); i++)
     {
-       theArray.waypoint_array.push_back(msg->sorted_gate_array[i].midpointAndBearing.y);
        theArray.waypoint_array.push_back(msg->sorted_gate_array[i].midpointAndBearing.x);
+       theArray.waypoint_array.push_back(msg->sorted_gate_array[i].midpointAndBearing.y);
        theArray.waypoint_array.push_back(2.25);// tempPoint.east, 1.5};
     }
     navChannelGoal=true;
@@ -257,7 +257,7 @@ void tester::loop()
             while(ros::ok() && !finished)
             {
                 //ROS_WARN("GOING TO FIRST WAYPOINT");
-                //ROS_WARN("THE WAYPOINT ARRAY IS OF SIZE %lu",theArray.waypoint_array.size());
+                ROS_WARN("THE WAYPOINT ARRAY IS OF SIZE %lu",theArray.waypoint_array.size());
                 ros::spinOnce();
                 geometry_msgs::Pose theGoal;
                 theGoal.position.x = theArray.waypoint_array[i];

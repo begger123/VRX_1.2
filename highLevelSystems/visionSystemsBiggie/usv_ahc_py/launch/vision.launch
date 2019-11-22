@@ -4,5 +4,7 @@
   <!-- <node pkg="cluster_classifier" type="classifier.py" name="classifier_node" output="screen"/>-->
   <!--<node pkg="usv_ahc_py" type="persistance_table.py" name="persistance_table_node" output="screen"/>-->
   <node pkg="usv_ahc_py" type="persistanceSortedGates.py" name="persistanceSortedGateNode" output="screen"/>
-  <node pkg="usv_ahc_py" type="navChannelSpoof.py" name="spooferNode" output="screen"/>
+  <!--<node pkg="usv_ahc_py" type="navChannelSpoofHard.py" name="spooferNode" output="screen"/>-->
+  <!--<node pkg="usv_ahc_py" type="navChannelSpoofFull.py" name="spooferNode" output="screen"/>-->
+  <node pkg="usv_ahc_py" type="navChannelSpoofMed.py" name="spooferNode" output="screen"/>
 </launch>

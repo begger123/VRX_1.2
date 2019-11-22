@@ -2,9 +2,9 @@
 <launch>
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find vrx_gazebo)/config/custom_rosconsole.conf"/>
   <!-- Gazebo world to load -->
-  <arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge0.world" /> 
+  <!--<arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge0.world" /> -->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge0b.world" /> -->
-  <!--<arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge1.world" /> -->
+  <arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge1.world" /> 
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge2.world" /> -->
 
 

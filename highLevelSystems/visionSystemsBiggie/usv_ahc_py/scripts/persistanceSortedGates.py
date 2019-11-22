@@ -71,6 +71,7 @@ class persistanceSortedGates():
         #we know that another gate is possible if the remaining items in clusterListMsgCopy is even
         self.currentGateNumber=1#this is one since we already found the start gate, which would be number 0
         while(len(self.clusterListMsgCopy.cluster_list) % 2 == 0 and len(self.clusterListMsgCopy.cluster_list) > 0 and not self.blueBouyFound):
+        #while(len(self.clusterListMsgCopy.cluster_list) > 0 and not self.blueBouyFound):
             self.find_gates()
             #check to see if there are only two buoys left and one of them is the blue buoy
             if (len(self.clusterListMsgCopy.cluster_list)==2):
@@ -84,14 +85,13 @@ class persistanceSortedGates():
         
         if(self.blueBouyFound==True):
             #prepare the last gate
-            something =1
             self.find_blue_buoy()
             self.find_last_gate()
        
         #print len(self.sortedGateList.sorted_gate_array)
         #print len(self.clusterListMsgCopy.cluster_list)
 
-        #print self.sortedGateList
+        print self.sortedGateList
         self.pubSortedGateList.publish(self.sortedGateList)
 
     def find_white_buoy(self):

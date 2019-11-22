@@ -9,10 +9,11 @@ pid_controller::pid::pid(ros::NodeHandle &nh) : pid_nh(&nh), loop_rate(60) //set
 	}
 	ROS_DEBUG("Entering initializer, next stop get_params");
 	target_sub = pid_nh->subscribe("/control_target", 10, &pid_controller::pid::target_callback, this);
+    target_sub = pid_nh->subscribe("/control_target_sk", 10, &pid_controller::pid::targetSK_callback, this);
     pose_sub   = pid_nh->subscribe("/vehicle_pose", 10, &pid_controller::pid::pose_callback, this);
 	//state_sub = pid_nh->subscribe("vehicle_state", 10, &pid_controller::pid::state_callback, this);//use this for real vehicle
 	state_sub = pid_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::pid::state_callback, this);//use this for simulation
-	control_effort_pub = pid_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10); //published TAU = {X,Y,Eta}
+	control_effort_pub = pid_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10, true); //published TAU = {X,Y,Eta}
 
 	this->get_params();
 	previous_waypoint.x=0;
@@ -81,6 +82,11 @@ void pid_controller::pid::target_callback(const geometry_msgs::Pose2D::ConstPtr&
 	//ROS_DEBUG("The value of velocity command is %f",target_data.control_command.at(1).data);
 
 	newCommand=true;
+}
+
+void pid_controller::pid::targetSK_callback(const geometry_msgs::Pose2D::ConstPtr& msg)
+{
+    got_sk = true;
 }
 
 void pid_controller::pid::state_callback(const nav_msgs::Odometry::ConstPtr& msg)
@@ -546,10 +552,15 @@ void pid_controller::pid::run()
 
 	while(ros::ok())
 	{
+        if (got_sk == true) {
+            // Do nothing
+            got_sk = false;
+        }
 		if(newCommand&&newState)
 		{
 			newCommand=false;
 			newState=false;
+            got_sk = false;
 
             // dynamic_reconfigure stuff
             f = boost::bind(&pid_controller::pid::get_theGains, this, _1, _2);
@@ -566,7 +577,6 @@ void pid_controller::pid::run()
 		}
 		ros::spinOnce();
 		loop_rate.sleep();
-
 	}
 }
 

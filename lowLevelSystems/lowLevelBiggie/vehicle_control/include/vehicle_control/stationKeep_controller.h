@@ -13,6 +13,7 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Pose2D.h>
 #include "custom_messages_biggie/control_effort.h"
+#include <std_msgs/Float32MultiArray.h>
 
 // The following is to perform dynamic reconfigure of the PID gains
 #include <dynamic_reconfigure/server.h>
@@ -40,6 +41,7 @@ namespace pid_controller
         ros::Subscriber pose_sub;
         ros::Subscriber state_sub;
         ros::Publisher control_pub;
+        ros::Publisher etat_pub;
         ros::Time prev_time, prev_time2;
         ros::Time curr_time, curr_time2;
 		ros::Duration delta_t, delta_t2;

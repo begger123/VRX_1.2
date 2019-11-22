@@ -10,10 +10,13 @@ pid_controller::sk::sk(ros::NodeHandle &nh) : sk_nh(&nh), loop_rate(60) //sets d
    		ros::console::notifyLoggerLevelsChanged();
 	}
 	ROS_DEBUG("Entering initializer, next stop get_params");
-    target_sub   = sk_nh->subscribe("/control_target_sk", 10, &pid_controller::sk::target_callback, this);
+    // Subscribers
+    target_sub = sk_nh->subscribe("/control_target_sk", 10, &pid_controller::sk::target_callback, this);
     pose_sub   = sk_nh->subscribe("/vehicle_pose", 10, &pid_controller::sk::pose_callback, this);
-	state_sub = sk_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::sk::velo_callback, this);
+	state_sub  = sk_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::sk::velo_callback, this);
+    // Publishers
     control_pub = sk_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10);  // published tau = {Tx, Ty, Mz}
+    etat_pub    = sk_nh->advertise<std_msgs::Float32MultiArray>("/etat_sk", 10);
 
     // Initialize some variables
     //double x_des = 10;
@@ -78,7 +81,15 @@ void pid_controller::sk::pose_callback(const geometry_msgs::Pose2D::ConstPtr& ms
         eta << x, y, yaw_angle;
         eta_t = eta - eta_des;
         eta_t(2) = piwrap(eta_t(2));
-        ROS_INFO("eta_t = [%g, %g, %g]", eta_t(0), eta_t(1), eta_t(2));
+        // ROS_INFO("eta_t = [%g, %g, %g]", eta_t(0), eta_t(1), eta_t(2));
+        
+        // Publish SK errors (eta_t)
+        std_msgs::Float32MultiArray etat_msg;
+        etat_msg.data.push_back(eta_t(0));
+        etat_msg.data.push_back(eta_t(1));
+        etat_msg.data.push_back(eta_t(2));
+        etat_pub.publish(etat_msg);
+        ROS_INFO("eta_t = [%g, %g, %g] (deg)", etat_msg.data[0], etat_msg.data[1], etat_msg.data[2]*180/M_PI);
         newPose = true;
     }
 }
@@ -130,6 +141,13 @@ void pid_controller::sk::compute_tau()
         Jt_prev = Jt;
         prev_time = curr_time;
 
+        // // Publish SK errors (eta_t)
+        // std_msgs::Float32MultiArray etat_msg;
+        // etat_msg.data.push_back(eta_t(0));
+        // etat_msg.data.push_back(eta_t(1));
+        // etat_msg.data.push_back(eta_t(2));
+        // etat_pub.publish(etat_msg);
+
         newPose = false;
         newVelo = false;
         newControl = true;
@@ -150,9 +168,7 @@ void pid_controller::sk::pub_control()
         control_effort_msg.tau.push_back(temp);
         temp.data = tau(2);
         control_effort_msg.tau.push_back(temp);
-
 	    control_pub.publish(control_effort_msg);
-
         newControl = false;
     }
 }

@@ -80,7 +80,7 @@ include_directories(${the_planner_INCLUDE_DIRS})
 ## Planner Executable ##
 ########################
 
-set(MISSIONS src/missions/tester.cpp src/missions/navigation_channel.cpp src/missions/acoustics_channel.cpp src/missions/buoy_field.cpp src/missions/totems.cpp)
+set(MISSIONS src/missions/tester.cpp src/missions/navigation_channel.cpp src/missions/acoustics_channel.cpp src/missions/buoy_field.cpp src/missions/totems.cpp src/missions/dock.cpp)
 
 #set(MISSIONS src/missions/tester.cpp src/missions/listen_to_gui.cpp src/missions/slalom_mission.cpp src/missions/speed_gate_mission.cpp  src/missions/follow_the_leader.cpp)
 

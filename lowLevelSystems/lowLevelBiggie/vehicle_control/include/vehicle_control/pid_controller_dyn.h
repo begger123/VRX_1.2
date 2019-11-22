@@ -32,6 +32,7 @@ namespace pid_controller
 		~pid();
         void pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
 		void target_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
+        void targetSK_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
 		void state_callback(const nav_msgs::Odometry::ConstPtr& msg);
 		void set_error_los();
 		void set_error_ebs();
@@ -58,6 +59,7 @@ namespace pid_controller
 		ros::NodeHandle *pid_nh;
         ros::Subscriber pose_sub;
 		ros::Subscriber target_sub;
+		ros::Subscriber target_sk_sub;
 		ros::Subscriber state_sub;
 		ros::Publisher control_effort_pub;
 		nav_msgs::Odometry state_data;
@@ -96,6 +98,7 @@ namespace pid_controller
 		bool newCommand=false;
 		bool newState=false;
 		bool is_sim;
+        bool got_sk = false;
 
 		//Heading calculation holders
 		std::vector<double> heading_error=std::vector<double>(3);

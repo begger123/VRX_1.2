@@ -1,1 +1,2 @@
 *.weights filter=lfs diff=lfs merge=lfs -text
+highLevelSystems/visionSystemsBiggie/yolo_detection/src/placard_10000.weights filter=lfs diff=lfs merge=lfs -text

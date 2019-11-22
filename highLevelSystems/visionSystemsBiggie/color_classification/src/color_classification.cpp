@@ -212,6 +212,7 @@ bool findColor(color_classification::color_classification::Request  &req,
 		conf.push_back(compareHist( hist_img[0], toCompare, CV_COMP_INTERSECT ) );
 	}
 	
+	res.colors = colors;
 	res.confidence = conf;
 
 } 

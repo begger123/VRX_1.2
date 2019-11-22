@@ -103,35 +103,49 @@ void calcHistBGRColor(Mat image, vector<Mat> &out)
 }
 
 //saves histogram to yaml files
-void saveHist(vector<Mat> red, vector<Mat> green, vector<Mat> blue, vector<Mat> black, ros::NodeHandle nh)
-{
-    //save mat directly to computer to be loaded pack later
-	string path = pack_path + "/config/images/";
-	cv::FileStorage file(path + "red_b.hist", cv::FileStorage::WRITE);
-	file << "HA" << red[0];
-	file = cv::FileStorage(path + "red_g.hist", cv::FileStorage::WRITE);
-	file << "HA" << red[1];
-	file = cv::FileStorage(path + "red_r.hist", cv::FileStorage::WRITE);
-	file << "HA" << red[2];
-	file = cv::FileStorage(path + "green_b.hist", cv::FileStorage::WRITE);
-	file << "HA" << green[0];
-	file = cv::FileStorage(path + "green_g.hist", cv::FileStorage::WRITE);
-	file << "HA" << green[1];
-	file = cv::FileStorage(path + "green_r.hist", cv::FileStorage::WRITE);
-	file << "HA" << green[2];
-	file = cv::FileStorage(path + "blue_b.hist", cv::FileStorage::WRITE);
-	file << "HA" << blue[0];
-	file = cv::FileStorage(path + "blue_g.hist", cv::FileStorage::WRITE);
-	file << "HA" << blue[1];
-	file = cv::FileStorage(path + "blue_r.hist", cv::FileStorage::WRITE);
-	file << "HA" << blue[2];
-	file = cv::FileStorage(path + "black_b.hist", cv::FileStorage::WRITE);
-	file << "HA" << black[0];
-	file = cv::FileStorage(path + "black_g.hist", cv::FileStorage::WRITE);
-	file << "HA" << black[1];
-	file = cv::FileStorage(path + "black_r.hist", cv::FileStorage::WRITE);
-	file << "HA" << black[2];
+// void saveHist(vector<Mat> red, vector<Mat> green, vector<Mat> blue, vector<Mat> black, ros::NodeHandle nh)
+// {
+//     //save mat directly to computer to be loaded pack later
+// 	string path = pack_path + "/config/images/";
+// 	cv::FileStorage file(path + "red_b.hist", cv::FileStorage::WRITE);
+// 	file << "HA" << red[0];
+// 	file = cv::FileStorage(path + "red_g.hist", cv::FileStorage::WRITE);
+// 	file << "HA" << red[1];
+// 	file = cv::FileStorage(path + "red_r.hist", cv::FileStorage::WRITE);
+// 	file << "HA" << red[2];
+// 	file = cv::FileStorage(path + "green_b.hist", cv::FileStorage::WRITE);
+// 	file << "HA" << green[0];
+// 	file = cv::FileStorage(path + "green_g.hist", cv::FileStorage::WRITE);
+// 	file << "HA" << green[1];
+// 	file = cv::FileStorage(path + "green_r.hist", cv::FileStorage::WRITE);
+// 	file << "HA" << green[2];
+// 	file = cv::FileStorage(path + "blue_b.hist", cv::FileStorage::WRITE);
+// 	file << "HA" << blue[0];
+// 	file = cv::FileStorage(path + "blue_g.hist", cv::FileStorage::WRITE);
+// 	file << "HA" << blue[1];
+// 	file = cv::FileStorage(path + "blue_r.hist", cv::FileStorage::WRITE);
+// 	file << "HA" << blue[2];
+// 	file = cv::FileStorage(path + "black_b.hist", cv::FileStorage::WRITE);
+// 	file << "HA" << black[0];
+// 	file = cv::FileStorage(path + "black_g.hist", cv::FileStorage::WRITE);
+// 	file << "HA" << black[1];
+// 	file = cv::FileStorage(path + "black_r.hist", cv::FileStorage::WRITE);
+// 	file << "HA" << black[2];
     
+// }
+
+void saveHist(vector<vector<Mat>> hists, vector<string> name)
+{
+    string path = pack_path + "/config/images/";
+    for(int i = 0; i < hists.size(); i++)
+    {
+        cv::FileStorage file(path + name[i] + "_h.hist", cv::FileStorage::WRITE);
+        file << "data" << hists[i][0];
+        file = cv::FileStorage(path + name[i] + "_s.hist", cv::FileStorage::WRITE);
+        file << "data" << hists[i][1];
+        file = cv::FileStorage(path  + name[i] + "_v.hist", cv::FileStorage::WRITE);
+        file << "data" << hists[i][2];
+    }
 }
 
 //streamline this later
@@ -165,89 +179,60 @@ int main(int argc, char **argv)
     {
         //get name of
         string color = (string)color_list[i];
+        
         ROS_INFO_STREAM("Processing: "<< color);
         
 
         string path = pack_path + "/data/" + color;
 
         int count = 0;
-        vector<Mat> hist;
+        vector<Mat> hist;   //3 histograms for each channel
         for(auto& file : boost::make_iterator_range(directory_iterator(path), {}))
         {   
             //iterating through each file in the folders
-            cout << file << endl;
+            //cout << file << endl;
             Mat image = imread(file.path().string(), CV_LOAD_IMAGE_COLOR);
             cvtColor(image, image, CV_RGB2HSV);
             
+            vector<Mat> temp; 
+
+            calcHistBGRColor(image, temp);
+            
             if(count == 0)
             {
-                calcHistBGRColor(image, hist);
+                hist = temp;
             }
             else
             {
-
+                for(int i = 0; i < 3; i++)
+                {
+                    Mat tempHist;
+                    cv::add(hist[i], temp[i], tempHist);
+                    tempHist/=2;
+                    hist[i] = tempHist;
+                }
             }
-            
+
             count++;
 
         }
+        
+        int hist_w = 512; int hist_h = 500;
+	    Mat histImage( hist_h, hist_w, CV_8UC3, Scalar( 0,0,0) );
+        normalize(hist[0], hist[0], 0, histImage.rows, NORM_MINMAX, -1, Mat() );
+        normalize(hist[1], hist[1], 0, histImage.rows, NORM_MINMAX, -1, Mat() );
+        normalize(hist[2], hist[2], 0, histImage.rows, NORM_MINMAX, -1, Mat() );
+
         colors.push_back(color);
         hists.push_back(hist);
+
         ROS_INFO_STREAM("Processed " << count << " " << color << " images");
     }
   
 
-
-    // nh.param("/num_red", num_test_red, num_test_red);
-    // nh.param("/num_green", num_test_green, num_test_green);
-    // nh.param("/num_blue", num_test_blue, num_test_blue);
-	// nh.param("/num_black", num_test_black, num_test_black);
-
-
-    // //**PROCESSING RED IMAGES**//
-    // //**---------------------**//
-    // ROS_WARN("PROCESSING %d RED IMAGES", num_test_red);
-    // Mat image_red;
-    // std::string path = pack_path + "/Data/red test 1.png";
-    // std::string path_partial = pack_path + "/Data/red test ";
-    // image_red = imread(path, CV_LOAD_IMAGE_COLOR);
-	// cvtColor(image_red, image_red, CV_RGB2HSV);
-
-    // vector<Mat> hist_red = getColor(image_red);
-
-    // for(int i = 2; i < num_test_red+1; i++)
-    // {
-    //     //gets image from file
-    //     std::string path_full = path_partial + patch::to_string(i) + ".png";
-    //     Mat image_temp = imread(path_full, CV_LOAD_IMAGE_COLOR);
-	// 	cvtColor(image_temp, image_temp, CV_RGB2HSV);
-    //     vector<Mat> hist_temp = getColor(image_temp);
-
-    //     for(int i = 0; i < 3; i++)
-    //     {
-    //         Mat temp;
-    //         cv::add(hist_red[i], hist_temp[i], temp);
-    //         temp/=2;
-    //         hist_red[i] = temp;
-    //     }
-
-    // }
-
-    // //have to normalize new graph
-    // int hist_w = 512; int hist_h = 500;
-	// Mat histImage( hist_h, hist_w, CV_8UC3, Scalar( 0,0,0) );
-    // normalize(hist_red[0], hist_red[0], 0, histImage.rows, NORM_MINMAX, -1, Mat() );
-    // normalize(hist_red[1], hist_red[1], 0, histImage.rows, NORM_MINMAX, -1, Mat() );
-    // normalize(hist_red[2], hist_red[2], 0, histImage.rows, NORM_MINMAX, -1, Mat() );
-
-    //**FINISHED RED IMAGES**//
-    //**-------------------**//
-
-
-
     // //now to save array to yaml file
-    // saveHist(hist_red, hist_green, hist_blue, hist_black, nh);
-	// ROS_WARN("FINISHED SAVING MATS");
+    saveHist(hists, colors);
+	ROS_WARN("FINISHED SAVING MATS");
 
 	return 0;
 

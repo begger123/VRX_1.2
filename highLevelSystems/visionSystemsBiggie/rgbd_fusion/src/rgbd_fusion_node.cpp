@@ -112,7 +112,7 @@ int main(int argc, char **argv)
         imgBridge.toImageMsg(toPub.image);
 
 	for(int i = 0; i < rects.size(); i++)
-      	{
+  {
 	  rgbd_fusion::object_image obj;
 	  obj.object_id = i;
 	  geometry_msgs::Point32 temp;

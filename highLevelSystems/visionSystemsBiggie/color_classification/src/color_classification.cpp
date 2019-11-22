@@ -150,6 +150,7 @@ Mat getDisplayMat(vector<Mat> hist)
 //grab data from config images
 void loadHists()
 {
+	ROS_INFO("LADING HISTOGRAM DATA");
 	//each color will have 3 histograms, H, S, V
 	for(int i = 0; i < color_list.size(); i++)
     {
@@ -160,15 +161,15 @@ void loadHists()
 		{
 			string path = pack_path + "/config/images/"; 
 			string end;
-			if(j = 0)
+			if(j == 0)
 			{
 				end = "_h.hist";
 			}
-			else if(j = 1)
+			else if(j == 1)
 			{
 				end = "_s.hist";
 			}
-			else if(j = 2)
+			else if(j == 2)
 			{
 				end = "_v.hist";
 			}
@@ -179,12 +180,14 @@ void loadHists()
 		}
 		hists.push_back(colorIn);
 	}
+	ROS_INFO("FINISHED LOADING HISTOGRAM DATA");
 }
 
 //finds colors using h channel
 bool findColor(color_classification::color_classification::Request  &req,
 	 color_classification::color_classification::Response &res)
 {
+	ROS_INFO("ENTERED LOOP");
 	Mat img;
 	vector<Mat> compare;
 
@@ -201,99 +204,15 @@ bool findColor(color_classification::color_classification::Request  &req,
 
 	//each color will have 3 histograms, we are just looking at hue
 	for(int i = 0; i < color_list.size(); i++)
-    {
+    {	
 		string color = (string)color_list[i];
 		Mat toCompare = hists[i][0];
-		
-		//compare blue and normalizes
-		float sum = 0;
-		vector<float> temp;
+		//compares hue 
+		//would have to iterate 3 times for all channels
+		conf.push_back(compareHist( hist_img[0], toCompare, CV_COMP_INTERSECT ) );
 	}
-
-	// //compare blue and normalizes
-	// float sum_blue = 0;
-	// vector<float> blue_temp;
-	// for(int i = 0; i < 3; i++)	//comparing loop for each channel
-	// {	
-	// 	blue_temp.push_back(compareHist( hist_img[i], blue[i], CV_COMP_INTERSECT ) );
-	// 	sum_blue += compareHist( hist_img[i], blue[i], CV_COMP_INTERSECT );
-	// }
-	// for(int i = 0; i < 3; i++)	//normalizing and placement loop
-	// {
-	// 	blue_temp[i] /= sum_blue;
-	// }
-	// //compare green
-	// float sum_green = 0;
-	// vector<float> green_temp;
-	// for(int i = 0; i < 3; i++)	//comparing loop for each channel
-	// {
-	// 	green_temp.push_back(compareHist( hist_img[i], green[i], CV_COMP_INTERSECT ));
-	// 	sum_green += compareHist( hist_img[i], green[i], CV_COMP_INTERSECT );
-	// }
-	// for(int i = 0; i < 3; i++)	//normalizing and placement loop
-	// {
-	// 	green_temp[i] /= sum_green;
-	// }
-	// //compare red
-	// float sum_red = 0;
-	// vector<float> red_temp;
-	// for(int i = 0; i < 3; i++)
-	// {	
-	// 	red_temp.push_back(compareHist( hist_img[i], red[i], CV_COMP_INTERSECT ) );
-	// 	sum_red += compareHist( hist_img[i], red[i], CV_COMP_INTERSECT );
-	// }
-	// for(int i = 0; i < 3; i++)
-	// {
-	// 	red_temp[i]/=sum_red;
-	// }
-	// //compare black
-	// float sum_black = 0;
-	// vector<float> black_temp;
-	// for(int i = 0; i < 3; i++)
-	// {
-	// 	black_temp.push_back(compareHist( hist_img[i], black[i], CV_COMP_INTERSECT ) );
-	// 	sum_black+=compareHist( hist_img[i], black[i], CV_COMP_INTERSECT );
-	// }
-	// for(int i = 0; i < 3; i++)
-	// {
-	// 	black_temp[i]/=sum_black;
-	// }
-
-	// //three different channels
-	// //sends all h, then s, then v
-	// for(int i = 0; i < 3; i++)
-	// {
-	// 	conf.push_back(blue_temp[i]);
-	// 	conf.push_back(green_temp[i]);
-	// 	conf.push_back(red_temp[i]);
-	// 	conf.push_back(black_temp[i]);
-	// }
-
-	// //redo this later to remove conf variable
-	// if(conf[0] > conf[1] && conf[0] > conf[2])	
-	// {
-	// 	res.color = 0;
-	// }
-	// else if(conf[1] > conf[0] && conf[1] > conf[2])
-	// {
-	// 	res.color = 1;
-	// }
-	// else if(conf[2] > conf[0] && conf[2] > conf[1])
-	// {
-	// 	res.color = 2;
-	// }
-	// else if(conf[3] > conf[0] && conf[3] > conf[1] && conf[3] > conf[2])
-	// {
-	// 	res.color = 3;
-	// }
-	// else{
-	// 	res.color = 10;	//shouldn't get here
-	// }
-
-	// res.confidence_blue = blue_temp;
-	// res.confidence_green = green_temp;
-	// res.confidence_red = red_temp;
-	// res.confidence_black = black_temp;
+	
+	res.confidence = conf;
 
 } 
 

@@ -102,38 +102,6 @@ void calcHistBGRColor(Mat image, vector<Mat> &out)
     out.push_back(v_hist);
 }
 
-//saves histogram to yaml files
-// void saveHist(vector<Mat> red, vector<Mat> green, vector<Mat> blue, vector<Mat> black, ros::NodeHandle nh)
-// {
-//     //save mat directly to computer to be loaded pack later
-// 	string path = pack_path + "/config/images/";
-// 	cv::FileStorage file(path + "red_b.hist", cv::FileStorage::WRITE);
-// 	file << "HA" << red[0];
-// 	file = cv::FileStorage(path + "red_g.hist", cv::FileStorage::WRITE);
-// 	file << "HA" << red[1];
-// 	file = cv::FileStorage(path + "red_r.hist", cv::FileStorage::WRITE);
-// 	file << "HA" << red[2];
-// 	file = cv::FileStorage(path + "green_b.hist", cv::FileStorage::WRITE);
-// 	file << "HA" << green[0];
-// 	file = cv::FileStorage(path + "green_g.hist", cv::FileStorage::WRITE);
-// 	file << "HA" << green[1];
-// 	file = cv::FileStorage(path + "green_r.hist", cv::FileStorage::WRITE);
-// 	file << "HA" << green[2];
-// 	file = cv::FileStorage(path + "blue_b.hist", cv::FileStorage::WRITE);
-// 	file << "HA" << blue[0];
-// 	file = cv::FileStorage(path + "blue_g.hist", cv::FileStorage::WRITE);
-// 	file << "HA" << blue[1];
-// 	file = cv::FileStorage(path + "blue_r.hist", cv::FileStorage::WRITE);
-// 	file << "HA" << blue[2];
-// 	file = cv::FileStorage(path + "black_b.hist", cv::FileStorage::WRITE);
-// 	file << "HA" << black[0];
-// 	file = cv::FileStorage(path + "black_g.hist", cv::FileStorage::WRITE);
-// 	file << "HA" << black[1];
-// 	file = cv::FileStorage(path + "black_r.hist", cv::FileStorage::WRITE);
-// 	file << "HA" << black[2];
-    
-// }
-
 void saveHist(vector<vector<Mat>> hists, vector<string> name)
 {
     string path = pack_path + "/config/images/";

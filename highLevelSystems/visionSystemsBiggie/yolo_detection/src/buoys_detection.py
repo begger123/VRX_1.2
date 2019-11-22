@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 import sys
-sys.path.insert(0,'/home/eric/ros/VRX_workspace/src/VRX_1.2/highLevelSystems/yolo_detection/')
+sys.path.insert(0,'~/Programming/docker_cws/tester_cws/src/VRX_1.2/highLevelSystems/visionSystemsBiggie/yolo_detection/')
 
 from darkflow.net.build import TFNet
 import cv2

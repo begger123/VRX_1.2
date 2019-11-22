@@ -10,7 +10,7 @@ class argHandler(dict):
         self.define('binary', './bin/', 'path to .weights directory')
         self.define('config', './cfg/', 'path to .cfg directory')
         self.define('dataset', '../pascal/VOCdevkit/IMG/', 'path to dataset directory')
-        self.define('labels', '/home/eric/ros/VRX_workspace/src/VRX_1.2/highLevelSystems/yolo_detection/src/placard.names', 'path to labels file')
+        self.define('labels', '~/Programming/docker_vrx/tester_cws/src/VRX_1.2/highLevelSystems/visionSystemsBiggie/yolo_detection/src/placard.names', 'path to labels file')
         self.define('backup', './ckpt/', 'path to backup folder')
         self.define('summary', '', 'path to TensorBoard summaries directory')
         self.define('annotation', '../pascal/VOCdevkit/ANN/', 'path to annotation directory')

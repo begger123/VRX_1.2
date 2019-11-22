@@ -61,7 +61,7 @@ class persistanceTable():
                   clusterListMsg.cluster_list[i].centroid.x=tempX
                   clusterListMsg.cluster_list[i].centroid.y=tempY
 
-                  if(not self.inTable(clusterListMsg.cluster_list[i].centroid)):
+                  if(not self.inTable(clusterListMsg.cluster_list[i])):
                       #print "adding"
                       self.addBuoy(clusterListMsg.cluster_list[i])
 
@@ -88,7 +88,7 @@ class persistanceTable():
     def shutdownHook(self):
         print "Shutting down persistence table"
     
-    def inTable(self,aCentroid):
+    def inTable(self,aClusterList):
         #Look through markerArrayMsg to see if the current object is in the liust
         #Only x and y deviations are used as a filter, since many z centroids will be at the same place
         #print "just entered inTable"
@@ -97,17 +97,19 @@ class persistanceTable():
 
         for i in range(len(self.persistantCloud.points)):
             #print "the distance is"
-            #print (np.sqrt(np.square(.x-self.markerArrayMsg.markers[i].pose.position.x)+np.square(aCentroid.y-self.markerArrayMsg.markers[i].pose.position.y)))
-            if(np.sqrt(np.square(aCentroid.x-self.persistantCloud.points[i].x)+np.square(aCentroid.y-self.persistantCloud.points[i].y))<self.drift):
+            #print (np.sqrt(np.square(.x-self.markerArrayMsg.markers[i].pose.position.x)+np.square(aClusterList.centroid.y-self.markerArrayMsg.markers[i].pose.position.y)))
+            if(np.sqrt(np.square(aClusterList.centroid.x-self.persistantCloud.points[i].x)+np.square(aClusterList.centroid.y-self.persistantCloud.points[i].y))<self.drift):
                 itemInTable=True
                 #print "updating position"
-                self.persistantCloud.points[i].x=(self.persistantCloud.points[i].x+aCentroid.x)/2
-                self.persistantCloud.points[i].y=(self.persistantCloud.points[i].y+aCentroid.y)/2
-                self.persistantCloud.points[i].z=(self.persistantCloud.points[i].z+aCentroid.z)/2
+                self.persistantCloud.points[i].x=(self.persistantCloud.points[i].x+aClusterList.centroid.x)/2
+                self.persistantCloud.points[i].y=(self.persistantCloud.points[i].y+aClusterList.centroid.y)/2
+                self.persistantCloud.points[i].z=(self.persistantCloud.points[i].z+aClusterList.centroid.z)/2
 
                 self.persistantClusterList.cluster_list[i].centroid.x=self.persistantCloud.points[i].x
                 self.persistantClusterList.cluster_list[i].centroid.y=self.persistantCloud.points[i].y
                 self.persistantClusterList.cluster_list[i].centroid.z=self.persistantCloud.points[i].z
+
+                self.persistantClusterList.cluster_list[i].raw_cluster=aClusterList.raw_cluster;
 
         return itemInTable
     

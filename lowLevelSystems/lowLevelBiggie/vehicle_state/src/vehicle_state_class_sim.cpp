@@ -4,8 +4,8 @@
 //convert it so that the system behaves the same whether running with real or simulated data
 vehicle_state_sim::vehicle_state_sim(ros::NodeHandle &nh) : state_nh_(&nh), loop_rate(60)
 {
-	sim_sub = state_nh_->subscribe("/wamv/robot_localization/odometry/filtered", 10, &vehicle_state_sim::sim_callback, this);
-	//sim_sub = state_nh_->subscribe("/wamv/sensors/position/p3d_wamv", 10, &vehicle_state_sim::sim_callback, this);
+    sim_sub = state_nh_->subscribe("/wamv/robot_localization/odometry/filtered", 10, &vehicle_state_sim::sim_callback, this);
+    //sim_sub = state_nh_->subscribe("/wamv/sensors/position/p3d_wamv", 10, &vehicle_state_sim::sim_callback, this);
     base_link_ned_pub = state_nh_->advertise<nav_msgs::Odometry>("/p3d_wamv_ned", 10);
 	base_link_pose2d_pub = state_nh_->advertise<geometry_msgs::Pose2D>("/vehicle_pose", 10);
   	ros::param::get("state/tf/lidarXOffset", lidarXOffset);

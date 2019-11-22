@@ -86,6 +86,8 @@ void tester::wp_goal_callback(const geographic_msgs::GeoPath::ConstPtr& msg)
 
     ROS_WARN("the number of waypoints is %lu", wpGoalMsg.poses.size()); 
     
+    theArray.waypoint_array.clear();
+    
     for (int i=0; i<wpGoalMsg.poses.size(); i++)
     {
        NED_struct tempPoint; 
@@ -216,43 +218,19 @@ void tester::loop()
             {
                 ros::spinOnce();
             }
-            
+
+            ros::Duration(1).sleep();
+
 			ROS_INFO("Waypoint command received.");
-            //directly to high_to_low_node
-            custom_waypoint_array_publisher.publish(theArray);
-
-            ROS_WARN("Publishing the array");
-            while(ros::ok()&&!finished)
-            {
-                ros::Rate loop_rate(60);
-                loop_rate.sleep();
-            }
-            this->task=START;
-			break;
-		}
-        case NAVIGATION_COURSE:
-        {
-            while(ros::ok() && !navChannelGoal)
-            {
-                ros::spinOnce();
-            }
-
-            ROS_INFO("Starting Nav Channel.");
-            
-            
-            
-            
-            //directly to high_to_low_node
+            ////directly to high_to_low_node
             //custom_waypoint_array_publisher.publish(theArray);
 
             //ROS_WARN("Publishing the array");
             //while(ros::ok()&&!finished)
             //{
-                //ros::Rate loop_rate(60);
-                //loop_rate.sleep();
+            //    ros::Rate loop_rate(60);
+            //    loop_rate.sleep();
             //}
-
-
             int i=0;
             while(ros::ok() && !finished)
             {
@@ -274,7 +252,64 @@ void tester::loop()
                     ROS_INFO("goal_heading_enu = %g deg", goto_srv.response.goal_heading_enu);
                 }
                 else {
-                    ROS_INFO("Service call failed");
+                    ROS_ERROR("Service call failed");
+                    finished = true;
+                }
+
+                previous_status = 1;
+                while (ros::ok() && goal_reached == false) {
+                    ros::spinOnce();
+                    //ROS_DEBUG("The vehicle hasn't reached the goal yet");
+                    ros::Rate rate(60);
+                    rate.sleep();
+                }
+                goal_reached=false;
+                //the reason we check with i+4 is because we are actually indexing one more than what i is)
+                if((i+4)<theArray.waypoint_array.size())
+                    i=i+3;
+                else
+                {
+                    ROS_WARN("Breaking");
+                    break;
+                }
+
+                ROS_INFO("JUST ITERATED i");
+            }
+
+            this->task=START;
+			break;
+		}
+        case NAVIGATION_COURSE:
+        {
+            while(ros::ok() && !navChannelGoal)
+            {
+                ros::spinOnce();
+            }
+
+            ROS_WARN("Starting Nav Channel.");
+            
+            int i=0;
+            while(ros::ok() && !finished)
+            {
+                //ROS_WARN("GOING TO FIRST WAYPOINT");
+                ROS_WARN("THE WAYPOINT ARRAY IS OF SIZE %lu",theArray.waypoint_array.size());
+                ros::spinOnce();
+                geometry_msgs::Pose theGoal;
+                theGoal.position.x = theArray.waypoint_array[i];
+                theGoal.position.y = theArray.waypoint_array[i+1];
+
+                wamv_navigation::SendGoal goto_srv;
+                goto_srv.request.goal          = theGoal;
+                goto_srv.request.vehicle_pos.x = theOdom.pose.pose.position.x;
+                goto_srv.request.vehicle_pos.y = theOdom.pose.pose.position.y;
+                goto_srv.request.dist_stop     = 0.0;
+
+                if (client_goal.call(goto_srv)) {
+                    ROS_INFO("Service call to send-goal server was successful");
+                    ROS_INFO("goal_heading_enu = %g deg", goto_srv.response.goal_heading_enu);
+                }
+                else {
+                    ROS_ERROR("Service call failed");
                     finished = true;
                 }
 
@@ -295,7 +330,7 @@ void tester::loop()
                     break;
                 }
 
-                ROS_WARN("JUST ITERATED i");
+                ROS_INFO("JUST ITERATED i");
             }
 
 

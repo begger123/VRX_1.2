@@ -53,8 +53,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCL
     
     <!-- global costmap with laser, for odom_navigation_demo -->
     <rosparam file="$(find wamv_navigation)/config/costmap_global_laser.yaml" command="load" ns="global_costmap" if="$(arg no_static_map)"/>
-    <param name="global_costmap/width" value="200.0" if="$(arg no_static_map)"/>
-    <param name="global_costmap/height" value="200.0" if="$(arg no_static_map)"/>
+    <param name="global_costmap/width" value="500.0" if="$(arg no_static_map)"/>
+    <param name="global_costmap/height" value="500.0" if="$(arg no_static_map)"/>
   </node>
 
   <!-- <node pkg="wamv_navigation" type="path_to_ned" name="path_to_ned"/>  -->

@@ -1,5 +1,5 @@
 footprint: [[-2.5, -2.5], [-2.5, 2.5], [2.5, 2.5], [2.5, -2.5]]
-footprint_padding: 0.2
+footprint_padding: 4.0
 
 robot_base_frame: wamv/base_link
 update_frequency: 4.0
@@ -44,4 +44,4 @@ obstacles_pc:
     pointcloud: {sensor_frame: wamv/lidar_wamv_link, data_type: PointCloud2, clearing: true, marking: true, topic: /lidar_fenced}
 
 inflation:
-    inflation_radius: 2.0
+    inflation_radius: 5

@@ -17,12 +17,12 @@
     <rosparam command="load" file="$(find vehicle_control)/config/sm_sk.yaml" />
 
     <!-- Run control system -->
-    <!--<node pkg="vehicle_control" name="control" type="vehicle_control_dyn"/>-->
-    <!-- <node pkg="vehicle_control" name="control_sk" type="sm_sk_control" /> -->
-    <!--<node pkg="vehicle_control" name="control_sk" type="vehicle_skcontrol_dyn"/>-->
-    <node pkg="vehicle_control" name="control" type="vehicle_control_dyn" output="screen"/>
-    <!-- <node pkg="vehicle_control" name="control_sk" type="sm_sk_control" output="screen"/> -->
-    <node pkg="vehicle_control" name="control_sk" type="vehicle_skcontrol_dyn" output="screen"/>
+    <node pkg="vehicle_control" name="control" type="vehicle_control_dyn"/>
+    <!--<node pkg="vehicle_control" name="control_sk" type="sm_sk_control" /> -->
+    <node pkg="vehicle_control" name="control_sk" type="vehicle_skcontrol_dyn"/>
+    <!--<node pkg="vehicle_control" name="control" type="vehicle_control_dyn" output="screen"/>-->
+     <!--<node pkg="vehicle_control" name="control_sk" type="sm_sk_control" output="screen"/> -->
+    <!--<node pkg="vehicle_control" name="control_sk" type="vehicle_skcontrol_dyn" output="screen"/>-->
 
     <!-- Run allocation -->
     <node pkg="qp_allocation" name="qp_allocation" type="qp_allocation.py"/>
@@ -42,7 +42,8 @@
     <!--<node pkg="lidar_geofence" name="lidar_geofence" type="lidar_geofence.py" output="screen"/>-->
     
     <!-- Run PC Collapser -->
-    <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan" output="screen">
+    <!--<node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan" output="screen">-->
+    <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan">
       <remap from="cloud_in" to="/wamv/sensors/lidars/lidar_wamv/points"/>
     <remap from="scan" to="scan_converter"/>
     <rosparam>

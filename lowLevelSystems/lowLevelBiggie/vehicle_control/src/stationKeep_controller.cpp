@@ -12,8 +12,8 @@ pid_controller::sk::sk(ros::NodeHandle &nh) : sk_nh(&nh), loop_rate(60) //sets d
 	ROS_DEBUG("Entering initializer, next stop get_params");
     target_sub   = sk_nh->subscribe("/control_target_sk", 10, &pid_controller::sk::target_callback, this);
     pose_sub   = sk_nh->subscribe("/vehicle_pose", 10, &pid_controller::sk::pose_callback, this);
-	state_sub = sk_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::sk::velo_callback, this);
-	//state_sub = sk_nh->subscribe("/wamv/sensors/position/p3d_wamv", 10, &pid_controller::sk::velo_callback, this);
+    state_sub = sk_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::sk::velo_callback, this);
+    //state_sub = sk_nh->subscribe("/wamv/sensors/position/p3d_wamv", 10, &pid_controller::sk::velo_callback, this);
     control_pub = sk_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10);  // published tau = {Tx, Ty, Mz}
 
     // Initialize some variables

@@ -29,6 +29,8 @@ namespace pid_controller
         void pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
         void velo_callback(const nav_msgs::Odometry::ConstPtr& msg);
         void get_theSKGains(vehicle_control::pidSKGainsConfig &config, uint32_t level);
+        void set_timestep();
+        void integrate_eta_t();
         void compute_tau();
         void pub_control();
         void run();
@@ -53,10 +55,13 @@ namespace pid_controller
         double x, y, yaw_angle;
         double init_heading;
 
+        nav_msgs::Odometry state_data_;
+
         // Linear algebra...
         Eigen::Vector3d eta_des;
         Eigen::Vector3d eta;
         Eigen::Vector3d eta_t;
+        Eigen::Vector3d integral_eta_t;
         Eigen::Vector3d eta_td;
         Eigen::Vector3d tau;
         Eigen::Matrix3d Jt_prev;

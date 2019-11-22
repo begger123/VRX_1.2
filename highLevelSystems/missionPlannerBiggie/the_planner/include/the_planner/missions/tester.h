@@ -17,7 +17,7 @@ public:
 	void mission_callback(const std_msgs::String::ConstPtr& msg);
 	void loop();
 	//this needs to be updated to address the multitude of tasks
-	enum Task{START, STATIONKEEP, WAYPOINTS, FINISHED};
+	enum Task{START, STATIONKEEP, WAYPOINTS, NAVIGATION_COURSE, FINISHED};
 	ros::ServiceClient traj_client;
 
 private:
@@ -27,10 +27,12 @@ private:
     ros::Subscriber task_subscriber;
 	ros::Subscriber station_keeping_subscriber;
 	ros::Subscriber waypoint_subscriber;
+	ros::Subscriber nav_channel_subscriber;
 
     void task_callback(const vrx_gazebo::Task::ConstPtr& msg);
 	void sk_goal_callback(const geographic_msgs::GeoPoseStamped::ConstPtr& msg);
 	void wp_goal_callback(const geographic_msgs::GeoPath::ConstPtr& msg);
+    void sorted_gate_list_callback(const usv_ahc_py::sorted_gates::ConstPtr& msg);
 
     vrx_gazebo::Task theTaskMsg;
     geographic_msgs::GeoPoseStamped skGoalMsg;
@@ -39,6 +41,7 @@ private:
     bool newTask;
     bool skGoal;
     bool wpGoal;
+    bool navChannelGoal;
     bool finished;
    
     geometry_msgs::Pose2D skPoint;

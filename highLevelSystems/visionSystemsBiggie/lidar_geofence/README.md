@@ -1,0 +1,1 @@
+The purpose of this package is to directly subscribe to the lidar point cloud, create a geofence that corresponds to the beach at sand island, check to see if any of the lidar points fall within this area, and if points do, remove them from the lidar pointcloud.

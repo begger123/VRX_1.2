@@ -14,7 +14,7 @@ pid:
   cutoff_frequency_v: 40
   velocity_scalar: 1
   is_sim: true
-  R: 10.0
+  R: 2.0
 
 ctrl:
   alloc:

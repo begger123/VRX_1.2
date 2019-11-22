@@ -40,7 +40,8 @@ obstacles_pc:
     # it is believed if you are running with GPU acceleration you must run without water
     # pointcloud: {sensor_frame: lidar_wamv_link, data_type: PointCloud2, clearing: true, marking: true, topic: /lidar_wamv/points_no_water, observation_persistence: 0}
     # pointcloud: {sensor_frame: lidar_wamv_link, data_type: PointCloud2, clearing: false, marking: true, topic: /lidar_wamv/points_no_water}
-    pointcloud: {sensor_frame: wamv/lidar_wamv_link, data_type: PointCloud2, clearing: true, marking: true, topic: /wamv/sensors/lidars/lidar_wamv/points}
+    #pointcloud: {sensor_frame: wamv/lidar_wamv_link, data_type: PointCloud2, clearing: true, marking: true, topic: /wamv/sensors/lidars/lidar_wamv/points}
+    pointcloud: {sensor_frame: wamv/lidar_wamv_link, data_type: PointCloud2, clearing: true, marking: true, topic: /lidar_fenced}
 
 inflation:
     inflation_radius: 2.0

@@ -41,78 +41,26 @@ def clusters_callback(cluster_list_msg_t):
         delX.append(max(xPoints)-min(xPoints))
         delY.append(max(yPoints)-min(yPoints))
         delZ.append(max(zPoints)-min(zPoints))
+        #print "delX"
         #print(delX)
+        #print "delY"
         #print(delY)
         #print(delZ)
      
-    #Nav Channel
-    #Speed Gates
-    #Autodocking
-    #Follow the Leader
-    #Buoy Field
-
-    if(state_string.data=="speed_gate_mission"):
-        for k in range(len(cluster_list_msg_t.cluster_list)):
-            cluster_msg_t=Cluster_msg()
-            #large_sphere_buoy
-            if((((delZ[k]/(max(delX[k],delY[k])))<2) and ((delZ[k]/(max(delX[k],delY[k])))>1)) and cluster_list_msg_t.cluster_list[k].centroid.z<.5):
-                cluster_msg_t.raw_cluster=cluster_list_msg_t.cluster_list[k].raw_cluster
-                cluster_msg_t.num_points=cluster_list_msg_t.cluster_list[k].num_points
-                cluster_msg_t.centroid=cluster_list_msg_t.cluster_list[k].centroid
-                cluster_msg_t.label.data='large_sphere_buoy'
-                labeled_cluster_list_msg_t.cluster_list.append(cluster_msg_t)
-
-    if(state_string.data=="nav_channel"):
-        for k in range(len(cluster_list_msg_t.cluster_list)):
-            cluster_msg_t=Cluster_msg()
-            #can_buoy
-            if(delX[k]<0.5 and delX[k]>0.1 and delY[k]<0.5 and delY[k]>0.1 and delZ[k]<2.0 and delZ[k]>0.5 and cluster_list_msg_t.cluster_list[k].centroid.z<1):# and cluster_list_msg_t.cluster_list[k].centroid.x<10):
-                cluster_msg_t.raw_cluster=cluster_list_msg_t.cluster_list[k].raw_cluster
-                cluster_msg_t.num_points=cluster_list_msg_t.cluster_list[k].num_points
-                cluster_msg_t.centroid=cluster_list_msg_t.cluster_list[k].centroid
-                cluster_msg_t.label.data='can_buoy'
-                labeled_cluster_list_msg_t.cluster_list.append(cluster_msg_t)
-
-    if(state_string.data=="auto_dock"):
-        for k in range(len(cluster_list_msg_t.cluster_list)):
-            cluster_msg_t=Cluster_msg()
-            #dock
-            if(delX[k]<0.5 and delX[k]>0.1 and delY[k]<0.5 and delY[k]>0.1 and delZ[k]<1.2 and cluster_list_msg_t.cluster_list[k].centroid.z>0.75 and cluster_list_msg_t.cluster_list[k].centroid.z<2):
-                cluster_msg_t.raw_cluster=cluster_list_msg_t.cluster_list[k].raw_cluster
-                cluster_msg_t.num_points=cluster_list_msg_t.cluster_list[k].num_points
-                cluster_msg_t.centroid=cluster_list_msg_t.cluster_list[k].centroid
-                cluster_msg_t.label.data='dock'
-                labeled_cluster_list_msg_t.cluster_list.append(cluster_msg_t)
-
-    if(state_string.data=="follow_the_leader"):
-        for k in range(len(cluster_list_msg_t.cluster_list)):
-            cluster_msg_t=Cluster_msg()
-            #dock
-            #if(delX[k]<0.5 and delX[k]>0.1 and delY[k]<0.5 and delY[k]>0.1 and delZ[k]<1.2 and cluster_list_msg_t.cluster_list[k].centroid.z>0.75 and cluster_list_msg_t.cluster_list[k].centroid.z<2):
-            #    cluster_msg_t.raw_cluster=cluster_list_msg_t.cluster_list[k].raw_cluster
-            #    cluster_msg_t.num_points=cluster_list_msg_t.cluster_list[k].num_points
-            #    cluster_msg_t.centroid=cluster_list_msg_t.cluster_list[k].centroid
-            #    cluster_msg_t.label.data='dock'
-            #    labeled_cluster_list_msg_t.cluster_list.append(cluster_msg_t)
-
-    if(state_string.data=="buoy_field"):
-        for k in range(len(cluster_list_msg_t.cluster_list)):
-            cluster_msg_t=Cluster_msg()
-            #can_buoy
-            if(delX[k]<0.5 and delX[k]>0.1 and delY[k]<0.5 and delY[k]>0.1 and delZ[k]<2.0 and delZ[k]>0.5 and cluster_list_msg_t.cluster_list[k].centroid.z<1):# and cluster_list_msg_t.cluster_list[k].centroid.x<10):
-                cluster_msg_t.raw_cluster=cluster_list_msg_t.cluster_list[k].raw_cluster
-                cluster_msg_t.num_points=cluster_list_msg_t.cluster_list[k].num_points
-                cluster_msg_t.centroid=cluster_list_msg_t.cluster_list[k].centroid
-                cluster_msg_t.label.data='can_buoy'
-                labeled_cluster_list_msg_t.cluster_list.append(cluster_msg_t)
-            #small_sphere_buoy
-            if(delX[k]<0.5 and delX[k]>0.1 and delY[k]<0.5 and delY[k]>0.1 and delZ[k]<0.6 and delZ[k]>.1 and cluster_list_msg_t.cluster_list[k].centroid.z<1):# and cluster_list_msg_t.cluster_list[k].centroid.x<10):
-                cluster_msg_t.raw_cluster=cluster_list_msg_t.cluster_list[k].raw_cluster
-                cluster_msg_t.num_points=cluster_list_msg_t.cluster_list[k].num_points
-                cluster_msg_t.centroid=cluster_list_msg_t.cluster_list[k].centroid
-                cluster_msg_t.label.data='small_sphere_buoy'
-                labeled_cluster_list_msg_t.cluster_list.append(cluster_msg_t)
-
+    #if(state_string.data=="tester"):
+    for k in range(len(cluster_list_msg_t.cluster_list)):
+        cluster_msg_t=Cluster_msg()
+        #can_buoy
+        #print "internal delX"
+        #print delX[k]
+        #print "internal delY"
+        #print delY[k]
+        if(delX[k]<5.0 and delX[k]>0.01 and delY[k]<5 and delY[k]>0.01):
+            cluster_msg_t.raw_cluster=cluster_list_msg_t.cluster_list[k].raw_cluster
+            cluster_msg_t.num_points=cluster_list_msg_t.cluster_list[k].num_points
+            cluster_msg_t.centroid=cluster_list_msg_t.cluster_list[k].centroid
+            cluster_msg_t.label.data='can_buoy'
+            labeled_cluster_list_msg_t.cluster_list.append(cluster_msg_t)
 
     pubDetections.publish(labeled_cluster_list_msg_t)
     #rate=rospy.Rate(20)

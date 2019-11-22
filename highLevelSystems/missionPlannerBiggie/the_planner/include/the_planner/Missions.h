@@ -22,6 +22,8 @@
 #include "the_planner/objects.h"
 #include "the_planner/waypoint_list.h"
 #include "usv_ahc_py/buoy.h"
+#include "usv_ahc_py/gate.h"
+#include "usv_ahc_py/sorted_gates.h"
 
 #include "wamv_navigation/SendGoal.h"
 #include "wamv_navigation/CircleTarget.h"

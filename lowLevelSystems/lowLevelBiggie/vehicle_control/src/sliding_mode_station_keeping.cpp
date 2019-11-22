@@ -1,4 +1,3 @@
-//This will be Eduoardo Sarda's fully actuated sliding mode controller station keeping
 #include <vehicle_control/sliding_mode_station_keeping.h>
 
 //sliding mode equations
@@ -151,9 +150,8 @@ void sm_controller::sl_mode_st_keep::state_callback(const nav_msgs::Odometry::Co
     //eta_d_dot
     eta_ << state_data_.pose.pose.position.x, state_data_.pose.pose.position.y, yaw_angle;
     nu_ << state_data_.twist.twist.linear.x, state_data_.twist.twist.linear.y, state_data_.twist.twist.angular.z;
-    //as no angular acceleration data is provided, we must calculat the angular acceleration about the z axis
-    nu_dot_ << accel_data_.linear_acceleration.x, -accel_data_.linear_acceleration.y, (last_accel_.data+state_data_.twist.twist.angular.z)/delta_t.toSec(); 
-    //nu_dot_ << state_data_.twist.twist.linear.x, state_data_.twist.twist.linear.y, state_data_.twist.twist.angular.z;
+    //as no angular acceleration data is provided, we must calculate the angular acceleration about the z axis
+    nu_dot_ << accel_data_.linear_acceleration.y, accel_data_.linear_acceleration.x, (-state_data_.twist.twist.angular.z-last_accel_.data)/delta_t.toSec(); 
     last_accel_.data=-state_data_.twist.twist.angular.z;
     
     this->set_C();		
@@ -211,9 +209,10 @@ void sm_controller::sl_mode_st_keep::set_C()
 					0.0, 0.0, (m_-Xu_dot_)*state_data_.twist.twist.linear.x,
 					(m_-Yv_dot_)*state_data_.twist.twist.linear.y, -(m_-Xu_dot_)*state_data_.twist.twist.linear.x, 0.0;
     
-    D_m3x3_ 	<<	-(Xu_ + 72.4*abs(state_data_.twist.twist.linear.x)), 0.0, 0.0,
-					0.0, -Yv_, 0.0,
-					0.0, 0.0, -Nr_;
+    //D_m3x3_ 	<<	(Xu_ + 72.4*abs(state_data_.twist.twist.linear.x)), 0.0, 0.0,
+    D_m3x3_ 	<<	-(Xu_, 0.0, 0.0,
+					0.0, Yv_, 0.0,
+					0.0, 0.0, Nr_);
 }
 
 void sm_controller::sl_mode_st_keep::set_J_and_J_dot()
@@ -361,7 +360,7 @@ void sm_controller::sl_mode_st_keep::calc_variales()
 
 void sm_controller::sl_mode_st_keep::calc_tau()
 {
-	ROS_DEBUG("In calc tau");
+	ROS_WARN("In calc tau");
     tau_=M_m3x3_*(J_trans_*eta_r_dot_dot_+J_trans_dot_*eta_r_dot_)+C_m3x3_*J_trans_*eta_r_dot_+D_m3x3_*J_trans_*eta_r_dot_-J_trans_*R_m3x3_*this->sat_function(e_m3x3_.inverse()*s_);
 
     ROS_WARN("tau_ %f %f %f",tau_(0),tau_(1),tau_(2));
@@ -390,11 +389,11 @@ void sm_controller::sl_mode_st_keep::pub()
 	
 	std_msgs::Float64 temp;
 
-	temp.data=-tau_(0);
+	temp.data=tau_(0);
 	control_effort_msg.tau.push_back(temp);//X
-	temp.data=-tau_(1);	
+	temp.data=tau_(1);	
 	control_effort_msg.tau.push_back(temp);//Y
-	temp.data=-tau_(2);
+	temp.data=tau_(2);
 	control_effort_msg.tau.push_back(temp);//Eta
 
 	//ROS_DEBUG("control_effort_heading %f", control_effort_heading);

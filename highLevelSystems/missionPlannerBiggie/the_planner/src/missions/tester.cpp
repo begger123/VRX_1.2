@@ -7,6 +7,7 @@ tester::tester(ros::NodeHandle &nh) : Mission(nh)
 	task_subscriber = mission_nh_->subscribe("/vrx/task/info", 10, &tester::task_callback, this);
 	station_keeping_subscriber = mission_nh_->subscribe("/vrx/station_keeping/goal", 10, &tester::sk_goal_callback, this);
 	waypoint_subscriber = mission_nh_->subscribe("/vrx/wayfinding/waypoints", 10, &tester::wp_goal_callback, this);
+	nav_channel_subscriber = mission_nh_->subscribe("/sortedGateList", 10, &tester::sorted_gate_list_callback, this);
 	sk_publisher = mission_nh_->advertise<geometry_msgs::Pose2D>("/control_target_sk", 10);
 	tester_publisher = mission_nh_->advertise<std_msgs::Bool>("shouldIStart", 10);
 	traj_client = mission_nh_->serviceClient<the_planner::initTraj>("gen_init_traj");
@@ -44,6 +45,14 @@ void tester::task_callback(const vrx_gazebo::Task::ConstPtr& msg)
         newTask=true;
         finished=false;
     }
+   
+    if (theTaskMsg.name=="navigation_course" && theTaskMsg.state=="ready")
+    {
+        this->task=NAVIGATION_COURSE;
+        newTask=true;
+        finished=false;
+    }
+    
     if (theTaskMsg.state=="finished")
     {
         finished=true;
@@ -63,19 +72,6 @@ void tester::sk_goal_callback(const geographic_msgs::GeoPoseStamped::ConstPtr& m
     skPoint.y=nedPoint.east;
 
     skPoint.theta=tf::getYaw(tf::Quaternion(msg->pose.orientation.x,msg->pose.orientation.y,msg->pose.orientation.z,msg->pose.orientation.w));
-
-    //wraps heading between 0 and 2PI    
-    //skPoint.theta=fmod(skPoint.theta, 2*M_PI); 
-
-    // Convert yawAngle from ENU to NED convention
-    //if (skPoint.theta < M_PI/2)
-    //{
-    //    skPoint.theta = M_PI/2 - skPoint.theta;
-    //}
-    //else 
-    //{
-    //    skPoint.theta = 5*M_PI/2 - skPoint.theta;
-    //}
 
     ROS_INFO("The target in NED is %f %f %f", skPoint.x, skPoint.y, skPoint.theta);    
     skGoal=true;
@@ -97,7 +93,7 @@ void tester::wp_goal_callback(const geographic_msgs::GeoPath::ConstPtr& msg)
        
        theArray.waypoint_array.push_back(tempPoint.north);// tempPoint.east, 1.5};
        theArray.waypoint_array.push_back(tempPoint.east);// tempPoint.east, 1.5};
-       theArray.waypoint_array.push_back(2.0);// tempPoint.east, 1.5};
+       theArray.waypoint_array.push_back(2.25);// tempPoint.east, 1.5};
     }
     wpGoal=true;
 }
@@ -167,6 +163,21 @@ NED_struct tester::Geo2NED(double lat, double lon, double latref, double lonref)
     return inner_struct;
 }
 
+//this function will pass the waypoints that have been calculated in the persistanceSortedGates routine to the obstacle avoidance path planner
+void tester::sorted_gate_list_callback(const usv_ahc_py::sorted_gates::ConstPtr& msg)
+{
+    //ROS_WARN("the number of waypoints is %lu", msg->sorted_gate_array.size());
+    theArray.waypoint_array.clear();
+    for (int i=0; i<msg->sorted_gate_array.size(); i++)
+    {
+       theArray.waypoint_array.push_back(msg->sorted_gate_array[i].midpointAndBearing.x);
+       theArray.waypoint_array.push_back(msg->sorted_gate_array[i].midpointAndBearing.y);
+       theArray.waypoint_array.push_back(2.25);// tempPoint.east, 1.5};
+    }
+    navChannelGoal=true;
+}
+
+
 void tester::loop()
 {
 	switch(this->task)
@@ -201,6 +212,12 @@ void tester::loop()
 		}
 		case WAYPOINTS:
 		{
+            while(ros::ok() && !wpGoal)
+            {
+                ros::spinOnce();
+            }
+            
+			ROS_INFO("Waypoint command received.");
             //directly to high_to_low_node
             custom_waypoint_array_publisher.publish(theArray);
 
@@ -210,9 +227,81 @@ void tester::loop()
                 ros::Rate loop_rate(60);
                 loop_rate.sleep();
             }
-            this->task=FINISHED;
+            this->task=START;
 			break;
 		}
+        case NAVIGATION_COURSE:
+        {
+            while(ros::ok() && !navChannelGoal)
+            {
+                ros::spinOnce();
+            }
+
+            ROS_INFO("Starting Nav Channel.");
+            
+            
+            
+            
+            //directly to high_to_low_node
+            //custom_waypoint_array_publisher.publish(theArray);
+
+            //ROS_WARN("Publishing the array");
+            //while(ros::ok()&&!finished)
+            //{
+                //ros::Rate loop_rate(60);
+                //loop_rate.sleep();
+            //}
+
+
+            int i=0;
+            while(ros::ok() && !finished)
+            {
+                //ROS_WARN("GOING TO FIRST WAYPOINT");
+                ROS_WARN("THE WAYPOINT ARRAY IS OF SIZE %lu",theArray.waypoint_array.size());
+                ros::spinOnce();
+                geometry_msgs::Pose theGoal;
+                theGoal.position.x = theArray.waypoint_array[i];
+                theGoal.position.y = theArray.waypoint_array[i+1];
+
+                wamv_navigation::SendGoal goto_srv;
+                goto_srv.request.goal          = theGoal;
+                goto_srv.request.vehicle_pos.x = theOdom.pose.pose.position.x;
+                goto_srv.request.vehicle_pos.y = theOdom.pose.pose.position.y;
+                goto_srv.request.dist_stop     = 0.0;
+
+                if (client_goal.call(goto_srv)) {
+                    ROS_INFO("Service call to send-goal server was successful");
+                    ROS_INFO("goal_heading_enu = %g deg", goto_srv.response.goal_heading_enu);
+                }
+                else {
+                    ROS_INFO("Service call failed");
+                    finished = true;
+                }
+
+                previous_status = 1;
+                while (ros::ok() && goal_reached == false) {
+                    ros::spinOnce();
+                    //ROS_DEBUG("The vehicle hasn't reached the goal yet");
+                    ros::Rate rate(60);
+                    rate.sleep();
+                }
+                goal_reached=false; 
+                //the reason we check with i+4 is because we are actually indexing one more than what i is)
+                if((i+4)<theArray.waypoint_array.size())
+                    i=i+3;
+                else
+                {
+                    ROS_WARN("Breaking");
+                    break;
+                }
+
+                ROS_WARN("JUST ITERATED i");
+            }
+
+
+            this->task=START;
+            break;
+        }
 		case FINISHED:
 		{
 			finished=true;

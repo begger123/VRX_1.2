@@ -11,6 +11,7 @@ from usv_ahc_py.msg import depth_points as depth_points_msg
 from usv_ahc_py.msg import cluster as Cluster_msg
 from usv_ahc_py.msg import cluster_list as cluster_list_msg
 from nav_msgs.msg import Odometry
+from vrx_gazebo.msg import Task
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,6 +25,9 @@ pubCentroids = rospy.Publisher('centroids', PointCloud, queue_size=1)
 pubTest = rospy.Publisher('tester', PointCloud, queue_size=1)
 
 theState=Odometry()
+theTask=Task()
+
+itCanRun=False
 
 ####################################################################################
 ##################################HELPER FUNCTIONS##################################
@@ -59,8 +63,13 @@ def state_callback(state_t):
     theState.twist=state_t.twist
     #print(theState)
 
-def shutdownHook():
+def shutdownHook(taskMsg):
     print "Shutting down AHC"
+
+def task_callback(taskMsg):
+    theTask.name=taskMsg.name
+    if(theTask.name=="navigation_course"):
+        itCanRun=True
 
 
 ####################################################################################
@@ -174,58 +183,64 @@ def clusterPub(clusters_t,point_cloud_t):
     pubCentroids.publish(centroids_as_pointcloud_t)
 
 def cloudCallback(point_cloud_2):
-    point_cloud=PointCloud()
-    np_point_cloud=[]
-    #the format coming into this function is a sensor_msgs::PointCloud2
-    #the data in this pc2 needs to be decoded in order to get x,y,z points
-    gen = pc2Functions.read_points(point_cloud_2, skip_nans=True, field_names=("x", "y", "z", "intensity", "ring"))
-    #now that we have the x,y,z points, lets turn it into our numpy array
+    if(itCanRun==True):
+        print "WTFFFF"
+        point_cloud=PointCloud()
+        np_point_cloud=[]
+        #the format coming into this function is a sensor_msgs::PointCloud2
+        #the data in this pc2 needs to be decoded in order to get x,y,z points
+        gen = pc2Functions.read_points(point_cloud_2, skip_nans=True, field_names=("x", "y", "z", "intensity", "ring"))
+        #now that we have the x,y,z points, lets turn it into our numpy array
 
 
-    testingPC=PointCloud()
-    testingPC.header.frame_id="lidar_nwu"
-    
-    for p in gen:
-        #only take elements above the water plane
-        #this number is 1.5, and not 0, because the points are in the lidar frame of reference, which is 1.5 meters above the water surface
-        if(math.sqrt(p[0]*p[0]+p[1]*p[1])> 1 and math.sqrt(p[0]*p[0]+p[1]*p[1])< 50):
-            np_point_cloud.append([p[0], p[1], p[2]+0.9])
-            #tempPoint=Point32()
-            #tempPoint.x=p[0]
-            #tempPoint.y=p[1]
-            #tempPoint.z=p[2]
-            #testingPC.points.append(tempPoint)
-            #print p
+        testingPC=PointCloud()
+        testingPC.header.frame_id="lidar_nwu"
+        
+        for p in gen:
+            #only take elements above the water plane
+            #this number is 1.5, and not 0, because the points are in the lidar frame of reference, which is 1.5 meters above the water surface
+            if(math.sqrt(p[0]*p[0]+p[1]*p[1])> 1 and math.sqrt(p[0]*p[0]+p[1]*p[1])< 50):
+                np_point_cloud.append([p[0], p[1], p[2]+0.9])
+                #tempPoint=Point32()
+                #tempPoint.x=p[0]
+                #tempPoint.y=p[1]
+                #tempPoint.z=p[2]
+                #testingPC.points.append(tempPoint)
+                #print p
 
-    #this publisher was used to publish to rviz to visually validate that the data is doing what we want 
-    #pubTest.publish(testingPC)
+        #this publisher was used to publish to rviz to visually validate that the data is doing what we want 
+        #pubTest.publish(testingPC)
  
-    thresh=1.0
-    if(not np.size(np_point_cloud)==0):
-        Y=pdist(np_point_cloud, metric='euclidean')
-        Z=linkage(Y, method='average')
-        clusterPub(fcluster(Z, thresh, criterion='distance'),np_point_cloud)
-        #plt.figure(figsize=(25, 10))
-        #plt.title('Hierarchical Clustering Dendrogram')
-        #plt.xlabel('sample index')
-        #plt.ylabel('distance')
-        #dendrogram(
-        #    Z,
-        #    leaf_rotation=90.,  # rotates the x axis labels
-        #    leaf_font_size=8.,  # font size for the x axis labels
-        #)
-        #plt.show()
+        thresh=1.0
+        if(not np.size(np_point_cloud)==0):
+            Y=pdist(np_point_cloud, metric='euclidean')
+            Z=linkage(Y, method='average')
+            clusterPub(fcluster(Z, thresh, criterion='distance'),np_point_cloud)
+            #plt.figure(figsize=(25, 10))
+            #plt.title('Hierarchical Clustering Dendrogram')
+            #plt.xlabel('sample index')
+            #plt.ylabel('distance')
+            #dendrogram(
+            #    Z,
+            #    leaf_rotation=90.,  # rotates the x axis labels
+            #    leaf_font_size=8.,  # font size for the x axis labels
+            #)
+            #plt.show()
 
-        #clusterPub(hcluster.fclusterdata(np_point_cloud, thresh, criterion='distance', method='weighted'),np_point_cloud)
-        #clusterPub(hcluster.fclusterdata(np_point_cloud, thresh, criterion='distance', method='centroid'),np_point_cloud)
-        #clusterPub(hcluster.fclusterdata(np_point_cloud, thresh, criterion='distance', method='median'),np_point_cloud)
-        #clusterPub(hcluster.fclusterdata(np_point_cloud, thresh, criterion='distance', method='ward'),np_point_cloud)
+            #clusterPub(hcluster.fclusterdata(np_point_cloud, thresh, criterion='distance', method='weighted'),np_point_cloud)
+            #clusterPub(hcluster.fclusterdata(np_point_cloud, thresh, criterion='distance', method='centroid'),np_point_cloud)
+            #clusterPub(hcluster.fclusterdata(np_point_cloud, thresh, criterion='distance', method='median'),np_point_cloud)
+            #clusterPub(hcluster.fclusterdata(np_point_cloud, thresh, criterion='distance', method='ward'),np_point_cloud)
+    else:
+        #this program will only run if /vrx/tasks/info/name == navigation_course
+        doNothing=1
 
 def cloudSub():
     rospy.init_node('cloud_sub', anonymous=False)
     #rospy.Subscriber('/lidar_wamv/points', PointCloud2, cloudCallback)
     rospy.Subscriber('/lidar_fenced', PointCloud2, cloudCallback)
     rospy.Subscriber('/p3d_wamv_ned', Odometry, state_callback)
+    rospy.Subscriber('/vrx/task/info', Task, task_callback)
     rospy.on_shutdown(shutdownHook)
     rospy.spin()
 

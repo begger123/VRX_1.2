@@ -6,5 +6,5 @@
   <node pkg="usv_ahc_py" type="persistanceSortedGates.py" name="persistanceSortedGateNode" output="screen"/>
   <!--<node pkg="usv_ahc_py" type="navChannelSpoofHard.py" name="spooferNode" output="screen"/>-->
   <!--<node pkg="usv_ahc_py" type="navChannelSpoofFull.py" name="spooferNode" output="screen"/>-->
-  <node pkg="usv_ahc_py" type="navChannelSpoofMed.py" name="spooferNode" output="screen"/>
+  <!--<node pkg="usv_ahc_py" type="navChannelSpoofMed.py" name="spooferNode" output="screen"/>-->
 </launch>

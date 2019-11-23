@@ -73,5 +73,8 @@
         <rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load" ></rosparam>
     </node>
     
-    <!-- <include file="$(find usv_ahc_py)/launch/vision.launch" /> -->
+    <!--Launch the vision package-->
+    <include file="$(find usv_ahc_py)/launch/vision.launch" />
+    <!--Launch yolo out here-->
+    <include file="$(find yolo_detection)/launch/yolov3_buoys.launch" />
 </launch>

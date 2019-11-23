@@ -20,6 +20,7 @@
 #include <the_planner/missions/acoustics_channel.h>
 #include <the_planner/missions/buoy_field.h>
 #include <the_planner/missions/totems.h>
+#include <the_planner/missions/dock.h>
 //#include <the_planner/missions/listen_to_gui.h>
 //#include <the_planner/missions/slalom_mission.h>
 //#include <the_planner/missions/speed_gate_mission.h>

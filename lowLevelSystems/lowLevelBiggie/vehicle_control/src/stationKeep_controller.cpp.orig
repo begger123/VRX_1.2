@@ -10,11 +10,18 @@ pid_controller::sk::sk(ros::NodeHandle &nh) : sk_nh(&nh), loop_rate(60) //sets d
    		ros::console::notifyLoggerLevelsChanged();
 	}
 	ROS_DEBUG("Entering initializer, next stop get_params");
-    target_sub   = sk_nh->subscribe("/control_target_sk", 10, &pid_controller::sk::target_callback, this);
+    // Subscribers
+    target_sub = sk_nh->subscribe("/control_target_sk", 10, &pid_controller::sk::target_callback, this);
     pose_sub   = sk_nh->subscribe("/vehicle_pose", 10, &pid_controller::sk::pose_callback, this);
-	state_sub = sk_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::sk::velo_callback, this);
+<<<<<<< HEAD
+    state_sub = sk_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::sk::velo_callback, this);
+    //state_sub = sk_nh->subscribe("/wamv/sensors/position/p3d_wamv", 10, &pid_controller::sk::velo_callback, this);
+=======
+	state_sub  = sk_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::sk::velo_callback, this);
+    // Publishers
+>>>>>>> 79c255531f3dd51acf3686297bbb7b14eda66c7c
     control_pub = sk_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10);  // published tau = {Tx, Ty, Mz}
-
+    etat_pub    = sk_nh->advertise<std_msgs::Float32MultiArray>("/etat_sk", 10);
 
     // Initialize some variables
     //double x_des = 10;
@@ -70,7 +77,9 @@ void pid_controller::sk::pose_callback(const geometry_msgs::Pose2D::ConstPtr& ms
         //           0,              0,              1;
         //prev_time = ros::Time::now();
         initialized = true;
+        eta_ti << 0, 0, 0;
     }
+<<<<<<< HEAD
     //else {
     //    x = msg->y;
     //    y = msg->x;
@@ -79,6 +88,24 @@ void pid_controller::sk::pose_callback(const geometry_msgs::Pose2D::ConstPtr& ms
     //    eta_t = eta - eta_des;
     //    eta_t(2) = piwrap(eta_t(2));
     //    ROS_INFO("eta_t = [%g, %g, %g]", eta_t(0), eta_t(1), eta_t(2));
+=======
+    else {
+        x = msg->x;
+        y = msg->y;
+        yaw_angle = msg->theta;
+        eta << x, y, yaw_angle;
+        eta_t = eta - eta_des;
+        eta_t(2) = piwrap(eta_t(2));
+        // ROS_INFO("eta_t = [%g, %g, %g]", eta_t(0), eta_t(1), eta_t(2));
+        
+        // Publish SK errors (eta_t)
+        std_msgs::Float32MultiArray etat_msg;
+        etat_msg.data.push_back(eta_t(0));
+        etat_msg.data.push_back(eta_t(1));
+        etat_msg.data.push_back(eta_t(2));
+        etat_pub.publish(etat_msg);
+        ROS_INFO("eta_t = [%g, %g, %g] (deg)", etat_msg.data[0], etat_msg.data[1], etat_msg.data[2]*180/M_PI);
+>>>>>>> 79c255531f3dd51acf3686297bbb7b14eda66c7c
         newPose = true;
     //}
     yaw_angle = msg->theta;                         // it's already pi-wrapped
@@ -167,13 +194,28 @@ void pid_controller::sk::compute_tau()
         // ROS_INFO("yaw_angle = %g", yaw_angle);
         // ROS_INFO("init_heading = %g", init_heading);
 
-        ROS_WARN("Heading controller gains: [Kp, Ki, Kd] = [%g, %g, %g]", Kp, Ki, Kd);
+        // ROS_WARN("Heading controller gains: [Kp, Ki, Kd] = [%g, %g, %g]", Kp, Ki, Kd);
+
+        eta_ti = eta_ti + Jt*eta_t*delta_t.toSec();
         
+<<<<<<< HEAD
         //Jt_d = (Jt - Jt_prev)/delta_t.toSec();
         tau = -Kp*Jt*eta_t - Ki*Jt*integral_eta_t - Kd*(Jt_dot_*eta_t + Jt*eta_td);
+=======
+        Eigen::Matrix3d Jt_d;
+        Jt_d = (Jt - Jt_prev)/delta_t.toSec();
+        tau = -Kp*Jt*eta_t - Ki*eta_ti - Kd*(Jt_d*eta_t + Jt*eta_td);
+>>>>>>> 79c255531f3dd51acf3686297bbb7b14eda66c7c
 
         Jt_prev = Jt;
         prev_time = curr_time;
+
+        // // Publish SK errors (eta_t)
+        // std_msgs::Float32MultiArray etat_msg;
+        // etat_msg.data.push_back(eta_t(0));
+        // etat_msg.data.push_back(eta_t(1));
+        // etat_msg.data.push_back(eta_t(2));
+        // etat_pub.publish(etat_msg);
 
         newPose = false;
         newVelo = false;
@@ -195,9 +237,7 @@ void pid_controller::sk::pub_control()
         control_effort_msg.tau.push_back(temp);
         temp.data = tau(2);
         control_effort_msg.tau.push_back(temp);
-
 	    control_pub.publish(control_effort_msg);
-
         newControl = false;
     }
 }

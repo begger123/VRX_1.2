@@ -7,7 +7,7 @@
 #include <vector>
 
 /* This node listens for the global_planner message in the "/move_base/NavfnROS/plan" 
- * topic, as well as for the "odom_ned" transform.  Using these two, it transforms the
+ * topic, as well as for the "ned_origin" transform.  Using these two, it transforms the
  * global trajectory from odom_enu to odom_ned reference frame. */
 
 class PathToNED 
@@ -19,15 +19,16 @@ class PathToNED
         ros::NodeHandle node;
         ros::Publisher path_ned_pub;
         int count;
+        bool latch = true;
         
     public:
         PathToNED()
         {
             map_path_sub.subscribe(node, "/move_base/NavfnROS/plan", 100);
             // tf_filter = new tf::MessageFilter<nav_msgs::Path>(map_path_sub, listener, "odom_ned", 100);
-            tf_filter = new tf::MessageFilter<nav_msgs::Path>(map_path_sub, listener, "ned_origin", 100);
+            tf_filter = new tf::MessageFilter<nav_msgs::Path>(map_path_sub, listener, "ned_origin", 10);
             tf_filter->registerCallback(boost::bind(&PathToNED::msgCallback, this, _1));
-            path_ned_pub = node.advertise<custom_messages_biggie::waypoint_array>("waypoint_array", 50);
+            path_ned_pub = node.advertise<custom_messages_biggie::waypoint_array>("/waypoint_array", 100, latch);
             count = 0;
         }
 
@@ -36,7 +37,7 @@ class PathToNED
         {
             int size_ned = 0;
             count++;
-            if (count == 2) {
+            if (count == 1) {
                 printf("*** got message ***\n");
                 geometry_msgs::PointStamped point_out;
                 geometry_msgs::PointStamped point_ptr;

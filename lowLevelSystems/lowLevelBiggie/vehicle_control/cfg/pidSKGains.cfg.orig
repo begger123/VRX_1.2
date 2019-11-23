@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+PACKAGE = 'vehicle_control'
+
+from dynamic_reconfigure.parameter_generator_catkin import *
+
+gen = ParameterGenerator()
+
+# list of parameters
+<<<<<<< HEAD
+gen.add("Kp", double_t, 0, "Proportional gain", 250, 0, 500)#250
+gen.add("Ki", double_t, 0, "Integral gain", 125, 0, 200)#75
+gen.add("Kd", double_t, 0, "Derivative gain", 150, 0, 150)#85
+
+#gen.add("Kp", double_t, 0, "Proportional gain", 300, 0, 500)
+#gen.add("Ki", double_t, 0, "Integral gain", 25, 0, 200)
+#gen.add("Kd", double_t, 0, "Derivative gain", 50, 0, 150)
+=======
+gen.add("Kp", double_t, 0, "Proportional gain", 85, 0, 500)    # 300, 85
+gen.add("Ki", double_t, 0, "Integral gain", 0, 0, 200)         # 75, 0
+gen.add("Kd", double_t, 0, "Derivative gain", 40, 0, 150)       # 50, 40
+>>>>>>> 79c255531f3dd51acf3686297bbb7b14eda66c7c
+
+#gen.add("Kp", double_t, 0, "Proportional gain", 0, 0, 500)
+#gen.add("Ki", double_t, 0, "Integral gain", 0, 0, 200)
+#gen.add("Kd", double_t, 0, "Derivative gain", 0, 0, 150)
+
+exit(gen.generate(PACKAGE, "vehicle_control", "pidSKGains"))

@@ -1,7 +1,3 @@
-/*
-Uses process from 2016 VBAS sulu package
-*/
-
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "std_msgs/Float32.h"
@@ -14,7 +10,14 @@ Uses process from 2016 VBAS sulu package
 #include <cv_bridge/cv_bridge.h>
 #include "image_geometry/pinhole_camera_model.h"
 #include "rgbd_fusion/segment.h"
-
+#include "nav_msgs/Odometry.h"
+#include "geometry_msgs/PoseWithCovariance.h"
+#include "geometry_msgs/Pose.h"
+#include "geometry_msgs/Pose2D.h"
+#include "geometry_msgs/Point.h"
+#include "geometry_msgs/Quaternion.h"
+#include "tf/transform_datatypes.h"
+#include "geometry_msgs/Vector3.h"
 
 #define PI 3.14159265359
 
@@ -25,7 +28,7 @@ vector<float> camera_transform;
 vector<float> camera_rotation;
 int res_x;
 int res_y;
-float theta;
+int fov;
 
 bool camSettings = false;
 bool isCloud = false;
@@ -34,19 +37,22 @@ usv_ahc_py::cluster clust;
 
 image_geometry::PinholeCameraModel cam_model;
 
-bool inFrame(geometry_msgs::Point32 point);
 bool inFrame(float x, float y, float z);
 cv::Point toCameraCoords(float x, float y, float z);
 cv::Rect formatMask(vector<cv::Point> points);
 cv::Rect generateMask(usv_ahc_py::cluster cluster);
+bool validPoint(cv::Point temp);
 
-
-float degToRad(float deg){return deg*(PI/180);}
-float radToDeg(float rad){return rad*(180/PI);}
+//position of the wamv so that it only checks objects in camera frame
+float wamvX;
+float wamvY;
+float wamvTheta;
 
 bool segmentCallback(rgbd_fusion::segment::Request  &req,
 	 rgbd_fusion::segment::Response &res)
 {
+
+  ROS_INFO("Attempting Segmentation");
   //loads cluster in
   clust = req.clust;
 
@@ -68,7 +74,16 @@ bool segmentCallback(rgbd_fusion::segment::Request  &req,
   res.root_point = rootPoint;
   res.width_height = widthHeight;
 
+  //ROS_INFO_STREAM("Segmented X: "<< rootPoint.x << "\tY: " << rootPoint.y << "\tWidth: " << widthHeight.x << "\tHeight: " << widthHeight.y);
+
   return true;
+}
+
+void odomCallback(const geometry_msgs::Pose2D msg)
+{
+  wamvTheta = msg.theta;
+  wamvX = msg.x;
+  wamvY = msg.y;
 }
 
 int main(int argc, char **argv)
@@ -79,8 +94,10 @@ int main(int argc, char **argv)
   
   nh.getParam("/camera_transform", camera_transform);
   nh.getParam("/camera_rotation", camera_rotation);
+  nh.getParam("/camera_fov", fov);
  
   ros::ServiceServer service = nh.advertiseService("RGBD_segmentation", segmentCallback);
+  ros::Subscriber camInfoSub = nh.subscribe("/vehicle_pose",10,odomCallback);  //odometry message
   ROS_INFO("Segmentation Service Running");
   ros::spin();
      	 
@@ -107,33 +124,106 @@ cv::Point toCameraCoords(float x, float y, float z)
 
 
 //use vector to centriod to make sure its within fov; atan2
+//wamv and centroids are in ned
 bool inFrame(float x, float y, float z)
 {
-  //filter out any value that is not in front of the vehicle
-  if(x <=0)
-    return false;
-  return true;
+  //only looking at x and y values
+  //ROS_INFO_STREAM("WAMV-X: " << wamvLoc.x << "\tWAMV-Y: " << wamvLoc.y);
+  //ROS_INFO_STREAM("Centroid-X: " <<  x << "\tCentroid-Y: " << y);
+  float angle = atan2(x-wamvX, y-wamvY);
+  float theta = fov/2 * (PI/180); //gets theta in radians
+  
+  if(angle < 0)
+    angle += 2*PI;
+
+  //generate boundry conditions
+  float min, max;
+  min = wamvTheta-theta;
+  max = wamvTheta+theta;
+
+  ROS_INFO_STREAM("Centroid Angle: "<< angle);
+  ROS_INFO_STREAM("WAMV Angle: "<< wamvTheta);
+
+  if(min >= 0 && max <=2*PI) //no boundry conditions
+  {
+    if(angle >= min && angle <= max)
+    {
+      return true;
+    }
+    else 
+    {
+      return false;
+    }
+  }
+  else if(min < 0)
+  {
+    min += abs(min);
+    max += abs(min);
+    angle += abs(min);
+    if(angle >2*PI)
+      angle-=2*PI;
+
+    if(angle >= min && angle <= max)
+    {
+      return true;
+    }
+    else 
+    {
+      return false;
+    }
+  }
+  else if(max > 2*PI)
+  {
+    min -= max-(2*PI);
+    max -= max-(2*PI);
+    angle -= max-(2*PI);
+    if(angle < 0)
+      angle+=(2*PI);
+
+    if(angle >= min && angle <= max)
+    {
+      return true;
+    }
+    else 
+    {
+      return false;
+    }
+  }
+  
+  //just in case somehow isn't caught
+  return false;
 }
 
 cv::Rect generateMask(usv_ahc_py::cluster cluster)
 {
   vector<cv::Point> points; 
-  for(int i = 0; i < cluster.raw_cluster.size(); i++)
-  { 
-    //need to plot point on image
-    float x, y, z;
-    x = cluster.raw_cluster[i].labeled_point[0];
-    y = cluster.raw_cluster[i].labeled_point[1];
-    z = cluster.raw_cluster[i].labeled_point[2];
-    if(inFrame(x,y,z))
-    {
-      points.push_back(toCameraCoords(x,y,z));
-    }
-  }
-  if(points.size() > 3)
+  geometry_msgs::Point32 cent = cluster.centroid;
+
+  if(inFrame(cent.x,cent.y,cent.z))
   {
-    cv::Rect rect = formatMask(points);
-    return rect;
+    for(int i = 0; i < cluster.raw_cluster.size(); i++)
+    { 
+      //need to plot point on image
+      float x, y, z;
+      x = cluster.raw_cluster[i].labeled_point[0];
+      y = cluster.raw_cluster[i].labeled_point[1];
+      z = cluster.raw_cluster[i].labeled_point[2];
+
+      cv::Point temp = toCameraCoords(x,y,z);
+      if(validPoint(temp))
+      {
+        points.push_back(temp);
+      }
+    }
+    if(points.size() > 3)
+    {
+     cv::Rect rect = formatMask(points);
+      return rect;
+    }
+    else 
+    {
+      return cv::Rect(-999,-999,-999,-999);
+    }
   }
   else 
   {
@@ -171,4 +261,13 @@ cv::Rect formatMask(vector<cv::Point> points)
   }
 
   return cv::Rect(left,top,right-left,bottom-top);
+}
+
+bool validPoint(cv::Point temp)
+{
+  if(temp.x > res_x || temp.x < 0)
+    return false;
+  if(temp.y > res_y || temp.y < 0)
+    return false;
+  return true;
 }

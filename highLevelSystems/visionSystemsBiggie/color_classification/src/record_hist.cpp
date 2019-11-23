@@ -121,8 +121,6 @@ void saveHist(vector<vector<Mat>> hists, vector<string> name)
 int main(int argc, char **argv)
 {
     //for reading strings from yaml
-
-
     ros::init(argc, argv, "Histogram_Generator");
 	ros::NodeHandle nh;
 

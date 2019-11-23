@@ -17,6 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
   image_geometry
   message_generation
   message_runtime
+  nav_msgs
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
@@ -142,7 +144,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
- add_executable(${PROJECT_NAME}_node src/rgbd_fusion_node.cpp)
+ #add_executable(${PROJECT_NAME}_node src/rgbd_fusion_node.cpp)
  add_executable(segment_srv src/segment.cpp)
 
 ## Rename C++ executable without prefix
@@ -153,14 +155,14 @@ include_directories(
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
- add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ #add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
  add_dependencies(segment_srv ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(${PROJECT_NAME}_node
-   ${catkin_LIBRARIES}
-   ${OpenCV_LIBRARIES}
- )
+ #target_link_libraries(${PROJECT_NAME}_node
+ #  ${catkin_LIBRARIES}
+ #  ${OpenCV_LIBRARIES}
+ #)
  target_link_libraries(segment_srv ${catkin_LIBRARIES})
 
 

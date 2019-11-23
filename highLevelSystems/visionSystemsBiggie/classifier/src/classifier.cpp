@@ -68,6 +68,7 @@ int main(int argc, char **argv)
   ros::Subscriber clusterSub = nh.subscribe("/persistanceClusterList", 5, clusterCallback);
 
   ros::ServiceClient client = nh.serviceClient<rgbd_fusion::segment>("RGBD_segmentation");
+  ros::ServiceClient client1 = nh.serviceClient<color_classification::color_classification>("color_classification");
 
   ROS_INFO("Waiting for segmentation service");
   ROS_INFO("Waiting for color classification service");
@@ -81,7 +82,6 @@ int main(int argc, char **argv)
 
     for(int i = 0; i < clusters.size(); i++)
     {
-      ROS_INFO_STREAM("NumPoints: " << clusters[i].raw_cluster.size());
       getMask.request.clust = clusters[i];
       getMask.request.cam_info = cam_info;
 
@@ -93,37 +93,48 @@ int main(int argc, char **argv)
         geometry_msgs::Point32 widthHeight = getMask.response.width_height;
         
         //escape system for non real values
-        if(rootPoint.x = -999)
+        if(rootPoint.x == -999)
         {
-          break; 
+          //ROS_INFO("Cluster out of camera view");
+          //non real values
         }
-
-        ROS_INFO_STREAM("X: "<< rootPoint.x << "\tY: " << rootPoint.y << "\tWidth: " << widthHeight.x << "\tHeight: " << widthHeight.y);
-
-        cv::Rect temp(rootPoint.x, rootPoint.y, widthHeight.x, widthHeight.y);
-
-        //crops image
-        cv::Mat cropped = img(temp);
-        
-        //allows for transport
-        cv_bridge::CvImage img_bridge;
-        sensor_msgs::Image img_msg; 
-        std_msgs::Header header; // empty header
-        header.stamp = ros::Time::now(); // time
-        img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::RGB8, cropped);
-        img_bridge.toImageMsg(img_msg);
-
-        getColor.request.image = img_msg;
-        
-        if(client.call(getColor))
+        else
         {
-          vector<float> conf = getColor.response.confidence;
-          vector<string> colors = getColor.response.colors;
-          for(int i = 0; i < conf.size(); i++)
+        
+          ROS_INFO_STREAM("X: "<< rootPoint.x << "\tY: " << rootPoint.y << "\tWidth: " << widthHeight.x << "\tHeight: " << widthHeight.y);
+
+          cv::Rect temp(rootPoint.x, rootPoint.y, widthHeight.x, widthHeight.y);
+
+          //crops image
+          cv::Mat cropped = img(temp);
+          
+          //allows for transport
+          cv_bridge::CvImage img_bridge;
+          sensor_msgs::Image img_msg; 
+          std_msgs::Header header; // empty header
+          header.stamp = ros::Time::now(); // time
+          img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::RGB8, cropped);
+          img_bridge.toImageMsg(img_msg);
+
+          getColor.request.image = img_msg;
+          
+          if(client1.call(getColor))
           {
-            ROS_INFO_STREAM(colors[i] << ": " << conf[i]);
+            vector<float> conf = getColor.response.confidence;
+            vector<string> colors = getColor.response.colors;
+            ROS_INFO_STREAM(colors.size() << " : " << conf.size());
+            for(int i = 0; i < conf.size(); i++)
+            {
+              ROS_INFO("TRYING TO PRINT CONFIDENCE");
+              ROS_INFO_STREAM(colors[i] << ": " << conf[i]);
+            }
+          }
+          else
+          {
+            ROS_WARN("FAILED TO CALL COLOR SERVICE");
           }
         }
+        
 
       }
     }

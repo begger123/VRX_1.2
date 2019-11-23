@@ -20,3 +20,5 @@ camera_rotation:
 #yaw
  - 0
 
+#camera fov
+camera_fov: 80

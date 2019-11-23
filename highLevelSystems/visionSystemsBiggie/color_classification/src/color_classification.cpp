@@ -67,16 +67,11 @@ void findColor(const Mat image, const Mat mask, vector<Point> contours, vector<M
 	conf.push_back(r_hist);
 }
 
-//Calculates it for difficult objects but removes white
-void calcHistHSVColorMask(Mat image, vector<Mat> &conf)
+void calcHistBGRColor(Mat image, vector<Mat> &out)
 {
 	// Seperate HSV
 	vector<Mat> hsv;
 	split( image, hsv );
-
-	Mat mask;
-	inRange(image, Scalar(0, 0, 200), Scalar(180, 20, 255), mask);
-    bitwise_not(mask,mask);
 
 	int histSize = bin_size;
 
@@ -92,7 +87,7 @@ void calcHistHSVColorMask(Mat image, vector<Mat> &conf)
   	calcHist( &hsv[1], 1, 0, Mat(), s_hist, 1, &histSize, &histRange, uniform, accumulate );
   	calcHist( &hsv[2], 1, 0, Mat(), v_hist, 1, &histSize, &histRange, uniform, accumulate );
 
-	// Draw the histograms for B, G and R
+	// Draw the histograms for H, S and V
 	int hist_w = 512; int hist_h = 500;
 	int bin_w = cvRound( (double) hist_w/histSize );
 
@@ -102,9 +97,9 @@ void calcHistHSVColorMask(Mat image, vector<Mat> &conf)
     normalize(s_hist, s_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
     normalize(v_hist, v_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
 	
-	conf.push_back(h_hist);
-	conf.push_back(s_hist);
-	conf.push_back(v_hist);
+	out.push_back(h_hist);
+	out.push_back(s_hist);
+    out.push_back(v_hist);
 }
 
 //displays histograms in a readable way
@@ -150,7 +145,7 @@ Mat getDisplayMat(vector<Mat> hist)
 //grab data from config images
 void loadHists()
 {
-	ROS_INFO("LADING HISTOGRAM DATA");
+	ROS_INFO("LOADING HISTOGRAM DATA");
 	//each color will have 3 histograms, H, S, V
 	for(int i = 0; i < color_list.size(); i++)
     {
@@ -175,7 +170,7 @@ void loadHists()
 			}
 			cv::FileStorage file(path + color + end, cv::FileStorage::READ);
 			Mat temp;
-			file["Data"] >> temp;
+			file["data"] >> temp;
 			colorIn.push_back(temp);
 		}
 		hists.push_back(colorIn);
@@ -198,7 +193,7 @@ bool findColor(color_classification::color_classification::Request  &req,
 	cvtColor(img, img, CV_RGB2HSV);
 
 	vector<Mat> hist_img;
-	calcHistHSVColorMask(img, hist_img);
+	calcHistBGRColor(img, hist_img);
 
 	vector<float> conf;
 
@@ -225,6 +220,8 @@ int main(int argc, char **argv)
 
 	nh.param("/path", pack_path, pack_path);
     nh.getParam("/colors", color_list);
+	for(int i = 0; i < color_list.size(); i++)
+		colors.push_back((string)color_list[i]);
 
 	loadHists();
 

@@ -7,6 +7,7 @@
 #include "usv_ahc_py/cluster.h"
 #include "usv_ahc_py/cluster_list.h"
 #include <vector> 
+#include <string>
 #include <image_transport/image_transport.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -66,6 +67,7 @@ int main(int argc, char **argv)
 	image_transport::Subscriber imageSub = it.subscribe("/wamv/sensors/cameras/front_left_camera/image_raw", 5, imageCallback);
   ros::Subscriber camInfoSub = nh.subscribe("/wamv/sensors/cameras/front_left_camera/camera_info",10,camCallback);
   ros::Subscriber clusterSub = nh.subscribe("/persistanceClusterList", 5, clusterCallback);
+  ros::Publisher labeledList = nh.advertise<usv_ahc_py::cluster_list>("persistanceLabeledClusterList", 1);
 
   ros::ServiceClient client = nh.serviceClient<rgbd_fusion::segment>("RGBD_segmentation");
   ros::ServiceClient client1 = nh.serviceClient<color_classification::color_classification>("color_classification");
@@ -80,6 +82,8 @@ int main(int argc, char **argv)
     rgbd_fusion::segment getMask;
     color_classification::color_classification getColor;
 
+    vector<usv_ahc_py::cluster> labeledClusts;
+
     for(int i = 0; i < clusters.size(); i++)
     {
       getMask.request.clust = clusters[i];
@@ -93,16 +97,13 @@ int main(int argc, char **argv)
         geometry_msgs::Point32 widthHeight = getMask.response.width_height;
         
         //escape system for non real values
-        if(rootPoint.x == -999)
+        if(rootPoint.x == -999 || widthHeight.x == 0 || widthHeight.y == 0)
         {
           //ROS_INFO("Cluster out of camera view");
           //non real values
         }
         else
         {
-        
-          ROS_INFO_STREAM("X: "<< rootPoint.x << "\tY: " << rootPoint.y << "\tWidth: " << widthHeight.x << "\tHeight: " << widthHeight.y);
-
           cv::Rect temp(rootPoint.x, rootPoint.y, widthHeight.x, widthHeight.y);
 
           //crops image
@@ -120,14 +121,40 @@ int main(int argc, char **argv)
           
           if(client1.call(getColor))
           {
+            //first element h, second element s, third element v
             vector<float> conf = getColor.response.confidence;
             vector<string> colors = getColor.response.colors;
-            ROS_INFO_STREAM(colors.size() << " : " << conf.size());
-            for(int i = 0; i < conf.size(); i++)
+            int highConf = 0; //first value should be a hue based
+            int colorIndex = 0;
+            for(int j = 1; j < colors.size(); j++)
             {
-              ROS_INFO("TRYING TO PRINT CONFIDENCE");
-              ROS_INFO_STREAM(colors[i] << ": " << conf[i]);
+              // if(colors[j].compare("white")==0)  //white and black need saturation to be checked
+              // {
+              //   if(conf[(3*j)+2] > conf[highConf])
+              //   {
+              //      highConf = (3*j)+1;
+              //      colorIndex = j;
+              //   }
+              // }
+              // else  //other colors need hue to be checked
+              // {
+                if(conf[j*3] > conf[highConf])
+                {
+                   highConf = j*3;
+                   colorIndex = j;
+                }
+              // }
+              ROS_INFO_STREAM(colors[j] << " H: " << conf[j*3]);
+              ROS_INFO_STREAM(colors[j] << " S: " << conf[j*3+1]);
+              ROS_INFO_STREAM(colors[j] << " V: " << conf[j*3+2]);
             }
+
+            //have largest value
+            string classified = colors[colorIndex] + "_can";
+            std_msgs::String temp;
+            temp.data = classified;
+            clusters[i].label = temp;
+            labeledClusts.push_back(clusters[i]);
           }
           else
           {
@@ -138,6 +165,9 @@ int main(int argc, char **argv)
 
       }
     }
+    usv_ahc_py::cluster_list toPub;
+    toPub.cluster_list = labeledClusts;
+    labeledList.publish(toPub);
 
   }
  

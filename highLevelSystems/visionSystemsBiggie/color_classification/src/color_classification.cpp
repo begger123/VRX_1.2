@@ -182,7 +182,6 @@ void loadHists()
 bool findColor(color_classification::color_classification::Request  &req,
 	 color_classification::color_classification::Response &res)
 {
-	ROS_INFO("ENTERED LOOP");
 	Mat img;
 	vector<Mat> compare;
 
@@ -204,7 +203,10 @@ bool findColor(color_classification::color_classification::Request  &req,
 		Mat toCompare = hists[i][0];
 		//compares hue 
 		//would have to iterate 3 times for all channels
-		conf.push_back(compareHist( hist_img[0], toCompare, CV_COMP_INTERSECT ) );
+		for(int j = 0; j < 3; j++)
+		{
+			conf.push_back(compareHist( hist_img[j], hists[i][j], CV_COMP_INTERSECT ) );
+		}
 	}
 	
 	res.colors = colors;

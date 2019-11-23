@@ -113,7 +113,7 @@ cv::Point toCameraCoords(float x, float y, float z)
 
   //rotates points  //not sure if rotation value is correct
   point.x = y+camera_transform[0];
-  point.y = z*cos(camera_rotation[0])-x*sin(camera_rotation[0])+camera_transform[1];
+  point.y = z*cos(camera_rotation[0])-x*sin(camera_rotation[0])-camera_transform[1];
   point.z = -z*sin(camera_rotation[0])-x*cos(camera_rotation[0])+camera_transform[2];
 
   //gets camera points
@@ -141,8 +141,8 @@ bool inFrame(float x, float y, float z)
   min = wamvTheta-theta;
   max = wamvTheta+theta;
 
-  ROS_INFO_STREAM("Centroid Angle: "<< angle);
-  ROS_INFO_STREAM("WAMV Angle: "<< wamvTheta);
+  //ROS_INFO_STREAM("Centroid Angle: "<< angle);
+  //ROS_INFO_STREAM("WAMV Angle: "<< wamvTheta);
 
   if(min >= 0 && max <=2*PI) //no boundry conditions
   {
@@ -199,8 +199,8 @@ cv::Rect generateMask(usv_ahc_py::cluster cluster)
   vector<cv::Point> points; 
   geometry_msgs::Point32 cent = cluster.centroid;
 
-  if(inFrame(cent.x,cent.y,cent.z))
-  {
+  //if(inFrame(cent.x,cent.y,cent.z))
+  //{
     for(int i = 0; i < cluster.raw_cluster.size(); i++)
     { 
       //need to plot point on image
@@ -224,11 +224,11 @@ cv::Rect generateMask(usv_ahc_py::cluster cluster)
     {
       return cv::Rect(-999,-999,-999,-999);
     }
-  }
-  else 
-  {
-    return cv::Rect(-999,-999,-999,-999);
-  }
+  // }
+  // else 
+  // {
+  //   return cv::Rect(-999,-999,-999,-999);
+  // }
 }
 
 cv::Rect formatMask(vector<cv::Point> points)

@@ -315,7 +315,6 @@ void dock::loop()
                 ros::Time curr_time;
                 curr_time = ros::Time::now();
                 delta_t = curr_time - prev_time;
-                prev_time = curr_time;
                 ROS_INFO("ELAPSED TIME = %g", delta_t.toSec());
                 if (delta_t.toSec() > 10) {
                     ROS_INFO("************* DOCKPATH1_SK3 BREAK *****************");
@@ -327,6 +326,7 @@ void dock::loop()
                 }
             }
             else {
+                prev_time = ros::Time::now();
                 this->task = DOCKPATH1_SK3;
             }
             break;

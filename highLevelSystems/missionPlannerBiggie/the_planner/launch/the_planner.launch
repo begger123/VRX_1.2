@@ -6,7 +6,7 @@
 
 	<node pkg="the_planner" type="planner" name="planner" output="screen">
             <!-- <rosparam param="mission_string">[tester]</rosparam> -->
-            <rosparam param="mission_string">[dock]</rosparam>
+            <rosparam param="mission_string">[tester, dock]</rosparam>
    		<rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load" respawn="true"></rosparam>
     	</node> 
 </launch>

@@ -10,14 +10,14 @@
 
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_stationkeeping0.world" /> -->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_stationkeeping1.world" /> -->
-  <arg name="world" default="$(find vrx_gazebo)/worlds/phase2_stationkeeping2.world" /> 
+  <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_stationkeeping2.world" /> -->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_stationkeeping3.world" /> -->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_stationkeeping4.world" /> -->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_stationkeeping5.world" /> -->
 
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding0.world" />-->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding1.world" />-->
-  <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding2.world" />-->
+  <arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding2.world" />
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding3.world" />-->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding4.world" />-->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding5.world" />-->

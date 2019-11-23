@@ -44,7 +44,8 @@
     <!-- Run PC Collapser -->
     <!--<node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan" output="screen">-->
     <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan">
-      <remap from="cloud_in" to="/wamv/sensors/lidars/lidar_wamv/points"/>
+      <remap from="cloud_in" to="/lidar_fenced"/>
+      <!--<remap from="cloud_in" to="/wamv/sensors/lidars/lidar_wamv/points"/>-->
     <remap from="scan" to="scan_converter"/>
     <rosparam>
         target_frame: wamv/base_link
@@ -74,7 +75,10 @@
     </node>
     
     <!--Launch the vision package-->
-    <include file="$(find usv_ahc_py)/launch/vision.launch" />
+    <!--<include file="$(find usv_ahc_py)/launch/vision.launch" />-->
     <!--Launch yolo out here-->
-    <include file="$(find yolo_detection)/launch/yolov3_buoys.launch" />
+    <!--<include file="$(find yolo_detection)/launch/yolov3_buoys.launch" />-->
+    <!--Launch pca fancy pants-->
+    <!--<node pkg="lidar_docking" name="lidar_docking" type="get_costmap.py"/>-->
+
 </launch>

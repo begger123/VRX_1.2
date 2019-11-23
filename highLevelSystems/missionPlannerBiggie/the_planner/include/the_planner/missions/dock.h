@@ -13,6 +13,7 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32MultiArray.h>
+#include <vrx_gazebo/Task.h>
 
 
 /* Mission Description: The vehicle starts searching for a small region involving the plackard, which is
@@ -40,8 +41,11 @@ private:
     bool got_explore_points = false;
     bool got_path_points = false;
     bool got_etat = false;
-    bool got_plackard = false;
-    bool isPlackard = true;
+    bool got_placard = false;
+    bool got_desiredPlacard = false;
+    bool isPlacard = false;
+    std::string thePlacardString;
+    std::string theDesiredPlacardString;
     bool got_dock = false;
 
     int size_explore;
@@ -60,7 +64,8 @@ private:
     double sk_etat[3];
 
     // ROS stuff...
-    ros::Subscriber plackard_sub;
+    ros::Subscriber placard_sub;
+    ros::Subscriber task_sub;
     ros::Subscriber dockpath_sub;
     ros::Subscriber dockexplore_sub;
     ros::Subscriber pose_sub;
@@ -73,8 +78,10 @@ private:
     void goalStatusCallback(move_base_msgs::MoveBaseActionResult msg);
     void dockPathCallback(const std_msgs::Float32MultiArrayConstPtr &msg);
     void dockExploreCallback(const std_msgs::Float32MultiArrayConstPtr &msg);
-    void plackardCallback(const std_msgs::BoolConstPtr &msg);
+    void placardCallback(const std_msgs::StringConstPtr &msg);
+    void desiredPlacardCallback(const std_msgs::StringConstPtr &msg);
     void pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
+    void checkPlacard();
 
 public:
     dock(ros::NodeHandle &nh);

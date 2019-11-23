@@ -3,7 +3,7 @@
 
 dock::dock(ros::NodeHandle &nh) : Mission(nh)
 {
-    sleep(1);
+    sleep(10);
     ros::spinOnce();
     size_explore = 0;
     size_path = 0;
@@ -17,7 +17,8 @@ dock::dock(ros::NodeHandle &nh) : Mission(nh)
     this->pose_sub        = mission_nh_->subscribe("/vehicle_pose", 10, &dock::pose_callback, this);
     this->dockpath_sub    = mission_nh_->subscribe("/dock_path", 10, &dock::dockPathCallback, this);
     this->dockexplore_sub = mission_nh_->subscribe("/dock_explore", 10, &dock::dockExploreCallback, this);
-    this->plackard_sub    = mission_nh_->subscribe("/plackard", 10, &dock::plackardCallback, this);
+    this->placard_sub    = mission_nh_->subscribe("/yolo_output", 10, &dock::placardCallback, this);
+    this->task_sub    = mission_nh_->subscribe("/vrx/scan_and_dock/placard_symbol", 10, &dock::desiredPlacardCallback, this);
     // this->etat_sk_sub     = mission_nh_->subscribe("/etat_sk", 10, &dock::etatSKCallback, this);
     // Publishers
     this->stationkeep_pub = mission_nh_->advertise<geometry_msgs::Pose2D>("/control_target_sk", 10);
@@ -63,7 +64,7 @@ void dock::dockPathCallback(const std_msgs::Float32MultiArrayConstPtr &msg)
     // ROS_INFO("size_path = %d", size_path);
     size_path = dock_path.size();
     double dx, dy;
-    if (isPlackard == true) {
+    if (isPlacard == true) {
         ROS_INFO("Use dock_path1................");
         // dock_path1.clear();
         dock_path1 = dock_path;
@@ -95,12 +96,26 @@ void dock::dockExploreCallback(const std_msgs::Float32MultiArrayConstPtr &msg)
     ROS_INFO("size_explore = %d", size_explore);
 }
 
-void dock::plackardCallback(const std_msgs::BoolConstPtr &msg)
+void dock::placardCallback(const std_msgs::StringConstPtr &msg)
 {
-    ROS_INFO("plackard_value = %d", msg->data);
-    isPlackard = msg->data;
-    got_plackard = true;
+    ROS_INFO("placard_value = %s", msg->data.c_str());
+    thePlacardString=msg->data;    
+    got_placard = true;
 }
+
+void dock::desiredPlacardCallback(const std_msgs::StringConstPtr &msg)
+{
+    ROS_INFO("desired placard_value = %s", msg->data.c_str());
+    theDesiredPlacardString = msg->data;
+    got_desiredPlacard = true;
+}
+
+void dock::checkPlacard()
+{
+    isPlacard=thePlacardString.compare(theDesiredPlacardString);
+}
+//what needs to happen is a subscription to /vrx/tasks/placard and also /yolo_output
+//once both of these items have successfully been called back, we will compare strings
 
 void dock::loop()
 {
@@ -140,12 +155,22 @@ void dock::loop()
             ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in DOCKPATH1_START <<<<<<<<<<<<<<<<<<<<<<<<");
             ros::spinOnce();
             
-            // std::vector<double> the_path;
-            // if (isPlackard == true) {
-            //     the_path = dock_path1;
-            // } else {
-            //     the_path = dock_path2;
-            // }
+            std::vector<double> the_path;
+            
+            while(ros::ok() && !got_placard && !got_desiredPlacard)
+            {
+                ros::spinOnce();
+                ros::Rate loop_rate(60);
+                loop_rate.sleep();
+            }
+            checkPlacard();
+            if (isPlacard) {
+                ROS_WARN("Woohoo! we found the gate, dock_path1");
+                the_path = dock_path1;
+            } else {
+                ROS_WARN("Woohoo! we didn't found the gate, dock_path2");
+                the_path = dock_path2;
+            }
 
             geometry_msgs::Pose theGoal;
             theGoal.position.x = dock_path1[0];
@@ -203,7 +228,7 @@ void dock::loop()
             ROS_INFO("etat_sk = [%g, %g, %g] (deg)", etat_sk[0], etat_sk[1], etat_3);
 
             if ((abs(etat_sk[0])<tol_x) && (abs(etat_sk[1])<tol_y) && (abs(etat_3)<tol_psi)) {
-                if (isPlackard) {
+                if (isPlacard) {
                     this->task = DOCKPATH1_STOP;
                     ROS_INFO("************* DOCKPATH1_SK1 BREAK *****************");
                     break;
@@ -293,7 +318,7 @@ void dock::loop()
         case DOCKPATH1_SK3:
         {
             // Station-keep the vehicle to the final docking point
-            // Break when info regarding plackard has been acquired
+            // Break when info regarding placard has been acquired
             ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in DOCKPATH1_SK3 <<<<<<<<<<<<<<<<<<<<<<<<");
             ros::spinOnce();
             

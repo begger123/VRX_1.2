@@ -38,25 +38,35 @@ void tester::task_callback(const vrx_gazebo::Task::ConstPtr& msg)
         newTask=true;
         finished=false;
     }
-    
     if (theTaskMsg.name=="wayfinding" && theTaskMsg.state=="ready")
     {
         this->task=WAYPOINTS;
         newTask=true;
         finished=false;
     }
-   
     if (theTaskMsg.name=="navigation_course" && theTaskMsg.state=="ready")
     {
         this->task=NAVIGATION_COURSE;
         newTask=true;
         finished=false;
     }
-    
+    if (theTaskMsg.name=="perception" && theTaskMsg.state=="ready")
+    {
+        this->task=PERCEPTION;
+        newTask=true;
+        finished=false;
+    }
+    if (theTaskMsg.name=="scan")
+    {
+        newTask=true;
+        this->task=FINISHED;
+        finished=false;
+    }
     if (theTaskMsg.state=="finished")
     {
         finished=true;
     }
+
 }
 
 void tester::sk_goal_callback(const geographic_msgs::GeoPoseStamped::ConstPtr& msg)
@@ -334,6 +344,11 @@ void tester::loop()
             }
 
 
+            this->task=START;
+            break;
+        }
+        case PERCEPTION:
+        {
             this->task=START;
             break;
         }

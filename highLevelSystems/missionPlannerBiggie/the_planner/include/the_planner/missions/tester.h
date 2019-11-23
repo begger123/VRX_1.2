@@ -17,7 +17,7 @@ public:
 	void mission_callback(const std_msgs::String::ConstPtr& msg);
 	void loop();
 	//this needs to be updated to address the multitude of tasks
-	enum Task{START, STATIONKEEP, WAYPOINTS, NAVIGATION_COURSE, FINISHED};
+	enum Task{START, STATIONKEEP, WAYPOINTS, NAVIGATION_COURSE, PERCEPTION, FINISHED};
 	ros::ServiceClient traj_client;
 
 private:

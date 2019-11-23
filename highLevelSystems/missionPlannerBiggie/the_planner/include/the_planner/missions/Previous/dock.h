@@ -15,11 +15,11 @@
 #include <std_msgs/Float32MultiArray.h>
 
 
-/* Mission Description: The vehicle starts searching for a small region involving the plackard, which is
+/* Mission Description: The vehicle starts searching for a small region involving the placard, which is
  * what stands out from the dock from a far distance (it has more height). Once its sees it, it computs dock_explore
  * points and traverse them counter-clockwise in order to build a complete map of the dock. Then, from the dock map
  * it computes dock-aligned points describing a path suitable for the docking operation. Once it reaches the docking-point
- * it looks for the plackard information to see if it's the correct docking station.  If not, it computs the dock-aligned path
+ * it looks for the placard information to see if it's the correct docking station.  If not, it computs the dock-aligned path
  * corresponding to the other docking station and goes there using the dock_explore points. Finally it moves through this path
  * until it arrives to the new docking-point where it'll station keep
  *
@@ -36,7 +36,11 @@ private:
     bool got_explore_points = false;
     bool got_path_points = false;
     bool got_etat = false;
-    bool isPlackard = true;
+    bool isPlacard = false;
+    bool got_placard = false;
+    bool got_desiredPlacard = false;
+    std::string thePlacardString;
+    std::string theDesiredPlacardString;
     int size_explore;
     int size_path;
     double dock_explore[8];
@@ -56,7 +60,8 @@ private:
     float tol_psi = 10.0;  // in degrees
 
     // ROS stuff...
-    ros::Subscriber plackard_sub;
+    ros::Subscriber placard_sub;
+    ros::Subscriber task_sub;
     ros::Subscriber dockpath_sub;
     ros::Subscriber dockexplore_sub;
     // ros::Subscriber etat_sk_sub;
@@ -66,7 +71,8 @@ private:
     void goalStatusCallback(move_base_msgs::MoveBaseActionResult msg);
     void dockPathCallback(const std_msgs::Float32MultiArrayConstPtr &msg);
     void dockExploreCallback(const std_msgs::Float32MultiArrayConstPtr &msg);
-    void plackardCallback(const std_msgs::BoolConstPtr &msg);
+    void placardCallback(const std_msgs::StringConstPtr &msg);
+    void desiredPlacardCallback(const vrx_gazebo::TaskConstPtr &msg);
     // void etatSKCallback(const std_msgs::Float32MultiArrayConstPtr &msg);
     // void vehiclePosCallback(const nav_msgs::OdometryConstPtr &msg);
     void pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg);

@@ -10,7 +10,7 @@ always_send_full_costmap: true  # to convert occupancy grid iint opencv image
 resolution: 0.30         # 0.20 looked nice
 
 obstacle_range: 50.0
-raytrace_range: 50.0
+raytrace_range: 100.0
 
 #layer definitions
 static:

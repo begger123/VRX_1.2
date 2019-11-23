@@ -33,47 +33,42 @@
 class dock : public Mission
 {
 private:
-    std::vector<double> dock_path;
-    std::vector<double> dock_path1;
-    std::vector<double> dock_path2;
-
     bool got_explore_points = false;
     bool got_path_points = false;
     bool got_etat = false;
-    bool got_plackard = false;
     bool isPlackard = true;
-    bool got_dock = false;
-
     int size_explore;
     int size_path;
-
-    // Station-keeping goal tolerances
-    float tol_x = 1.0;    // in meters
-    float tol_y = 1.0;    // in meters
-    float tol_psi = 10.0;  // in degrees
-
     double dock_explore[8];
+    // double dock_path[8];
+    std::vector<double> dock_path;
+    std::vector<double> dock_path1;
+    std::vector<double> dock_path2;
+    // double vehicle_pos[2];
     double x, y, yaw_angle;
     double goal_start[2];
     double sk_heading, sk_heading1, sk_heading2;
     double sk1_heading, sk2_heading, sk3_heading;
     double sk_etat[3];
+    // Station-keeping goal tolerances
+    float tol_x = 1.0;    // in meters
+    float tol_y = 1.0;    // in meters
+    float tol_psi = 10.0;  // in degrees
 
     // ROS stuff...
     ros::Subscriber plackard_sub;
     ros::Subscriber dockpath_sub;
     ros::Subscriber dockexplore_sub;
+    // ros::Subscriber etat_sk_sub;
     ros::Subscriber pose_sub;
     ros::Publisher stationkeep_pub;
-    ros::Time prev_time;
-    ros::Duration delta_t;
     geometry_msgs::Pose2D skPoint;
-
-    // Callback functions
     void goalStatusCallback(move_base_msgs::MoveBaseActionResult msg);
     void dockPathCallback(const std_msgs::Float32MultiArrayConstPtr &msg);
     void dockExploreCallback(const std_msgs::Float32MultiArrayConstPtr &msg);
     void plackardCallback(const std_msgs::BoolConstPtr &msg);
+    // void etatSKCallback(const std_msgs::Float32MultiArrayConstPtr &msg);
+    // void vehiclePosCallback(const nav_msgs::OdometryConstPtr &msg);
     void pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
 
 public:
@@ -82,7 +77,7 @@ public:
     void loop();
     // enum Sequence{START, EXPLORE_DOCK, DOCKPATH1_START, DOCKPATH1_SK1, DOCKPATH1_STOP, DOCKPATH1_SK2, DOCKPATH1_SK3, DOCKPATH1_SK1_REV,
     //               EXPLORE_DOCK2, DOCKPATH2_START, DOCKPATH2_SK1, DOCKPATH2_STOP, DOCKPATH2_SK2};
-    enum Sequence{START, EXPLORE_DOCK, DOCKPATH1_START, DOCKPATH1_SK1, DOCKPATH1_STOP, DOCKPATH1_SK2, DOCKPATH1_SK3, DOCKPATH1_SK1_REV, CIRCLE_SEARCH, GOTO_STATION2, MISSION_FINISHED};
+    enum Sequence{START, EXPLORE_DOCK, DOCKPATH1_START, DOCKPATH1_SK1, DOCKPATH1_STOP, DOCKPATH1_SK2, DOCKPATH1_SK3, DOCKPATH1_SK1_REV};
                   // EXPLORE_DOCK2, DOCKPATH2_START};
 
     // Some functions

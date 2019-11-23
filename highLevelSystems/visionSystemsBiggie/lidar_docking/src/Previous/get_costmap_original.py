@@ -59,8 +59,46 @@ class GetMap:
 
         # convert OGrid to binary image
         bimg = self.convert_to_binary(ogc)
-        #  bimg = bimg[:, 0:500]
-        bimg = bimg[:, 0:550]
+
+        labels_img = np.zeros((height, width, 3), np.uint8)
+        if (self.got_plackard == False):
+            # get plackard orientation and centroid
+            plackard_region = bimg[:, 0:460]
+            plackard_points = np.transpose(np.nonzero(plackard_region)).astype(int)
+            #  rospy.loginfo("number of plackard_points = %g", plackard_points.shape[0])
+            pth1 = 270
+            pth2 = 258
+            num_pts_plackard = plackard_points.shape[0]
+            if (num_pts_plackard < pth1 and num_pts_plackard > pth2):
+                rospy.loginfo("got the number of plackard points required")
+                # perform pca over plackard and find centroid, eigenvector and orientation
+                labels_img[plackard_points[:,0], plackard_points[:,1]] = (255, 255, 255)
+                eigv_plackard1, eigv_plackard2, angle_pl1, angle_pl2, plackard_mean = self.do_pca(plackard_points, 1)
+                self.plackard_mean = plackard_mean
+                #  angle_plackard = -angle_plackard*180/np.pi - 90
+                angle_pl2 = angle_pl2 - np.pi/2
+                # list of dock_explore points
+                l = 40
+                s = 30
+                explore_pts = np.array([ [-s, l], [-s, -l], [s, -l], [s, l] ])
+                rot_mat = np.array([ [np.cos(angle_pl2), np.sin(angle_pl2)], [-np.sin(angle_pl2), np.cos(angle_pl2)] ])
+                self.explore_pts_pix = np.dot(explore_pts, rot_mat).astype(int) + self.plackard_mean.astype(int)
+                # scaled eigenvectors for plotting
+                self.vec_plackard1 = (eigv_plackard1*60).astype(int) + self.plackard_mean
+                self.vec_plackard2 = (eigv_plackard2*60).astype(int) + self.plackard_mean
+                # convert dock_explore points to NED
+                self.explore_pts_ned = self.convert_to_ned(self.explore_pts_pix.astype(int), height, width)
+                # publish via ROS
+                dock_explore_ned = Float32MultiArray()
+                j = 0
+                for i in range(self.explore_pts_ned.shape[0]):
+                    dock_explore_ned.data.append(np.int(self.explore_pts_ned[i,0]))
+                    dock_explore_ned.data.append(np.int(self.explore_pts_ned[i,1]))
+                self.dock_explore_pub.publish(dock_explore_ned)
+                self.got_plackard = True
+
+        # debugging printouts
+        #  rospy.loginfo("angle_plackard2 = %g", angle_pl2*180/np.pi)
 
         # compute 2 classes using k-means clustering
         # np.transpose(np,nonzero()): returns the coordinates of associated to non-zero values
@@ -72,14 +110,16 @@ class GetMap:
         # define criteria for k-means function
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
         # apply k-means algorithm
-        cost, label, center = cv2.kmeans(data, 2, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+        cost, label, center = cv2.kmeans(data, 3, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
         # Now separate the data, Note the flatten()
         A = data[label.ravel()==0].astype(int)
         B = data[label.ravel()==1].astype(int)
+        C = data[label.ravel()==2].astype(int)
 
         labels_img = np.zeros((height, width, 3), np.uint8)
         labels_img[A[:,0], A[:,1]] = (255,0,0)      # Blue
         labels_img[B[:,0], B[:,1]] = (0,255,0)      # Green
+        labels_img[C[:,0], C[:,1]] = (0,0,255)      # Red
 
         # compute dock-cluster
         cy_min = np.min(center[:,1])    # minimum y-coordinate (columns direction) among clusters locations
@@ -100,9 +140,9 @@ class GetMap:
             dock_cluster = data[label.ravel()==dock_center]
             dock_size = np.size(dock_cluster)
             #  rospy.loginfo("Cy_min = %g", np.min(center[:,1]))
-            rospy.loginfo("dock_size = %g", dock_size)
+            #  rospy.loginfo("dock_size = %g", dock_size)
             #  rospy.loginfo("dock_center is: %g", dock_center)
-            if (dock_size > 3600):
+            if (dock_size > 4600):
                 # perform PCA analysis
                 eigvector, eigvector2, angle, angle2, dock_mean = self.do_pca(dock_cluster, side)
                 # draw image and show eigenvector
@@ -116,15 +156,20 @@ class GetMap:
                 points[2,:] = (eigvector*50).astype(int) + dock_mean
                 # compute and draw docking_point
                 points[3,:] = (eigvector*20).astype(int) + dock_mean
+                # for drawing the line we have to invert the coordinates
+                #  cv2.line(labels_img, (dock_mean[1], dock_mean[0]), (vector[1], vector[0]), (255,255,255), 2)
                 # Draw all the points and convert them to NED coordinates
                 self.points_ned = np.zeros((points.shape[0], 2))
                 self.points_ned = self.convert_to_ned(points.astype(int), height, width)
 
-                # Drawing stuff onto opencv image
-                # for drawing the line we have to invert the coordinates
-                #  cv2.line(labels_img, (dock_mean[1], dock_mean[0]), (vector[1], vector[0]), (255,255,255), 2)
                 #  for i in range(points.shape[0]):
+                #      xp = points[i,0]
+                #      yp = points[i,1]
+                #      xned = (height - 1 - xp)*0.3
+                #      yned = yp*0.3
+                #      self.points_ned[i,:] = [xned, yned]
                 #      cv2.circle(labels_img, (points[i,1], points[i,0]), 4, (255,0,255), -1)
+                #      rospy.loginfo("points_ned = [%g, %g]", self.points_ned[i,0], self.points_ned[i,1])
 
                 # publish via ROS
                 dock_path_ned = Float32MultiArray()
@@ -150,7 +195,6 @@ class GetMap:
         #  for i in range(self.explore_pts_pix.shape[0]):
         #      cv2.circle(labels_img, (self.explore_pts_pix[i,1], self.explore_pts_pix[i,0]), 4, (255,0,255), -1)
         #      #  rospy.loginfo("explore_points = [%g, %g]", self.explore_pts_pix[i,0], self.explore_pts_pix[i,1])
-
         #  cv2.line(labels_img, (self.plackard_mean[1], self.plackard_mean[0]), (self.vec_plackard1[1], self.vec_plackard1[0]), (255,255,255), 2)
         #  cv2.line(labels_img, (self.plackard_mean[1], self.plackard_mean[0]), (self.vec_plackard2[1], self.vec_plackard2[0]), (255,255,255), 2)
 
@@ -165,7 +209,7 @@ class GetMap:
             xned = (height - 1 - array[i,0])*0.3
             yned = array[i,1]*0.3
             array_ned[i,:] = [xned, yned]
-            #  rospy.loginfo("array_ned = [%g, %g]", array_ned[i,0], array_ned[i,1])
+            rospy.loginfo("array_ned = [%g, %g]", array_ned[i,0], array_ned[i,1])
         return array_ned
 
 
@@ -210,7 +254,6 @@ if __name__ == "__main__":
     except rospy.ROSInterruptException:
         #  cv2.destroyAllWindows()
         rospy.loginfo("ogrid to cv_image task has been terminated")
-
 
 
 

@@ -32,7 +32,7 @@ namespace pid_controller
 		~pid();
         void pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
 		void target_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
-        void targetSK_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
+        // void targetSK_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
 		void state_callback(const nav_msgs::Odometry::ConstPtr& msg);
 		void set_error_los();
 		void set_error_ebs();

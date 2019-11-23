@@ -49,6 +49,13 @@ void dock::goalStatusCallback(move_base_msgs::MoveBaseActionResult msg)
     }
 }
 
+// void dock::vehiclePosCallback(const nav_msgs::OdometryConstPtr &msg)
+// {
+//     // These coordinates are in NED
+//     x = msg->pose.pose.position.x;
+//     y = msg->pose.pose.position.y;
+// }
+
 void dock::dockPathCallback(const std_msgs::Float32MultiArrayConstPtr &msg)
 {
     dock_path.clear();
@@ -70,8 +77,7 @@ void dock::dockPathCallback(const std_msgs::Float32MultiArrayConstPtr &msg)
         dy = dock_path1[size_path-1] - dock_path1[1];
         dx = dock_path1[size_path-2] - dock_path1[0];
         sk_heading1 = atan2(dy, dx);
-    } 
-    else {
+    } else {
         ROS_INFO("Use dock_path2................");
         // dock_path2.clear();
         dock_path2 = dock_path;
@@ -79,7 +85,6 @@ void dock::dockPathCallback(const std_msgs::Float32MultiArrayConstPtr &msg)
         dx = dock_path2[size_path-2] - dock_path2[0];
         sk_heading2 = atan2(dy, dx);
     }
-    got_dock = true;
 }
 
 void dock::dockExploreCallback(const std_msgs::Float32MultiArrayConstPtr &msg)
@@ -95,11 +100,19 @@ void dock::dockExploreCallback(const std_msgs::Float32MultiArrayConstPtr &msg)
     ROS_INFO("size_explore = %d", size_explore);
 }
 
+// void dock::etatSKCallback(const std_msgs::Float32MultiArrayConstPtr &msg)
+// {
+//     // Station-keep real-time error in (x,y,psi)
+//     sk_etat[0] = msg->data[0];
+//     sk_etat[1] = msg->data[1];
+//     sk_etat[2] = msg->data[2];
+//     got_etat = true;
+// }
+
 void dock::plackardCallback(const std_msgs::BoolConstPtr &msg)
 {
     ROS_INFO("plackard_value = %d", msg->data);
     isPlackard = msg->data;
-    got_plackard = true;
 }
 
 void dock::loop()
@@ -108,27 +121,71 @@ void dock::loop()
     {
         case START:
         {
-            // Check if we have info regarding the dock
-            // If we have received dock_path[8] it means we have found the dock
-            // If NOT, move holding the initial heading for some distance to start moving along
-            // a large circle in order to look for the dock in all directions
+            // Go straight to the left until plackard is mapped
+            // Break when dock_explore[8] points has been acquired
             ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in START <<<<<<<<<<<<<<<<<<<<<<<<");
             ros::spinOnce();
-            if (got_dock) {
-                // Position the vehicke in front (and at a certain distance) of the closest docking station
-                // Use path-following control and then station-keeping controller to face directly at the dock
-                ROS_INFO("$$$$$$$$$$$$$$$$$$$$$ DOCK HAS BEEN FOUND $$$$$$$$$$$$$$$$$$$$$$$");
-                this->task = DOCKPATH1_START;
+            if (got_explore_points) {
+                this->task = EXPLORE_DOCK;
                 break;
             } 
             else {
-                // Check if there is any visible part of the dock
-                // If there is, compute a series of safe points around 
-                // Perform the circular trajectory in order to search for the dock
-                // When finding any part of the dock, compute a series of safe points around the area in order to map the dock
-                ROS_INFO("The vehicle hasn't found dock yet...");
-                this->task = CIRCLE_SEARCH;
-                break;
+                ROS_INFO("The vehicle hasn't found the plackard yet...");
+                this->task = START;
+            }
+            break;
+        }
+        case EXPLORE_DOCK:
+        {
+            // Move the vehicle across the 4 dock_explore points in order to get a map of the dock 
+            // // Break when the vehicle gets to last point and a dock_path[8] has been acquired 
+            // ROS_INFO("GOT TO MAP_DOCK SEQUENCE, loop = %d", i);
+            ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in EXPLORE_DOCK <<<<<<<<<<<<<<<<<<<<<<<<");
+            ros::spinOnce();
+            int j = 0;
+            for (int i=0; i<size_explore; i++) {
+                ros::spinOnce();
+                geometry_msgs::Pose theGoal;
+                theGoal.position.x = dock_explore[j];
+                theGoal.position.y = dock_explore[j+1];
+                wamv_navigation::SendGoal goto_srv;
+                goto_srv.request.goal          = theGoal;
+                goto_srv.request.vehicle_pos.x = x;
+                goto_srv.request.vehicle_pos.y = y;
+                goto_srv.request.dist_stop     = 2.0;
+                ROS_INFO("vehicle_pos = [%g, %g]", x, y);
+
+                if (client_goal.call(goto_srv)) {
+                    // ROS_INFO("Service call to send-goal server was successful");
+                    // ROS_INFO("goal_heading_enu = %g deg", goto_srv.response.goal_heading_enu);
+                }
+                else {
+                    ROS_INFO("Service call failed");
+                    finished = true;
+                }
+                previous_status = 1;
+                while (goal_reached == false) {
+                    ros::spinOnce();
+                    // ROS_INFO("The vehicle hasn't reached the goal yet");
+                    // sleep(0.3);
+                }
+                if (previous_status == 2) {
+                    goal_reached = false;
+                    this->task = EXPLORE_DOCK;
+                }
+                else {
+                    // The vehicle has actually reached the goal
+                    if (i == 3) {
+                        this->task = DOCKPATH1_START;
+                        goal_reached = false;
+                        break;
+                    }
+                    else {
+                        j = j + 2;
+                        goal_reached = false;
+                        this->task = EXPLORE_DOCK;
+                    }
+                }
             }
             break;
         }
@@ -169,6 +226,7 @@ void dock::loop()
             while (goal_reached == false) {
                 ros::spinOnce();
                 // ROS_INFO("The vehicle hasn't reached the goal yet");
+                // sleep(0.3);
             }
             if (previous_status == 2) {
                 goal_reached = false;
@@ -189,11 +247,22 @@ void dock::loop()
             ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in DOCKPATH1_SK1 <<<<<<<<<<<<<<<<<<<<<<<<");
             ros::spinOnce();
 
+            // std::vector<double> the_path;
+            // if (isPlackard == true) {
+            //     the_path = dock_path1;
+            // } else {
+            //     the_path = dock_path2;
+            // }
+
             skPoint.x = dock_path1[0];
             skPoint.y = dock_path1[1];
             sk1_heading = sk_heading1;
             skPoint.theta = sk1_heading;
             this->stationkeep_pub.publish(skPoint);
+
+            // double etat_3 = piwrap(sk_etat[2]);
+            // etat_3 = etat_3*180/M_PI;
+            // double etat_3 = sk_etat[2]*180/M_PI;
 
             double etat_sk[3];
             etat_sk[0] = x - skPoint.x;
@@ -203,16 +272,9 @@ void dock::loop()
             ROS_INFO("etat_sk = [%g, %g, %g] (deg)", etat_sk[0], etat_sk[1], etat_3);
 
             if ((abs(etat_sk[0])<tol_x) && (abs(etat_sk[1])<tol_y) && (abs(etat_3)<tol_psi)) {
-                if (isPlackard) {
-                    this->task = DOCKPATH1_STOP;
-                    ROS_INFO("************* DOCKPATH1_SK1 BREAK *****************");
-                    break;
-                }
-                else {
-                    this->task = GOTO_STATION2;
-                    ROS_INFO("************* DOCKPATH1_SK1 BREAK *****************");
-                    break;
-                }
+                this->task = DOCKPATH1_STOP;
+                ROS_INFO("************* DOCKPATH1_SK1 BREAK *****************");
+                break;
             } 
             else {
                 this->task = DOCKPATH1_SK1;
@@ -225,9 +287,16 @@ void dock::loop()
             ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in DOCKPATH1_STOP <<<<<<<<<<<<<<<<<<<<<<<<");
             ros::spinOnce();
 
+            // std::vector<double> the_path;
+            // if (isPlackard == true) {
+            //     the_path = dock_path1;
+            // } else {
+            //     the_path = dock_path2;
+            // }
+
             geometry_msgs::Pose theGoal;
-            theGoal.position.x = dock_path1[2];
-            theGoal.position.y = dock_path1[3];
+            theGoal.position.x = dock_path1[0];
+            theGoal.position.y = dock_path1[1];
             wamv_navigation::SendGoal goto_srv;
             goto_srv.request.goal          = theGoal;
             goto_srv.request.vehicle_pos.x = x;
@@ -247,6 +316,7 @@ void dock::loop()
             while (goal_reached == false) {
                 ros::spinOnce();
                 // ROS_INFO("The vehicle hasn't reached the goal yet");
+                // sleep(0.3);
             }
             if (previous_status == 2) {
                 goal_reached = false;
@@ -266,12 +336,24 @@ void dock::loop()
             // Break when position and heading is within a defined tolerance
             ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in DOCKPATH1_SK2 <<<<<<<<<<<<<<<<<<<<<<<<");
             ros::spinOnce();
+
+            // std::vector<double> the_path;
+            // if (isPlackard == true) {
+            //     the_path = dock_path1;
+            // } else {
+            //     the_path = dock_path2;
+            // }
             
             skPoint.x = dock_path1[4];
             skPoint.y = dock_path1[5];
             sk2_heading = sk_heading1;
             skPoint.theta = sk2_heading;
             this->stationkeep_pub.publish(skPoint);
+
+            // double etat_3 = piwrap(sk_etat[2]);
+            // etat_3 = etat_3*180/M_PI;  // Convert to degrees
+            // double etat_3 = sk_etat[2]*180/M_PI;
+            // ROS_INFO("ETAT_3 = %g", etat_3);
 
             double etat_sk[3];
             etat_sk[0] = x - skPoint.x;
@@ -296,12 +378,25 @@ void dock::loop()
             // Break when info regarding plackard has been acquired
             ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in DOCKPATH1_SK3 <<<<<<<<<<<<<<<<<<<<<<<<");
             ros::spinOnce();
+
+            // std::vector<double> the_path;
+            // if (isPlackard == true) {
+            //     the_path = dock_path1;
+            // } else {
+            //     the_path = dock_path2;
+            // }
             
             skPoint.x = dock_path1[6];
             skPoint.y = dock_path1[7];
             sk3_heading = sk_heading1;
             skPoint.theta = sk3_heading;
             this->stationkeep_pub.publish(skPoint);
+
+            // double etat_3 = piwrap(sk_etat[2]);
+            // etat_3 = etat_3*180/M_PI;  // Convert to degrees
+            // ros::spinOnce();
+            // double etat_3 = sk_etat[2]*180/M_PI;
+            // ROS_INFO("ETAT_3 = %g", etat_3);
 
             double etat_sk[3];
             etat_sk[0] = x - skPoint.x;
@@ -311,13 +406,7 @@ void dock::loop()
             ROS_INFO("etat_sk = [%g, %g, %g]", etat_sk[0], etat_sk[1], etat_3);
 
             if ((abs(etat_sk[0])<tol_x) && (abs(etat_sk[1])<tol_y) && (abs(etat_3)<tol_psi)) {
-                // Elapsed time
-                ros::Time curr_time;
-                curr_time = ros::Time::now();
-                delta_t = curr_time - prev_time;
-                prev_time = curr_time;
-                ROS_INFO("ELAPSED TIME = %g", delta_t.toSec());
-                if (delta_t.toSec() > 10) {
+                if (isPlackard == false) {
                     ROS_INFO("************* DOCKPATH1_SK3 BREAK *****************");
                     this->task = DOCKPATH1_SK1_REV;
                     break;
@@ -337,11 +426,23 @@ void dock::loop()
             // Break when position and heading is within a defined tolerance
             ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in DOCKPATH1_SK1_REV <<<<<<<<<<<<<<<<<<<<<<<<");
             ros::spinOnce();
+
+            // std::vector<double> the_path;
+            // if (isPlackard == true) {
+            //     the_path = dock_path2;
+            // } else {
+            //     the_path = dock_path1;
+            // }
             
             skPoint.x = dock_path1[0];
             skPoint.y = dock_path1[1];
             skPoint.theta = sk1_heading;
             this->stationkeep_pub.publish(skPoint);
+
+            // double etat_3 = piwrap(sk_etat[2]);
+            // etat_3 = etat_3*180/M_PI;  // Convert to degrees
+            // double etat_3 = sk_etat[2]*180/M_PI;
+            // ROS_INFO("sk_etat = [%g, %g, %g]", sk_etat[0], sk_etat[1], sk_etat[2]*180/M_PI);
 
             double etat_sk[3];
             etat_sk[0] = x - skPoint.x;
@@ -351,28 +452,131 @@ void dock::loop()
             ROS_INFO("etat_sk = [%g, %g, %g]", etat_sk[0], etat_sk[1], etat_3);
 
             if ((abs(etat_sk[0])<tol_x) && (abs(etat_sk[1])<tol_y) && (abs(etat_3)<tol_psi)) {
-                this->task = MISSION_FINISHED;
+                ros::spinOnce();
+                // this->task = EXPLORE_DOCK2;
+                this->task = DOCKPATH1_SK1_REV;
                 ROS_INFO("************* DOCKPATH1_SK1_REV BREAK *****************");
                 break;
             } 
             else {
                 this->task = DOCKPATH1_SK1_REV;
+                ros::spinOnce();
             }
             break;
         }
-        case CIRCLE_SEARCH:
+        case EXPLORE_DOCK2:
         {
-            ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in CIRCLE_SEARCH <<<<<<<<<<<<<<<<<<<<<<<<");
+            // Move the vehicle across the top 2 points of the dock_explore points in order to move to the second docking station
+            // Break when the vehicle gets to the second point
+            // ROS_INFO("GOT TO MAP_DOCK SEQUENCE, loop = %d", i);
+            ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in EXPLORE_DOCK2 <<<<<<<<<<<<<<<<<<<<<<<<");
+            ros::spinOnce();
+
+            // std::vector<double> the_path;
+            // if (isPlackard == true) {
+            //     the_path = dock_path1;
+            // } else {
+            //     the_path = dock_path2;
+            // }
+
+            geometry_msgs::Pose theGoal;
+            theGoal.position.x = dock_explore[0];
+            theGoal.position.y = dock_explore[1];
+            wamv_navigation::SendGoal goto_srv;
+            goto_srv.request.goal          = theGoal;
+            goto_srv.request.vehicle_pos.x = x;
+            goto_srv.request.vehicle_pos.y = y;
+            goto_srv.request.dist_stop     = 0.0;
+            ROS_INFO("vehicle_pos = [%g, %g]", x, y);
+
+            if (client_goal.call(goto_srv)) {
+                ROS_INFO("Service call to send-goal server was successful");
+                ROS_INFO("goal_heading_enu = %g deg", goto_srv.response.goal_heading_enu);
+            }
+            sleep(2);
+            if (client_goal.call(goto_srv)) {
+                ROS_INFO("Service call to send-goal server was successful");
+                ROS_INFO("goal_heading_enu = %g deg", goto_srv.response.goal_heading_enu);
+            }
+            else {
+                ROS_INFO("Service call failed");
+                finished = true;
+            }
+            previous_status = 1;
+            while (goal_reached == false) {
+                ros::spinOnce();
+                // ROS_INFO("The vehicle hasn't reached the goal yet");
+            }
+            if (previous_status == 2) {
+                goal_reached = false;
+                this->task = EXPLORE_DOCK2;
+            }
+            else {
+                // The vehicle has actually reached the goal
+                this->task = DOCKPATH2_START;
+                goal_reached = false;
+                break;
+            }
             break;
         }
-        case GOTO_STATION2:
+        case DOCKPATH2_START:
         {
-            ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in GOTO_STATION2 <<<<<<<<<<<<<<<<<<<<<<<<");
+            ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in DOCKPATH2_START <<<<<<<<<<<<<<<<<<<<<<<<");
             break;
         }
-        case MISSION_FINISHED:
+
+        case EXPLORE_DOCK2:
         {
-            ROS_INFO("********************** MISSION_FINISHED ***************************");
+            // Move the vehicle across the 4 dock_explore points in order to get a map of the dock
+            // // Break when the vehicle gets to last point and a dock_path[8] has been acquired
+            // ROS_INFO("GOT TO MAP_DOCK SEQUENCE, loop = %d", i);
+            ROS_INFO(">>>>>>>>>>>>>>>>>>>>>> We are in EXPLORE_DOCK <<<<<<<<<<<<<<<<<<<<<<<<");
+            ros::spinOnce();
+            int j = 0;
+            for (int i=0; i<size_explore; i++) {
+                ros::spinOnce();
+                geometry_msgs::Pose theGoal;
+                theGoal.position.x = dock_explore[j];
+                theGoal.position.y = dock_explore[j+1];
+                wamv_navigation::SendGoal goto_srv;
+                goto_srv.request.goal          = theGoal;
+                goto_srv.request.vehicle_pos.x = x;
+                goto_srv.request.vehicle_pos.y = y;
+                goto_srv.request.dist_stop     = 0.0;
+                ROS_INFO("vehicle_pos = [%g, %g]", x, y);
+
+                if (client_goal.call(goto_srv)) {
+                    ROS_INFO("Service call to send-goal server was successful");
+                    ROS_INFO("goal_heading_enu = %g deg", goto_srv.response.goal_heading_enu);
+                }
+                else {
+                    ROS_INFO("Service call failed");
+                    finished = true;
+                }
+                previous_status = 1;
+                while (goal_reached == false) {
+                    ros::spinOnce();
+                    // ROS_INFO("The vehicle hasn't reached the goal yet");
+                    // sleep(0.3);
+                }
+                if (previous_status == 2) {
+                    goal_reached = false;
+                    this->task = EXPLORE_DOCK2;
+                }
+                else {
+                    // The vehicle has actually reached the goal
+                    if (i == 1) {
+                        this->task = DOCKPATH2_START;
+                        goal_reached = false;
+                        break;
+                    }
+                    else {
+                        j = j + 2;
+                        goal_reached = false;
+                        this->task = EXPLORE_DOCK2;
+                    }
+                }
+            }
             break;
         }
     }
@@ -393,3 +597,6 @@ double dock::twopiwrap(double angle)
     angle = fmod(angle, 2*M_PI);
     return(angle);
 }
+
+
+

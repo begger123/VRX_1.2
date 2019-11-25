@@ -5,7 +5,8 @@
     <node pkg="high_to_low" type="high_to_low" name="shuffle_pass" output="screen" respawn="true" />
 
 	<node pkg="the_planner" type="planner" name="planner" output="screen">
-            <rosparam param="mission_string">[tester]</rosparam>
+            <!-- <rosparam param="mission_string">[tester]</rosparam> -->
+            <rosparam param="mission_string">[tester, dock]</rosparam>
    		<rosparam file="$(find the_planner)/yaml/missions.yaml" param = "missions" command="load" respawn="true"></rosparam>
     	</node> 
 </launch>

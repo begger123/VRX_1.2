@@ -1,5 +1,5 @@
 global_frame: wamv/odom
-rolling_window: true
+rolling_window: true 
 
 # obstacles_laser:
 #     observation_sources: laser
@@ -11,6 +11,5 @@ rolling_window: true
 
 plugins:
   - {name: obstacles_laser,           type: "costmap_2d::ObstacleLayer"}
-  # - {name: obstacles_pc,              type: "costmap_2d::VoxelLayer"}
   - {name: obstacles_pc,              type: "costmap_2d::ObstacleLayer"}
   - {name: inflation,                 type: "costmap_2d::InflationLayer"}

@@ -73,6 +73,15 @@ void highLevelPlanner::set_mission_list()
 			hlp_nh_->getParam("planner/missions/totems/east", mission_list[i]->east);
 			hlp_nh_->getParam("planner/missions/totems/heading", mission_list[i]->heading);
         }
+		else if (mission_string[i] == "dock") 
+        {
+            mission_list[i] = new dock(*hlp_nh_);
+			hlp_nh_->getParam("planner/missions/dock/name", mission_list[i]->mission_name);
+			hlp_nh_->getParam("planner/missions/dock/timeout", mission_list[i]->timeout);
+			// hlp_nh_->getParam("planner/missions/dock/north", mission_list[i]->north);
+			// hlp_nh_->getParam("planner/missions/dock/east", mission_list[i]->east);
+			// hlp_nh_->getParam("planner/missions/dock/heading", mission_list[i]->heading);
+        }
 		/*else if(mission_string[i]=="listen_to_gui")
 		{
 			mission_list[i] = new listen_to_gui(*hlp_nh_);

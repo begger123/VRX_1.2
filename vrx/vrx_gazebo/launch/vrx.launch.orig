@@ -1,14 +1,12 @@
 <?xml version="1.0"?>
 <launch>
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find vrx_gazebo)/config/custom_rosconsole.conf"/>
+
   <!-- Gazebo world to load -->
 <<<<<<< HEAD
-  <arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge0.world" />
-  <!-- If true, run gazebo GUI -->
-=======
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge0.world" /> -->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge0b.world" /> -->
-  <arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge1.world" /> 
+  <!--<arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge1.world" /> -->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge2.world" /> -->
 
 
@@ -26,8 +24,21 @@
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding4.world" />-->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding5.world" />-->
   
+  <arg name="world" default="$(find vrx_gazebo)/worlds/phase2_dock0.world" />
+  <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_dock1.world" />-->
+  <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_dock2.world" />-->
+  <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_dock3.world" />-->
+  <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_dock4.world" />-->
+  <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_dock5.world" />-->
+  
 <!-- If true, run gazebo GUI -->
->>>>>>> 73f72e8491ccf4ea582e8f76118689931e8271e1
+=======
+  <!-- <arg name="world" default="$(find vrx_gazebo)/worlds/phase2_stationkeeping3.world" /> -->
+  <!-- <arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding5.world" /> -->
+  <arg name="world" default="$(find vrx_gazebo)/worlds/example_course.world" />
+
+  <!-- If true, run gazebo GUI -->
+>>>>>>> 79c255531f3dd51acf3686297bbb7b14eda66c7c
   <arg name="gui" default="true" />
   <!-- If true, run gazebo in verbose mode -->
   <arg name="verbose" default="false"/>

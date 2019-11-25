@@ -1,0 +1,11 @@
+black_totem
+blue_totem
+green_totem
+polyform_a3
+polyform_a5
+polyform_a7
+red_totem
+surmark46104
+surmark_950400
+surmark_950410
+yellow_totem

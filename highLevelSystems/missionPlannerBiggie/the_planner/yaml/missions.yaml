@@ -33,6 +33,13 @@ totems:
     east: 0
     heading: 0
 
+dock:
+    name: "dock"
+    timeout: 0
+    north: 0
+    east: 0
+    heading: 0
+
 slalom_mission:
     name: "slalom_mission"
     timeout: 0

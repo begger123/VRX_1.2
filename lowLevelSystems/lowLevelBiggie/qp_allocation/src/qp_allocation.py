@@ -47,10 +47,10 @@ class QP:
         self.x = np.zeros((self.n+2*self.m, 1)) # This is the vector to be optimized [deltaU_left, deltaU_right, Sx, Sy, Sz, d_left_angle, d_right_angle]
         fact =  10
         self.w = 0.018*fact                     # 0.018 - quadratic term coeff. of the quadratic fit of the power function
-        self.q = 300                             # weights for Q>0 which penalize the error s between commanded and achieved forces
-        self.omega = 10                        # 180 - weights for OMEGA>0 for tunning angle rate (delta_alpha)
-        self.lx = 2.37                           #  1.3 bf x-magnitude of the thrusters
-        self.ly = 1.03                         # 0.915 bf y-magnitude of the thrusters
+        self.q = 300                            # weights for Q>0 which penalize the error s between commanded and achieved forces
+        self.omega = 10                         # 180 - weights for OMEGA>0 for tunning angle rate (delta_alpha)
+        self.lx = 2.37                          # 2.37 bf x-magnitude of the thrusters
+        self.ly = 1.03                          # 1.03 bf y-magnitude of the thrusters
         self.rho = 100                          # weighting parameter of the singularity avoidance term
         self.eps = 0.0001                       # small term to avoid division by zero in singularity avoidance term
         self.gradC1 = gradC1                    # gradient of singularity avoidance (SA) term (not yet implemented)                    
@@ -200,11 +200,10 @@ class QP:
         self.left_angle_pub.publish(left_angle_msg)
         self.right_angle_pub.publish(right_angle_msg)
 
+        # debugging printouts
         #  rospy.loginfo("tau = [%g, %g, %g]", tau[0], tau[1], tau[2])
-
         #  rospy.loginfo("[left_thrust, left_angle] = [%g, %g]", self.left_thrust, self.left_angle);
         #  rospy.loginfo("[left_command, left_angle_enu] = [%g, %g]", left_thrust_msg.data, left_angle_msg.data);
-
         #  rospy.loginfo("[right_thrust, right_angle] = [%g, %g]", self.right_thrust, self.right_angle);
         #  rospy.loginfo("[right_command, right_angle_enu] = [%g, %g]", right_thrust_msg.data, right_angle_msg.data);
 

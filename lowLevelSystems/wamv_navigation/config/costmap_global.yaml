@@ -1,9 +1,9 @@
 global_costmap:
     global_frame: wamv/odom   # (odom)
     robot_base_frame: wamv/base_link
-    update_frequency: 5.0
+    update_frequency: 2.0
     static_map: false
-    rolling_window: false
+    rolling_window: true   # false
     track_unknown_space: true
 
 plugins:

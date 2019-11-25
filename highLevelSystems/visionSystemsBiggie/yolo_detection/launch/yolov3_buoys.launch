@@ -1,0 +1,6 @@
+<launch>
+	<node pkg="yolo_detection" 
+	      name="object_recognizer" 
+	      type="buoys_detection.py" 
+	      output="screen"/>
+</launch>

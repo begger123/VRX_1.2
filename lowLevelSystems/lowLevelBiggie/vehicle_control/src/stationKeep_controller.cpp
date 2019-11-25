@@ -10,11 +10,13 @@ pid_controller::sk::sk(ros::NodeHandle &nh) : sk_nh(&nh), loop_rate(60) //sets d
    		ros::console::notifyLoggerLevelsChanged();
 	}
 	ROS_DEBUG("Entering initializer, next stop get_params");
-    target_sub   = sk_nh->subscribe("/control_target_sk", 10, &pid_controller::sk::target_callback, this);
+    // Subscribers
+    target_sub = sk_nh->subscribe("/control_target_sk", 10, &pid_controller::sk::target_callback, this);
     pose_sub   = sk_nh->subscribe("/vehicle_pose", 10, &pid_controller::sk::pose_callback, this);
-    state_sub = sk_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::sk::velo_callback, this);
-    //state_sub = sk_nh->subscribe("/wamv/sensors/position/p3d_wamv", 10, &pid_controller::sk::velo_callback, this);
+	state_sub  = sk_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::sk::velo_callback, this);
+    // Publishers
     control_pub = sk_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10);  // published tau = {Tx, Ty, Mz}
+    etat_pub    = sk_nh->advertise<std_msgs::Float32MultiArray>("/etat_sk", 10);
 
     // Initialize some variables
     //double x_des = 10;
@@ -63,25 +65,33 @@ void pid_controller::sk::pose_callback(const geometry_msgs::Pose2D::ConstPtr& ms
 
     // Initialize system
     if (!initialized) {
-        //yaw_angle = msg->theta;                         // it's already pi-wrapped
-        //init_heading = yaw_angle;
-        //Jt_prev << cos(yaw_angle), sin(yaw_angle), 0,
-        //          -sin(yaw_angle), cos(yaw_angle), 0,
-        //           0,              0,              1;
-        //prev_time = ros::Time::now();
+        yaw_angle = msg->theta;                         // it's already pi-wrapped
+        init_heading = yaw_angle;
+        Jt_prev << cos(yaw_angle), sin(yaw_angle), 0,
+                  -sin(yaw_angle), cos(yaw_angle), 0,
+                   0,              0,              1;
+        prev_time = ros::Time::now();
         initialized = true;
+        eta_ti << 0, 0, 0;
     }
-    //else {
-    //    x = msg->y;
-    //    y = msg->x;
-    //    yaw_angle = msg->theta;
-    //    eta << x, y, yaw_angle;
-    //    eta_t = eta - eta_des;
-    //    eta_t(2) = piwrap(eta_t(2));
-    //    ROS_INFO("eta_t = [%g, %g, %g]", eta_t(0), eta_t(1), eta_t(2));
+    else {
+        x = msg->x;
+        y = msg->y;
+        yaw_angle = msg->theta;
+        eta << x, y, yaw_angle;
+        eta_t = eta - eta_des;
+        eta_t(2) = piwrap(eta_t(2));
+        // ROS_INFO("eta_t = [%g, %g, %g]", eta_t(0), eta_t(1), eta_t(2));
+        
+        // Publish SK errors (eta_t)
+        std_msgs::Float32MultiArray etat_msg;
+        etat_msg.data.push_back(eta_t(0));
+        etat_msg.data.push_back(eta_t(1));
+        etat_msg.data.push_back(eta_t(2));
+        etat_pub.publish(etat_msg);
+        ROS_INFO("eta_t = [%g, %g, %g] (deg)", etat_msg.data[0], etat_msg.data[1], etat_msg.data[2]*180/M_PI);
         newPose = true;
-    //}
-    yaw_angle = msg->theta;                         // it's already pi-wrapped
+    }
 }
 
 
@@ -96,51 +106,13 @@ void pid_controller::sk::velo_callback(const nav_msgs::Odometry::ConstPtr& msg)
         Eigen::Vector3d velo_bff;
         velo_bff << msg->twist.twist.linear.x,
                     msg->twist.twist.linear.y,
-                    -msg->twist.twist.angular.z;
+                    msg->twist.twist.angular.z;
         eta_td = J*velo_bff;
 
         newVelo = true;
-    
-        state_data_.header=msg->header;
-        state_data_.child_frame_id=msg->child_frame_id;
-        state_data_.pose=msg->pose;
-        state_data_.twist=msg->twist;
-        
-        eta << state_data_.pose.pose.position.x, state_data_.pose.pose.position.y, yaw_angle;
-        eta_t = eta - eta_des;
-        eta_t(2) = piwrap(eta_t(2));
-        ROS_INFO("eta_t = [%g, %g, %g]", eta_t(0), eta_t(1), eta_t(2));
     }
 }
 
-void pid_controller::sk::set_timestep()
-{
-    ROS_DEBUG("In set timestep");
-    if (!prev_time.isZero()) //This case will typically only happens when the program is first starting
-    {
-        delta_t = ros::Time::now() - prev_time;
-        prev_time = ros::Time::now();
-        if (0 == delta_t.toSec())
-        {   
-            ROS_ERROR("delta_t is 0, skipping this loop. Possible overloaded cpu at time: %f", ros::Time::now().toSec());
-            return;
-        }
-    }
-    else
-    {
-        ROS_INFO("prev_time is 0, doing nothing");
-        prev_time = ros::Time::now();
-        return;
-    }
-}
-
-void pid_controller::sk::integrate_eta_t()
-{
-    ROS_DEBUG("In integrate eta_t");
-    this->set_timestep();
-    //ROS_ERROR("The integral is set as non cumulative");
-    integral_eta_t += eta_t * delta_t.toSec();
-}
 
 void pid_controller::sk::compute_tau()
 {
@@ -151,29 +123,30 @@ void pid_controller::sk::compute_tau()
               0,              0,              1;
 
         // Compute time step...
-        //ros::Time curr_time = ros::Time::now();
-        //delta_t = curr_time - prev_time;
-
-        Eigen::Matrix3d J_dot_;
-        Eigen::Matrix3d Jt_dot_;
-        //note that in this derivate, the proper sign convnetion would be [- - 0; + - 0; 0 0 0].  However, because the angular velocity is in ENU, we must negate the sign
-        J_dot_<<     sin(yaw_angle)*state_data_.twist.twist.angular.z, cos(yaw_angle)*state_data_.twist.twist.angular.z, 0.0,
-                    -cos(yaw_angle)*state_data_.twist.twist.angular.z, sin(yaw_angle)*state_data_.twist.twist.angular.z, 0.0,
-                     0.0,                                              0.0,                                             0.0;
-
-        Jt_dot_=J_dot_.transpose();
+        ros::Time curr_time = ros::Time::now();
+        delta_t = curr_time - prev_time;
 
         // ROS_INFO("delta_t = %g", delta_t.toSec());
         // ROS_INFO("yaw_angle = %g", yaw_angle);
         // ROS_INFO("init_heading = %g", init_heading);
 
-        ROS_WARN("Heading controller gains: [Kp, Ki, Kd] = [%g, %g, %g]", Kp, Ki, Kd);
+        // ROS_WARN("Heading controller gains: [Kp, Ki, Kd] = [%g, %g, %g]", Kp, Ki, Kd);
+
+        eta_ti = eta_ti + Jt*eta_t*delta_t.toSec();
         
-        //Jt_d = (Jt - Jt_prev)/delta_t.toSec();
-        tau = -Kp*Jt*eta_t - Ki*Jt*integral_eta_t - Kd*(Jt_dot_*eta_t + Jt*eta_td);
+        Eigen::Matrix3d Jt_d;
+        Jt_d = (Jt - Jt_prev)/delta_t.toSec();
+        tau = -Kp*Jt*eta_t - Ki*eta_ti - Kd*(Jt_d*eta_t + Jt*eta_td);
 
         Jt_prev = Jt;
         prev_time = curr_time;
+
+        // // Publish SK errors (eta_t)
+        // std_msgs::Float32MultiArray etat_msg;
+        // etat_msg.data.push_back(eta_t(0));
+        // etat_msg.data.push_back(eta_t(1));
+        // etat_msg.data.push_back(eta_t(2));
+        // etat_pub.publish(etat_msg);
 
         newPose = false;
         newVelo = false;
@@ -195,9 +168,7 @@ void pid_controller::sk::pub_control()
         control_effort_msg.tau.push_back(temp);
         temp.data = tau(2);
         control_effort_msg.tau.push_back(temp);
-
 	    control_pub.publish(control_effort_msg);
-
         newControl = false;
     }
 }
@@ -230,5 +201,4 @@ void pid_controller::sk::run()
 		loop_rate.sleep();
 	}
 }
-
 

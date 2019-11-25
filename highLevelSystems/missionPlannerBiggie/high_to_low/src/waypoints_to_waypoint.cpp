@@ -9,10 +9,11 @@ waypoints_to_waypoint::ws2w::ws2w(ros::NodeHandle &nh) : ws2w_nh(&nh), loop_rate
 	}
 	ROS_DEBUG("waypoints_to_waypoint started");
     
+    bool latch = true;
     task_subscriber = ws2w_nh->subscribe("/vrx/task/info", 10, &waypoints_to_waypoint::ws2w::task_callback, this);
-	waypoint_array_sub = ws2w_nh->subscribe("/waypoint_array", 10, &waypoints_to_waypoint::ws2w::waypoint_array_callback, this);
+	waypoint_array_sub = ws2w_nh->subscribe("/waypoint_array", 100, &waypoints_to_waypoint::ws2w::waypoint_array_callback, this);
 	state_sub = ws2w_nh->subscribe("/p3d_wamv_ned", 10, &waypoints_to_waypoint::ws2w::state_callback, this);
-	control_target_pub = ws2w_nh->advertise<geometry_msgs::Pose2D>("/control_target", 10); //published TAU = {X,Y,Eta}
+	control_target_pub = ws2w_nh->advertise<geometry_msgs::Pose2D>("/control_target", 10, latch); //published TAU = {X,Y,Eta}
 	mission_complete_pub = ws2w_nh->advertise<std_msgs::Bool>("/missionComplete", 1);
 	missionComplete.data=false;
 
@@ -77,7 +78,7 @@ bool waypoints_to_waypoint::ws2w::within_error_bound()
 	//ROS_DEBUG("The waypoint message is: %f, %f, %f", current_waypoint.x, current_waypoint.y, current_waypoint.z);
 	//ROS_DEBUG("The state message is: %f, %f, %f", state_data.pose.pose.position.x, state_data.pose.pose.position.y, state_data.pose.pose.position.z);
 	error_magnitude=sqrt(pow(current_waypoint.x-state_data.pose.pose.position.x,2)+pow(current_waypoint.y-state_data.pose.pose.position.y,2));
-	ROS_DEBUG("The error magnitude is %f", error_magnitude);
+	// ROS_DEBUG("The error magnitude is %f", error_magnitude);
 	//this functiom is the one that will hangle the current index of the waypoint array to be published to controller
 	if(error_magnitude<error_bound)
 	{
@@ -101,7 +102,7 @@ void waypoints_to_waypoint::ws2w::run()
 	{
 		//if we have a new state message and a new waypoint message
 		//ROS_WARN("newState and newWaypoint %d, %d", newState, newWaypoint);
-		if(newState&&newWaypoint&&!finished)
+        if(newState&&newWaypoint&&!finished)
 		{
 			//if the error is within bounds, and error_checking is clear, iterate array to publish the next waypoint
 			if(!within_error_bound())
@@ -130,7 +131,7 @@ void waypoints_to_waypoint::ws2w::run()
 		}
 		missionComplete.data=false;
 		mission_complete_pub.publish(missionComplete);
-		ros::spinOnce();
+        ros::spinOnce();
 		loop_rate.sleep();
 	}
 }

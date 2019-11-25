@@ -32,7 +32,7 @@ int DISPLAY;
 int white_threshold = 40;
 int bin_size =256;
 
-void calcHistBGRColor(Mat image, vector<Mat> &out, Mat mask)
+void calcHistColor(Mat image, vector<Mat> &out, Mat mask)
 {
 	// Seperate HSV
 	vector<Mat> hsv;
@@ -67,7 +67,7 @@ void calcHistBGRColor(Mat image, vector<Mat> &out, Mat mask)
     out.push_back(v_hist);
 }
 
-void calcHistBGRColor(Mat image, vector<Mat> &out)
+void calcHistColor(Mat image, vector<Mat> &out)
 {
 	// Seperate HSV
 	vector<Mat> hsv;
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
             
             vector<Mat> temp; 
 
-            calcHistBGRColor(image, temp);
+            calcHistColor(image, temp);
             
             if(count == 0)
             {

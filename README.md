@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Documentation on an academic project you say???
 Here lies the source code for Florida Atlantic University's VRX 2019 effort.
 
@@ -11,6 +10,22 @@ Adam Hall
 Travis Moscicki
 
 ## System Dependencies
+For the VRX Simulation:  
+`sudo apt update`
+`sudo apt full-upgrade`
+`sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'`
+`sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654`
+`sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'`
+`wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -`
+`sudo apt update`
+`DIST=melodic`
+`GAZ=gazebo9`
+`sudo apt install cmake mercurial git ruby libeigen3-dev ${GAZ} lib${GAZ}-dev pkg-config python ros-${DIST}-gazebo-plugins ros-${DIST}-gazebo-ros ros-${DIST}-hector-gazebo-plugins ros-${DIST}-joy ros-${DIST}-joy-teleop ros-${DIST}-key-teleop ros-${DIST}-robot-localization ros-${DIST}-robot-state-publisher ros-${DIST}-rviz ros-${DIST}-ros-base ros-${DIST}-teleop-tools ros-${DIST}-teleop-twist-keyboard ros-${DIST}-velodyne-simulator ros-${DIST}-xacro ros-${DIST}-rqt ros-${DIST}-rqt-common-plugins protobuf-compiler`   
+For Owltonomous base code:  
+`sudo apt-get install ros-melodic-pointcloud-to-laserscan`  
+*more to be added
+
+
 A whole bunch...
 Ubuntu 18.04
 Ros Melodic

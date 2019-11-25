@@ -35,8 +35,8 @@ void findColor(const Mat image, const Mat mask, vector<Point> contours, vector<M
 	inRange(mask, Scalar(50, 50, 50), Scalar(255, 255, 255), mask_bin);
 	
 	// Seperate BGR
-	vector<Mat> bgr;
-	split( image(_boundingRect), bgr );
+	vector<Mat> hsv;
+	split( image(_boundingRect), hsv );
 
 	int histSize = bin_size;
 
@@ -48,9 +48,9 @@ void findColor(const Mat image, const Mat mask, vector<Point> contours, vector<M
 
 	Mat b_hist, g_hist, r_hist;
 
-	calcHist( &bgr[0], 1, 0, mask_bin(_boundingRect), b_hist, 1, &histSize, &histRange, uniform, accumulate );
-  	calcHist( &bgr[1], 1, 0, mask_bin(_boundingRect), g_hist, 1, &histSize, &histRange, uniform, accumulate );
-  	calcHist( &bgr[2], 1, 0, mask_bin(_boundingRect), r_hist, 1, &histSize, &histRange, uniform, accumulate );
+	calcHist( &hsv[0], 1, 0, mask_bin(_boundingRect), b_hist, 1, &histSize, &histRange, uniform, accumulate );
+  	calcHist( &hsv[1], 1, 0, mask_bin(_boundingRect), g_hist, 1, &histSize, &histRange, uniform, accumulate );
+  	calcHist( &hsv[2], 1, 0, mask_bin(_boundingRect), r_hist, 1, &histSize, &histRange, uniform, accumulate );
 
 	// Draw the histograms for B, G and R
 	int hist_w = 512; int hist_h = 500;
@@ -67,7 +67,7 @@ void findColor(const Mat image, const Mat mask, vector<Point> contours, vector<M
 	conf.push_back(r_hist);
 }
 
-void calcHistBGRColor(Mat image, vector<Mat> &out)
+void calcHistColor(Mat image, vector<Mat> &out)
 {
 	// Seperate HSV
 	vector<Mat> hsv;
@@ -192,9 +192,10 @@ bool findColor(color_classification::color_classification::Request  &req,
 	cvtColor(img, img, CV_RGB2HSV);
 
 	vector<Mat> hist_img;
-	calcHistBGRColor(img, hist_img);
+	calcHistColor(img, hist_img);
 
 	vector<float> conf;
+	vector<float> hsvConf;
 
 	//each color will have 3 histograms, we are just looking at hue
 	for(int i = 0; i < color_list.size(); i++)
@@ -205,8 +206,12 @@ bool findColor(color_classification::color_classification::Request  &req,
 		//would have to iterate 3 times for all channels
 		for(int j = 0; j < 3; j++)
 		{
-			conf.push_back(compareHist( hist_img[j], hists[i][j], CV_COMP_INTERSECT ) );
+			hsvConf.push_back(compareHist( hist_img[j], hists[i][j], CV_COMP_INTERSECT ) );
 		}
+
+		//process hsv confs to general confidence
+		//currently takes the average of all 3. Would like to build in weights later for each channel
+		conf.push_back((hsvConf[0]+hsvConf[1]+hsvConf[2])/3);
 	}
 	
 	res.colors = colors;

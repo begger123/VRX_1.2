@@ -11,9 +11,10 @@ waypoints_to_waypoint::ws2w::ws2w(ros::NodeHandle &nh) : ws2w_nh(&nh), loop_rate
     
     bool latch = true;
     task_subscriber = ws2w_nh->subscribe("/vrx/task/info", 10, &waypoints_to_waypoint::ws2w::task_callback, this);
-	waypoint_array_sub = ws2w_nh->subscribe("/waypoint_array", 100, &waypoints_to_waypoint::ws2w::waypoint_array_callback, this);
+	waypoint_array_sub = ws2w_nh->subscribe("/waypoint_array", 10, &waypoints_to_waypoint::ws2w::waypoint_array_callback, this);
 	state_sub = ws2w_nh->subscribe("/p3d_wamv_ned", 10, &waypoints_to_waypoint::ws2w::state_callback, this);
-	control_target_pub = ws2w_nh->advertise<geometry_msgs::Pose2D>("/control_target", 10, latch); //published TAU = {X,Y,Eta}
+    // control_target_pub = ws2w_nh->advertise<geometry_msgs::Pose2D>("/control_target", 10); //published TAU = {X,Y,Eta}
+    control_target_pub = ws2w_nh->advertise<geometry_msgs::Pose2D>("/control_target", 10, latch); //published TAU = {X,Y,Eta}
 	mission_complete_pub = ws2w_nh->advertise<std_msgs::Bool>("/missionComplete", 1);
 	missionComplete.data=false;
 

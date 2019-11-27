@@ -65,7 +65,7 @@ class GetMap:
         dock_region = bimg[:, 0:500]
         dock_points = np.transpose(np.nonzero(dock_region)).astype(int)
         rospy.loginfo("number of dock_points = %g", dock_points.shape[0])
-        th1 = 2200 
+        th1 = 2200
         self.dock_size = dock_points.shape[0]
         if (self.dock_size > th1):
             rospy.loginfo("got the number of dock points required")

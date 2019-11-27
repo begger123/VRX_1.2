@@ -37,32 +37,39 @@ private:
     std::vector<double> dock_path1;
     std::vector<double> dock_path2;
 
-    bool got_explore_points = false;
+    bool got_around_points = false;
     bool got_path_points = false;
     bool got_etat = false;
     bool got_plackard = false;
     bool isPlackard = true;
-    bool got_dock = false;
+    bool got_entire_dock = false;
+    bool got_part_dock = false;
 
-    int size_explore;
-    int size_path;
+    int size_around = 8;
+    int size_path = 8;
 
     // Station-keeping goal tolerances
     float tol_x = 1.0;    // in meters
     float tol_y = 1.0;    // in meters
     float tol_psi = 10.0;  // in degrees
 
-    double dock_explore[8];
-    double x, y, yaw_angle;
+    double sk_heading = 0;
+    double sk_heading1 = 0;
+    double sk_heading2 = 0;
+    double sk1_heading = 0;
+    double sk2_heading = 0;
+    double sk3_heading = 0;
+    double x = 0;
+    double y = 0;
+    double yaw_angle = 0;
+    double dock_around[8];
     double goal_start[2];
-    double sk_heading, sk_heading1, sk_heading2;
-    double sk1_heading, sk2_heading, sk3_heading;
     double sk_etat[3];
 
     // ROS stuff...
     ros::Subscriber plackard_sub;
     ros::Subscriber dockpath_sub;
-    ros::Subscriber dockexplore_sub;
+    ros::Subscriber dockaround_sub;
     ros::Subscriber pose_sub;
     ros::Publisher stationkeep_pub;
     ros::Time prev_time;
@@ -72,7 +79,7 @@ private:
     // Callback functions
     void goalStatusCallback(move_base_msgs::MoveBaseActionResult msg);
     void dockPathCallback(const std_msgs::Float32MultiArrayConstPtr &msg);
-    void dockExploreCallback(const std_msgs::Float32MultiArrayConstPtr &msg);
+    void dockAroundCallback(const std_msgs::Float32MultiArrayConstPtr &msg);
     void plackardCallback(const std_msgs::BoolConstPtr &msg);
     void pose_callback(const geometry_msgs::Pose2D::ConstPtr& msg);
 
@@ -80,10 +87,9 @@ public:
     dock(ros::NodeHandle &nh);
     ~dock();
     void loop();
-    // enum Sequence{START, EXPLORE_DOCK, DOCKPATH1_START, DOCKPATH1_SK1, DOCKPATH1_STOP, DOCKPATH1_SK2, DOCKPATH1_SK3, DOCKPATH1_SK1_REV,
-    //               EXPLORE_DOCK2, DOCKPATH2_START, DOCKPATH2_SK1, DOCKPATH2_STOP, DOCKPATH2_SK2};
-    enum Sequence{START, EXPLORE_DOCK, DOCKPATH1_START, DOCKPATH1_SK1, DOCKPATH1_STOP, DOCKPATH1_SK2, DOCKPATH1_SK3, DOCKPATH1_SK1_REV, CIRCLE_SEARCH, GOTO_STATION2, MISSION_FINISHED};
-                  // EXPLORE_DOCK2, DOCKPATH2_START};
+    enum Sequence{START, EXPLORE_DOCK, DOCKPATH1_START, DOCKPATH1_SK1, DOCKPATH1_STOP, DOCKPATH1_SK2, DOCKPATH1_SK3, DOCKPATH1_SK1_REV,
+                                       DOCKPATH2_START, DOCKPATH2_SK1, DOCKPATH2_STOP, DOCKPATH2_SK2, DOCKPATH2_SK3, DOCKPATH2_SK1_REV,   
+                                       CIRCLE_SEARCH, GOTO_STATION2, MISSION_FINISHED};
 
     // Some functions
     double twopiwrap(double angle);

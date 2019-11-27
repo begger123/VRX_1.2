@@ -134,13 +134,14 @@ void vehicle_state_sim::sim_callback(const nav_msgs::Odometry::ConstPtr& msg)
     yawAngle = twopiwrap(yawAngle);
     
     // Convert yawAngle from ENU to NED convention
-    if (yawAngle < M_PI/2) {
+    if (yawAngle <= M_PI/2) {
         yawAngle = M_PI/2 - yawAngle;
     }
     else {
         yawAngle = 5*M_PI/2 - yawAngle;
     }
 
+    // yawAngle = twopiwrap(yawAngle);
     // yawAngle = piwrap(yawAngle);
     // ROS_INFO("yawAngle = %g", yawAngle);
 

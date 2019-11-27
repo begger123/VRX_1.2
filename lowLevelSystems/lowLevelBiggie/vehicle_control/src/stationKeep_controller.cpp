@@ -12,10 +12,12 @@ pid_controller::sk::sk(ros::NodeHandle &nh) : sk_nh(&nh), loop_rate(60) //sets d
 	ROS_DEBUG("Entering initializer, next stop get_params");
     // Subscribers
     target_sub = sk_nh->subscribe("/control_target_sk", 10, &pid_controller::sk::target_callback, this);
+	// target_sub = sk_nh->subscribe("/control_target", 10, &pid_controller::sk::target_callback_pf, this);
     pose_sub   = sk_nh->subscribe("/vehicle_pose", 10, &pid_controller::sk::pose_callback, this);
 	state_sub  = sk_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::sk::velo_callback, this);
     // Publishers
-    control_pub = sk_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10);  // published tau = {Tx, Ty, Mz}
+    bool latch = true;
+    control_pub = sk_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10, latch);  // published tau = {Tx, Ty, Mz}
     etat_pub    = sk_nh->advertise<std_msgs::Float32MultiArray>("/etat_sk", 10);
 
     // Initialize some variables
@@ -39,15 +41,27 @@ pid_controller::sk::~sk()
 }
 
 
+// double pid_controller::sk::piwrap(double angle)
+// {
+//    angle = fmod(angle, 2*M_PI);
+//
+//    if (angle >= 0 && angle <= M_PI) {
+//        return(angle);
+//    }
+//    else {
+//        return(angle - 2*M_PI);
+//    }
+// }
+
+// void pid_controller::sk::target_callback_pf(const geometry_msgs::Pose2D::ConstPtr& msg)
+// {
+//     got_pf = true;
+// }
+
 double pid_controller::sk::piwrap(double angle)
 {
-   angle = fmod(angle, 2*M_PI);
-   if (angle >= 0 && angle <= M_PI) {
-       return(angle);
-   }
-   else {
-       return(angle - 2*M_PI);
-   }
+    angle = atan2(sin(angle), cos(angle));
+    return angle;
 }
 
 void pid_controller::sk::target_callback(const geometry_msgs::Pose2D::ConstPtr& msg)
@@ -89,7 +103,6 @@ void pid_controller::sk::pose_callback(const geometry_msgs::Pose2D::ConstPtr& ms
         etat_msg.data.push_back(eta_t(1));
         etat_msg.data.push_back(eta_t(2));
         etat_pub.publish(etat_msg);
-        ROS_INFO("eta_t = [%g, %g, %g] (deg)", etat_msg.data[0], etat_msg.data[1], etat_msg.data[2]*180/M_PI);
         newPose = true;
     }
 }
@@ -170,6 +183,7 @@ void pid_controller::sk::pub_control()
         control_effort_msg.tau.push_back(temp);
 	    control_pub.publish(control_effort_msg);
         newControl = false;
+        ROS_INFO("eta_t = [%g, %g, %g] (deg)", eta_t(0), eta_t(1), eta_t(2)*180/M_PI);
     }
 }
 
@@ -188,7 +202,12 @@ void pid_controller::sk::run()
 {
 	while(ros::ok())
 	{
-		ros::spinOnce();
+        // if (got_pf == true) {
+        //     printf("WAITING FOR PATH-FOLLOWING CONTROL TO FINISH");
+        //     got_pf = false;
+        // }
+        
+        ros::spinOnce();
         if(newCommand)
         {
             this->compute_tau();

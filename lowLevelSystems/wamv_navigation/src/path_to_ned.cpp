@@ -28,7 +28,8 @@ class PathToNED
             // tf_filter = new tf::MessageFilter<nav_msgs::Path>(map_path_sub, listener, "odom_ned", 100);
             tf_filter = new tf::MessageFilter<nav_msgs::Path>(map_path_sub, listener, "ned_origin", 10);
             tf_filter->registerCallback(boost::bind(&PathToNED::msgCallback, this, _1));
-            path_ned_pub = node.advertise<custom_messages_biggie::waypoint_array>("/waypoint_array", 100, latch);
+            // path_ned_pub = node.advertise<custom_messages_biggie::waypoint_array>("/waypoint_array", 10);
+            path_ned_pub = node.advertise<custom_messages_biggie::waypoint_array>("/waypoint_array", 10, latch);
             count = 0;
         }
 

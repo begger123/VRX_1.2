@@ -18,15 +18,15 @@ class GetMap:
         self.plackard_sub = rospy.Subscriber("/plackard", Bool, self.plackard_callback)
         # Publishers
         self.dock_path_pub = rospy.Publisher("/dock_path", Float32MultiArray, latch=True, queue_size=10)
-        self.dock_explore_pub = rospy.Publisher("/dock_explore", Float32MultiArray, latch=True, queue_size=10)
+        self.dock_around_pub = rospy.Publisher("/dock_around", Float32MultiArray, latch=True, queue_size=10)
         # opencv-ros bridge
         self.bridge = CvBridge()
         # class variables
         self.side = True    # true: right, false: left
         self.got_plackard = False
         self.got_dock = False
-        self.explore_pts_pix = np.zeros((4,2), np.int)
-        self.explore_pts_ned = np.zeros((4,2), np.int)
+        self.around_pts_pix = np.zeros((4,2), np.int)
+        self.around_pts_ned = np.zeros((4,2), np.int)
         self.plackard_mean = np.zeros((2,1), np.int)
 
 
@@ -86,13 +86,8 @@ class GetMap:
         self.dock_center = 0
         self.dock_size = 0
         self.dock_mean = np.zeros((1, 2))
-        eigvector = np.zeros((2, 1))
+        eigvector1 = np.zeros((2, 1))
         side = 1
-        if (self.side):
-            side = 1                    # 1:right, -1:left
-        else:
-            side = -1
-        #  rospy.loginfo("side = %g", self.side)
         if (cy_min < 450):
             # which cluster it is?
             dock_center = np.argmin(center[:,1])
@@ -100,31 +95,29 @@ class GetMap:
             dock_cluster = data[label.ravel()==dock_center]
             dock_size = np.size(dock_cluster)
             #  rospy.loginfo("Cy_min = %g", np.min(center[:,1]))
-            rospy.loginfo("dock_size = %g", dock_size)
+            #  rospy.loginfo("dock_size = %g", dock_size)
             #  rospy.loginfo("dock_center is: %g", dock_center)
             if (dock_size > 3600):
                 # perform PCA analysis
-                eigvector, eigvector2, angle, angle2, dock_mean = self.do_pca(dock_cluster, side)
+                eigvector1, eigvector2, dock_angle1, dock_angle2, dock_mean = self.do_pca(dock_cluster, 1)
+                if (self.side == 0):
+                    eigvector1 = -eigvector1
+                    eigvector2 = -eigvector2
+
                 # draw image and show eigenvector
-                vector = (eigvector*100).astype(int) + dock_mean
+                vector = (eigvector1*100).astype(int) + dock_mean
                 points = np.zeros((4,2), np.int)
                 # compute starting path-point
                 points[0,:] = vector;
                 # compute stop point
-                points[1,:] = (eigvector*60).astype(int) + dock_mean
+                points[1,:] = (eigvector1*60).astype(int) + dock_mean
                 # compute prior sk-point prior to dock_point
-                points[2,:] = (eigvector*50).astype(int) + dock_mean
+                points[2,:] = (eigvector1*50).astype(int) + dock_mean
                 # compute and draw docking_point
-                points[3,:] = (eigvector*20).astype(int) + dock_mean
+                points[3,:] = (eigvector1*20).astype(int) + dock_mean
                 # Draw all the points and convert them to NED coordinates
                 self.points_ned = np.zeros((points.shape[0], 2))
                 self.points_ned = self.convert_to_ned(points.astype(int), height, width)
-
-                # Drawing stuff onto opencv image
-                # for drawing the line we have to invert the coordinates
-                #  cv2.line(labels_img, (dock_mean[1], dock_mean[0]), (vector[1], vector[0]), (255,255,255), 2)
-                #  for i in range(points.shape[0]):
-                #      cv2.circle(labels_img, (points[i,1], points[i,0]), 4, (255,0,255), -1)
 
                 # publish via ROS
                 dock_path_ned = Float32MultiArray()
@@ -138,6 +131,51 @@ class GetMap:
                     rospy.loginfo("dock_path_ned = [%g, %g]", dock_path_ned.data[j], dock_path_ned.data[j+1])
                     j = j + 2
 
+                # Compute points around the dock
+                l = 40
+                s = 30
+                self.dock_mean = dock_mean
+                dock_angle1 = dock_angle1 - np.pi/2;
+                around_pts = np.array([ [-s, l], [-s, -l], [s, -l], [s, l] ])
+                rot_mat = np.array([ [np.cos(dock_angle1), np.sin(dock_angle1)], [-np.sin(dock_angle1), np.cos(dock_angle1)] ])
+                self.around_pts_pix = np.dot(around_pts, rot_mat).astype(int) + self.dock_mean.astype(int)
+                # scaled eigenvectors for plotting
+                self.vec_dock1 = (eigvector1*60).astype(int) + self.dock_mean
+                self.vec_dock2 = (eigvector2*60).astype(int) + self.dock_mean
+                # convert dock around_points to NED
+                self.around_pts_ned = self.convert_to_ned(self.around_pts_pix.astype(int), height, width)
+                # publish via ROS
+                dock_around_ned = Float32MultiArray()
+                j = 0
+                for i in range(self.around_pts_ned.shape[0]):
+                    dock_around_ned.data.append(np.int(self.around_pts_ned[i,0]))
+                    dock_around_ned.data.append(np.int(self.around_pts_ned[i,1]))
+                self.dock_around_pub.publish(dock_around_ned)
+
+                # Drawing stuff onto opencv image
+                # For drawing the line we have to invert the coordinates
+                # Draw eigenvectors
+                #  rospy.loginfo("dock_mean = [%g, %g]", self.dock_mean[0], self.dock_mean[1])
+                #  rospy.loginfo("vec_dock = [%g, %g]", self.vec_dock1[0], self.vec_dock1[1])
+                #  cv2.line(labels_img, (self.dock_mean[1], self.dock_mean[0]), (self.vec_dock1[1], self.vec_dock1[0]), (255,0,0), 2)
+                #  cv2.line(labels_img, (self.dock_mean[1], self.dock_mean[0]), (self.vec_dock2[1], self.vec_dock2[0]), (0,255,0), 2)
+                # Draw the dock_path
+                #  cv2.line(labels_img, (dock_mean[1], dock_mean[0]), (vector[1], vector[0]), (255,255,255), 2)
+                #  # Draw points on the dock_path
+                #  for i in range(points.shape[0]):
+                #      cv2.circle(labels_img, (points[i,1], points[i,0]), 4, (255,0,255), -1)
+
+                # Draw points on the dock_path
+                #  cv2.circle(labels_img, (points[0,1], points[0,0]), 4, (255,0,0), -1)
+                #  cv2.circle(labels_img, (points[1,1], points[1,0]), 4, (0,255,0), -1)
+                #  cv2.circle(labels_img, (points[2,1], points[2,0]), 4, (0,0,255), -1)
+                #  cv2.circle(labels_img, (points[3,1], points[3,0]), 4, (255,0,255), -1)
+
+                #  # Draw dock around_points
+                #  cv2.circle(labels_img, (self.around_pts_pix[0,1], self.around_pts_pix[0,0]), 4, (255,0,0), -1)
+                #  cv2.circle(labels_img, (self.around_pts_pix[1,1], self.around_pts_pix[1,0]), 4, (0,255,0), -1)
+                #  cv2.circle(labels_img, (self.around_pts_pix[2,1], self.around_pts_pix[2,0]), 4, (0,0,255), -1)
+                #  cv2.circle(labels_img, (self.around_pts_pix[3,1], self.around_pts_pix[3,0]), 4, (255,0,255), -1)
 
                 # debug printouts
                 #  rospy.loginfo("dock_centroid = [%g, %g]", dock_mean[0], dock_mean[1])
@@ -146,15 +184,7 @@ class GetMap:
                 #  rospy.loginfo("ogrid_resolution = %g", self.ogrid_resolution)
                 #  rospy.loginfo("vector = [%g, %g]", vector[0], vector[1])
 
-        # draw all about plackard
-        #  for i in range(self.explore_pts_pix.shape[0]):
-        #      cv2.circle(labels_img, (self.explore_pts_pix[i,1], self.explore_pts_pix[i,0]), 4, (255,0,255), -1)
-        #      #  rospy.loginfo("explore_points = [%g, %g]", self.explore_pts_pix[i,0], self.explore_pts_pix[i,1])
-
-        #  cv2.line(labels_img, (self.plackard_mean[1], self.plackard_mean[0]), (self.vec_plackard1[1], self.vec_plackard1[0]), (255,255,255), 2)
-        #  cv2.line(labels_img, (self.plackard_mean[1], self.plackard_mean[0]), (self.vec_plackard2[1], self.vec_plackard2[0]), (255,255,255), 2)
-
-        # draw dock_paths
+        #  # draw dock_paths
         #  cv2.imshow("Labels Image", labels_img)
         #  cv2.waitKey(30)
 

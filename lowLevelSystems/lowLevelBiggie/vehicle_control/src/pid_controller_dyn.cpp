@@ -13,7 +13,7 @@ pid_controller::pid::pid(ros::NodeHandle &nh) : pid_nh(&nh), loop_rate(60) //set
     pose_sub   = pid_nh->subscribe("/vehicle_pose", 10, &pid_controller::pid::pose_callback, this);
 	//state_sub = pid_nh->subscribe("vehicle_state", 10, &pid_controller::pid::state_callback, this);//use this for real vehicle
 	state_sub = pid_nh->subscribe("/p3d_wamv_ned", 10, &pid_controller::pid::state_callback, this);//use this for simulation
-	control_effort_pub = pid_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10, true); //published TAU = {X,Y,Eta}
+	control_effort_pub = pid_nh->advertise<custom_messages_biggie::control_effort>("/control_effort", 10); //published TAU = {X,Y,Eta}
 
 	this->get_params();
 	previous_waypoint.x=0;

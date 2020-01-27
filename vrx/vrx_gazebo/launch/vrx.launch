@@ -5,7 +5,7 @@
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge0.world" /> -->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge0b.world" /> -->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge1.world" /> -->
-  <!--<arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge2.world" /> -->
+  <arg name="world" default="$(find vrx_gazebo)/worlds/nav_challenge2.world" />
 
 
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_stationkeeping0.world" /> -->
@@ -17,7 +17,7 @@
 
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding0.world" />-->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding1.world" />-->
-  <arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding2.world" />
+  <!-- <arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding2.world" />-->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding3.world" />-->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding4.world" />-->
   <!--<arg name="world" default="$(find vrx_gazebo)/worlds/phase2_wayfinding5.world" />-->

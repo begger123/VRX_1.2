@@ -34,7 +34,7 @@
     <include file="$(find vehicle_state)/launch/sim_vehicle_state.launch" />
 
     <!-- Run RViz -->
-    <!--<arg name="rviz_config" default="$(find wamv_gazebo)/config/rviz_armando.rviz" />-->
+    <arg name="rviz_config" default="$(find wamv_gazebo)/config/rviz_armando.rviz" />
     <!--<node pkg="rviz" type="rviz" name="wamv_visualization" args="-d $(arg rviz_config)" /> -->
     
     <!-- Run lidar geofence -->

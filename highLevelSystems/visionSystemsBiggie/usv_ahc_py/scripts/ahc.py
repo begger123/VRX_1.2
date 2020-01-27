@@ -27,7 +27,7 @@ pubTest = rospy.Publisher('tester', PointCloud, queue_size=1)
 theState=Odometry()
 theTask=Task()
 
-itCanRun=False
+itCanRun=True
 
 ####################################################################################
 ##################################HELPER FUNCTIONS##################################
@@ -68,8 +68,10 @@ def shutdownHook(taskMsg):
 
 def task_callback(taskMsg):
     theTask.name=taskMsg.name
-    if(theTask.name=="navigation_course"):
+    if(theTask.name == "navigation_course"):
         itCanRun=True
+    
+        
 
 
 ####################################################################################

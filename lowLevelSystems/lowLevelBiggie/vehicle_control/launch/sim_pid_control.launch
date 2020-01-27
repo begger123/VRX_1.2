@@ -35,7 +35,7 @@
 
     <!-- Run RViz -->
     <arg name="rviz_config" default="$(find wamv_gazebo)/config/rviz_armando.rviz" />
-    <!--<node pkg="rviz" type="rviz" name="wamv_visualization" args="-d $(arg rviz_config)" /> -->
+    <node pkg="rviz" type="rviz" name="wamv_visualization" args="-d $(arg rviz_config)" />
     
     <!-- Run lidar geofence -->
     <node pkg="lidar_geofence" name="lidar_geofence" type="lidar_geofence.py"/>
@@ -75,7 +75,7 @@
     </node>
     
     <!--Launch the vision package-->
-    <!--<include file="$(find usv_ahc_py)/launch/vision.launch" />-->
+    <include file="$(find usv_ahc_py)/launch/vision.launch" />
     <!--Launch yolo out here-->
     <!--<include file="$(find yolo_detection)/launch/yolov3_buoys.launch" />-->
     <!--Launch pca fancy pants-->

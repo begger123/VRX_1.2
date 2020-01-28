@@ -1,6 +1,0 @@
-<launch>
-    <rosparam command="load" file="$(find color_classification)/config/record.yaml" />
-    <rosparam command="load" file="$(find color_classification)/config/newRecord.yaml" />
-    <param name="path" value="$(find color_classification)" />
-    <node name="record" pkg="color_classification" type="record_hist" output="screen" />
-</launch>

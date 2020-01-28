@@ -1,7 +1,0 @@
-<launch>
-    <rosparam command="load" file="$(find rgbd_fusion)/config/config.yaml" />
-    <param name="path" value="$(find rgbd_fusion)" />
-    <rosparam command="load" file="$(find color_classification)/config/newRecord.yaml" />
-    <param name="path" value="$(find color_classification)" />
-    <node name="classifier" pkg="classifier" type="classifier_node" output="screen" />
-</launch>

@@ -49,9 +49,9 @@ private:
     int size_path = 8;
 
     // Station-keeping goal tolerances
-    float tol_x = 1.0;    // in meters
-    float tol_y = 1.0;    // in meters
-    float tol_psi = 10.0;  // in degrees
+    float tol_x = 0.6;    // in meters
+    float tol_y = 0.6;    // in meters
+    float tol_psi = 7;  // in degrees
 
     double sk_heading = 0;
     double sk_heading1 = 0;

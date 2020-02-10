@@ -157,25 +157,25 @@ class GetMap:
                 # Draw eigenvectors
                 #  rospy.loginfo("dock_mean = [%g, %g]", self.dock_mean[0], self.dock_mean[1])
                 #  rospy.loginfo("vec_dock = [%g, %g]", self.vec_dock1[0], self.vec_dock1[1])
-                #  cv2.line(labels_img, (self.dock_mean[1], self.dock_mean[0]), (self.vec_dock1[1], self.vec_dock1[0]), (255,0,0), 2)
-                #  cv2.line(labels_img, (self.dock_mean[1], self.dock_mean[0]), (self.vec_dock2[1], self.vec_dock2[0]), (0,255,0), 2)
+                cv2.line(labels_img, (self.dock_mean[1], self.dock_mean[0]), (self.vec_dock1[1], self.vec_dock1[0]), (255,0,0), 2)
+                cv2.line(labels_img, (self.dock_mean[1], self.dock_mean[0]), (self.vec_dock2[1], self.vec_dock2[0]), (0,255,0), 2)
                 # Draw the dock_path
-                #  cv2.line(labels_img, (dock_mean[1], dock_mean[0]), (vector[1], vector[0]), (255,255,255), 2)
-                #  # Draw points on the dock_path
-                #  for i in range(points.shape[0]):
-                #      cv2.circle(labels_img, (points[i,1], points[i,0]), 4, (255,0,255), -1)
-
+                cv2.line(labels_img, (dock_mean[1], dock_mean[0]), (vector[1], vector[0]), (255,255,255), 2)
                 # Draw points on the dock_path
-                #  cv2.circle(labels_img, (points[0,1], points[0,0]), 4, (255,0,0), -1)
-                #  cv2.circle(labels_img, (points[1,1], points[1,0]), 4, (0,255,0), -1)
-                #  cv2.circle(labels_img, (points[2,1], points[2,0]), 4, (0,0,255), -1)
-                #  cv2.circle(labels_img, (points[3,1], points[3,0]), 4, (255,0,255), -1)
+                for i in range(points.shape[0]):
+                    cv2.circle(labels_img, (points[i,1], points[i,0]), 4, (255,0,255), -1)
 
-                #  # Draw dock around_points
-                #  cv2.circle(labels_img, (self.around_pts_pix[0,1], self.around_pts_pix[0,0]), 4, (255,0,0), -1)
-                #  cv2.circle(labels_img, (self.around_pts_pix[1,1], self.around_pts_pix[1,0]), 4, (0,255,0), -1)
-                #  cv2.circle(labels_img, (self.around_pts_pix[2,1], self.around_pts_pix[2,0]), 4, (0,0,255), -1)
-                #  cv2.circle(labels_img, (self.around_pts_pix[3,1], self.around_pts_pix[3,0]), 4, (255,0,255), -1)
+                #  Draw points on the dock_path
+                cv2.circle(labels_img, (points[0,1], points[0,0]), 4, (255,0,0), -1)
+                cv2.circle(labels_img, (points[1,1], points[1,0]), 4, (0,255,0), -1)
+                cv2.circle(labels_img, (points[2,1], points[2,0]), 4, (0,0,255), -1)
+                cv2.circle(labels_img, (points[3,1], points[3,0]), 4, (255,0,255), -1)
+
+                # Draw dock around_points
+                cv2.circle(labels_img, (self.around_pts_pix[0,1], self.around_pts_pix[0,0]), 4, (255,0,0), -1)
+                cv2.circle(labels_img, (self.around_pts_pix[1,1], self.around_pts_pix[1,0]), 4, (0,255,0), -1)
+                cv2.circle(labels_img, (self.around_pts_pix[2,1], self.around_pts_pix[2,0]), 4, (0,0,255), -1)
+                cv2.circle(labels_img, (self.around_pts_pix[3,1], self.around_pts_pix[3,0]), 4, (255,0,255), -1)
 
                 # debug printouts
                 #  rospy.loginfo("dock_centroid = [%g, %g]", dock_mean[0], dock_mean[1])
@@ -184,9 +184,9 @@ class GetMap:
                 #  rospy.loginfo("ogrid_resolution = %g", self.ogrid_resolution)
                 #  rospy.loginfo("vector = [%g, %g]", vector[0], vector[1])
 
-        #  # draw dock_paths
-        #  cv2.imshow("Labels Image", labels_img)
-        #  cv2.waitKey(30)
+        # draw dock_paths
+        cv2.imshow("Labels Image", labels_img)
+        cv2.waitKey(30)
 
 
     def convert_to_ned(self, array, height, width):
